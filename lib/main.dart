@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 
-import 'admin/admin_app.dart';
-
 void main() {
-  // Boots straight into the admin panel while its frontend is being built.
-  // Once the login page exists this becomes the auth entry point, which then
-  // routes to AdminApp or the user app based on the signed-in role.
-  runApp(const AdminApp());
+  runApp(const ShaktiSareeAdminApp());
+}
+
+/// Placeholder root. Once the design tokens land this gets pointed at
+/// `lib/dev/token_preview.dart`, and later at the real router.
+class ShaktiSareeAdminApp extends StatelessWidget {
+  const ShaktiSareeAdminApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Shakti Saree Admin',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(useMaterial3: true, brightness: Brightness.light),
+      // Light-only app — no dark theme is supplied, so this pins it
+      // regardless of the device setting.
+      themeMode: ThemeMode.light,
+      home: const Scaffold(body: Center(child: Text('Design tokens pending'))),
+    );
+  }
 }
