@@ -47,6 +47,16 @@ class AppTypography {
     color: AppColors.textDark,
   );
 
+  /// The gold brand plate on the dashboard. Heavier and wider-tracked than
+  /// any display style, so it gets its own entry rather than a copyWith.
+  static TextStyle get brandPlate => GoogleFonts.playfairDisplay(
+    fontSize: 26,
+    fontWeight: FontWeight.w800,
+    height: 1.1,
+    letterSpacing: 1,
+    color: AppColors.textOnAccent,
+  );
+
   /// Section heading above a list, e.g. "Recent Orders".
   static TextStyle get sectionTitle => GoogleFonts.playfairDisplay(
     fontSize: 16,
@@ -150,6 +160,7 @@ class AppTypography {
     'displayLarge': displayLarge,
     'displayMedium': displayMedium,
     'displaySmall': displaySmall,
+    'brandPlate': brandPlate,
     'statValue': statValue,
     'sectionTitle': sectionTitle,
     'titleMedium': titleMedium,
