@@ -22,7 +22,7 @@ class DashboardHeader extends StatelessWidget {
 
   /// Design height. A minimum rather than a fixed size so the block grows
   /// instead of clipping when the platform text scale is turned up.
-  static const double _minHeight = 200;
+  static const double _minHeight = 180;
 
   static const double _avatarSize = 38;
 
@@ -44,11 +44,14 @@ class DashboardHeader extends StatelessWidget {
         AppSpacing.x5,
         topInset + AppSpacing.x4,
         AppSpacing.x5,
-        AppSpacing.x5,
+        AppSpacing.x6,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
+        // Bottom-aligned so the block hugs the text; any slack from
+        // [_minHeight] falls above the eyebrow rather than below the date.
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
