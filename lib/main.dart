@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'admin/dashboard/presentation/dashboard_screen.dart';
 import 'core/theme/app_theme.dart';
-import 'dev/token_preview.dart';
 
 void main() {
   runApp(const ShaktiSareeAdminApp());
@@ -19,8 +19,8 @@ class ShaktiSareeAdminApp extends StatelessWidget {
       // Light-only app — no dark theme is supplied, so this pins it
       // regardless of the device setting.
       themeMode: ThemeMode.light,
-      // TEMPORARY: points at the token preview until the router lands.
-      home: const TokenPreview(),
+      // TEMPORARY: points straight at the dashboard until the router lands.
+      home: const DashboardScreen(),
     );
   }
 }
