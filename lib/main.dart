@@ -18,7 +18,7 @@ class ShaktiSareeAdminApp extends StatelessWidget {
       // Light-only app — no dark theme is supplied, so this pins it
       // regardless of the device setting.
       themeMode: ThemeMode.light,
-      home: const Scaffold(body: Center(child: Text('Design tokens pending'))),
+      home: const Placeholder(),
     );
   }
 }
