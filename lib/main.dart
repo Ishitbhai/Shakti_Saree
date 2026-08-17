@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'core/theme/app_theme.dart';
+import 'dev/token_preview.dart';
+
 void main() {
   runApp(const ShaktiSareeAdminApp());
 }
 
-/// Placeholder root. Once the design tokens land this gets pointed at
-/// `lib/dev/token_preview.dart`, and later at the real router.
 class ShaktiSareeAdminApp extends StatelessWidget {
   const ShaktiSareeAdminApp({super.key});
 
@@ -14,11 +15,12 @@ class ShaktiSareeAdminApp extends StatelessWidget {
     return MaterialApp(
       title: 'Shakti Saree Admin',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true, brightness: Brightness.light),
+      theme: AppTheme.light,
       // Light-only app — no dark theme is supplied, so this pins it
       // regardless of the device setting.
       themeMode: ThemeMode.light,
-      home: const Scaffold(body: Center(child: Text('Design tokens pending'))),
+      // TEMPORARY: points at the token preview until the router lands.
+      home: const TokenPreview(),
     );
   }
 }
