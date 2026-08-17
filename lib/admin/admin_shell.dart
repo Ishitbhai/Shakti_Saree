@@ -24,9 +24,7 @@ class _AdminShellState extends State<AdminShell> {
       appBar: AdminAppBar(title: adminTabs[_selectedIndex].label),
       body: IndexedStack(
         index: _selectedIndex,
-        children: [
-          for (final tab in adminTabs) tab.screenBuilder(),
-        ],
+        children: [for (final tab in adminTabs) tab.screenBuilder()],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,

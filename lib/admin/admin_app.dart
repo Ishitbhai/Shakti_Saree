@@ -14,6 +14,9 @@ class AdminApp extends StatelessWidget {
       title: 'Shakti Saree — Admin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.admin,
+      // The admin panel is light-only by design; no dark theme is supplied, so
+      // this pins it regardless of the device setting.
+      themeMode: ThemeMode.light,
       home: const AdminShell(),
     );
   }
