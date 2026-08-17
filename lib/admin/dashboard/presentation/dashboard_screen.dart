@@ -9,9 +9,6 @@ import 'widgets/stat_grid.dart';
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
-  /// How far the grid is lifted into the header.
-  static const double _overlap = 56;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,10 +25,14 @@ class DashboardScreen extends StatelessWidget {
             //
             // Everything below the header belongs inside this one Transform:
             // the lift is then applied once, so later sections cannot
-            // double-space. The _overlap of slack it leaves at the very
-            // bottom serves as the screen's bottom padding.
+            // double-space. The slack it leaves at the very bottom serves as
+            // the screen's bottom padding.
+            //
+            // The offset lives on DashboardHeader because the header sizes
+            // its own bottom padding from it; duplicating the number here
+            // would let the two drift apart.
             Transform.translate(
-              offset: const Offset(0, -_overlap),
+              offset: const Offset(0, -DashboardHeader.cardOverlap),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

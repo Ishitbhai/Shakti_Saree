@@ -22,7 +22,21 @@ class DashboardHeader extends StatelessWidget {
 
   /// Design height. A minimum rather than a fixed size so the block grows
   /// instead of clipping when the platform text scale is turned up.
-  static const double _minHeight = 180;
+  static const double minHeight = 200;
+
+  /// How far the stat grid is lifted into this block. Owned here, next to the
+  /// padding that reserves room for it — [DashboardScreen] reads it rather
+  /// than declaring its own copy.
+  static const double cardOverlap = 40;
+
+  /// Clear space demanded between the date line and the top of the cards.
+  static const double minCardGap = 12;
+
+  /// Empty runway kept below the text for the cards to sit in. Deriving it
+  /// from the two constants above is what guarantees the gap survives a
+  /// notch and a large text scale: the block grows, so the cards move down
+  /// with it.
+  static const double _bottomReserve = cardOverlap + minCardGap;
 
   static const double _avatarSize = 38;
 
@@ -33,7 +47,7 @@ class DashboardHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: _minHeight),
+      constraints: const BoxConstraints(minHeight: minHeight),
       decoration: const BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.vertical(
@@ -44,14 +58,13 @@ class DashboardHeader extends StatelessWidget {
         AppSpacing.x5,
         topInset + AppSpacing.x4,
         AppSpacing.x5,
-        AppSpacing.x6,
+        _bottomReserve,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        // Bottom-aligned so the block hugs the text; any slack from
-        // [_minHeight] falls above the eyebrow rather than below the date.
-        mainAxisAlignment: MainAxisAlignment.end,
+        // Top-aligned: the slack belongs below the date line, where the
+        // cards land, not above the eyebrow.
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
