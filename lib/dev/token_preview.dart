@@ -4,7 +4,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_typography.dart';
 import '../core/utils/formatters.dart';
-import '../features/dashboard/presentation/widgets/dashboard_header.dart';
+import '../admin/dashboard/presentation/widgets/dashboard_header.dart';
 
 /// Throwaway screen that renders every design token so they can be eyeballed
 /// against the design. Delete once the real screens exist — nothing should
