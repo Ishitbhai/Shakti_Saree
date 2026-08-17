@@ -4,6 +4,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_typography.dart';
 import '../core/utils/formatters.dart';
+import '../features/dashboard/presentation/widgets/dashboard_header.dart';
 
 /// Throwaway screen that renders every design token so they can be eyeballed
 /// against the design. Delete once the real screens exist — nothing should
@@ -16,8 +17,12 @@ class TokenPreview extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Token Preview')),
       body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.pagePadding),
+        // Zero here so the header can bleed to the edges; sections pad
+        // themselves instead.
+        padding: EdgeInsets.zero,
         children: const [
+          DashboardHeader(),
+          SizedBox(height: AppSpacing.x6),
           _Section(title: 'Colours', child: _ColourGrid()),
           _Section(title: 'Type scale', child: _TypeSpecimens()),
           _Section(title: 'Formatters', child: _FormatterSamples()),
@@ -38,7 +43,12 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.x8),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pagePadding,
+        0,
+        AppSpacing.pagePadding,
+        AppSpacing.x8,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
