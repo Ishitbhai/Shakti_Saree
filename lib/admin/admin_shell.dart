@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'admin_destinations.dart';
-import 'widgets/admin_sidebar.dart';
-import 'widgets/admin_top_bar.dart';
+import 'widgets/admin_app_bar.dart';
 
-/// Frame around every admin screen: sidebar + top bar + the active screen.
+/// Frame around the admin tabs: app bar on top, bottom navigation below.
 ///
-/// Above [_wideBreakpoint] the sidebar is permanent; below it, it collapses
-/// into a drawer opened from the top bar's menu button.
+/// Tab screens are kept alive in an [IndexedStack] so scroll position and any
+/// in-progress form input survive switching tabs — expected behaviour on a
+/// phone, where tabs get switched constantly.
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
-
-  static const double _wideBreakpoint = 1100;
 
   @override
   State<AdminShell> createState() => _AdminShellState();
@@ -22,46 +20,25 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide =
-        MediaQuery.sizeOf(context).width >= AdminShell._wideBreakpoint;
-    final destination = adminDestinations[_selectedIndex];
-
     return Scaffold(
-      drawer: isWide
-          ? null
-          : Drawer(
-              width: 260,
-              child: AdminSidebar(
-                selectedIndex: _selectedIndex,
-                onSelect: (index) {
-                  setState(() => _selectedIndex = index);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ),
-      body: Row(
+      appBar: AdminAppBar(title: adminTabs[_selectedIndex].label),
+      body: IndexedStack(
+        index: _selectedIndex,
         children: [
-          if (isWide)
-            AdminSidebar(
-              selectedIndex: _selectedIndex,
-              onSelect: (index) => setState(() => _selectedIndex = index),
+          for (final tab in adminTabs) tab.screenBuilder(),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) =>
+            setState(() => _selectedIndex = index),
+        destinations: [
+          for (final tab in adminTabs)
+            NavigationDestination(
+              icon: Icon(tab.icon),
+              selectedIcon: Icon(tab.selectedIcon),
+              label: tab.label,
             ),
-          Expanded(
-            child: Column(
-              children: [
-                AdminTopBar(
-                  title: destination.label,
-                  showMenuButton: !isWide,
-                ),
-                Expanded(
-                  child: KeyedSubtree(
-                    key: ValueKey(_selectedIndex),
-                    child: destination.screenBuilder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
