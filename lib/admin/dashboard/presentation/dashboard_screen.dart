@@ -82,7 +82,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   StatGrid(),
                   SizedBox(height: AppSpacing.x6),
                   BrandMonogram(),
-                  SizedBox(height: AppSpacing.x6),
+                  // Wider than the gap above it — the design lets the
+                  // monogram breathe before the list starts.
+                  SizedBox(height: AppSpacing.x16),
                   RecentOrdersSection(orders: _recentOrders),
                   SizedBox(height: AppSpacing.x6),
                 ],

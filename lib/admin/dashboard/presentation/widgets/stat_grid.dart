@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import 'brand_plate.dart';
 import 'stat_card.dart';
@@ -49,6 +50,8 @@ class StatGrid extends StatelessWidget {
                     icon: Icons.inventory_2,
                     value: 320,
                     label: 'Products',
+                    iconBackground: AppColors.infoBg,
+                    iconColor: AppColors.info,
                   ),
                 ),
                 SizedBox(width: _gutter),
@@ -57,6 +60,8 @@ class StatGrid extends StatelessWidget {
                     icon: Icons.group,
                     value: 2150,
                     label: 'Customers',
+                    iconBackground: AppColors.warningBg,
+                    iconColor: AppColors.warning,
                   ),
                 ),
               ],

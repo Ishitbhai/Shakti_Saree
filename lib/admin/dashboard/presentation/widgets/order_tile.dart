@@ -50,7 +50,7 @@ class OrderTile extends StatelessWidget {
                         height: _iconCircle,
                         width: _iconCircle,
                         decoration: const BoxDecoration(
-                          color: AppColors.background,
+                          color: AppColors.tintMaroon,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(

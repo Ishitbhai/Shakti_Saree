@@ -15,12 +15,21 @@ class StatCard extends StatelessWidget {
     required this.icon,
     required this.value,
     required this.label,
+    this.iconBackground = AppColors.tintMaroon,
+    this.iconColor = AppColors.primary,
     this.onTap,
   });
 
   final IconData icon;
   final int value;
   final String label;
+
+  /// Chip fill behind the icon. Each KPI carries its own tint in the design.
+  final Color iconBackground;
+
+  /// Icon stroke, paired with [iconBackground].
+  final Color iconColor;
+
   final VoidCallback? onTap;
 
   /// Floor, not a fixed height — the card still grows with its content.
@@ -67,16 +76,12 @@ class StatCard extends StatelessWidget {
                           height: _iconTile,
                           width: _iconTile,
                           decoration: BoxDecoration(
-                            color: AppColors.tintMaroon,
+                            color: iconBackground,
                             borderRadius: BorderRadius.circular(
                               _iconTileRadius,
                             ),
                           ),
-                          child: Icon(
-                            icon,
-                            size: _iconSize,
-                            color: AppColors.primary,
-                          ),
+                          child: Icon(icon, size: _iconSize, color: iconColor),
                         ),
                         const SizedBox(height: AppSpacing.x2),
                         Text(
