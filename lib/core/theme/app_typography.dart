@@ -47,6 +47,16 @@ class AppTypography {
     color: AppColors.textDark,
   );
 
+  /// The two-letter mark inside the gold monogram circle. Larger than any
+  /// display style, so it gets its own entry.
+  static TextStyle get monogram => GoogleFonts.playfairDisplay(
+    fontSize: 40,
+    fontWeight: FontWeight.w700,
+    height: 1,
+    letterSpacing: 1,
+    color: AppColors.textOnAccent,
+  );
+
   /// The gold brand plate on the dashboard. Heavier and wider-tracked than
   /// any display style, so it gets its own entry rather than a copyWith.
   static TextStyle get brandPlate => GoogleFonts.playfairDisplay(
@@ -160,6 +170,7 @@ class AppTypography {
     'displayLarge': displayLarge,
     'displayMedium': displayMedium,
     'displaySmall': displaySmall,
+    'monogram': monogram,
     'brandPlate': brandPlate,
     'statValue': statValue,
     'sectionTitle': sectionTitle,

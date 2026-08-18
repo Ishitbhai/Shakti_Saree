@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../shell/presentation/widgets/admin_bottom_nav.dart';
+import '../domain/dashboard_order.dart';
+import 'widgets/brand_monogram.dart';
 import 'widgets/dashboard_header.dart';
+import 'widgets/recent_orders_section.dart';
 import 'widgets/stat_grid.dart';
 
-/// First assembly of the admin dashboard: header with the stat grid hanging
-/// past its rounded bottom edge.
-class DashboardScreen extends StatelessWidget {
+/// The admin dashboard: header, stat grid, brand monogram and recent orders.
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   /// Exact height of the maroon block.
@@ -23,7 +27,32 @@ class DashboardScreen extends StatelessWidget {
   static const double minCardGap = 12;
 
   /// Where the grid starts, measured from the top of the stack.
-  static const double _gridTop = headerHeight - cardOverlap;
+  static const double gridTop = headerHeight - cardOverlap;
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _navIndex = 0;
+
+  /// Hardcoded until the repository lands in Phase 6.
+  static const List<DashboardOrder> _recentOrders = [
+    DashboardOrder(
+      id: '#SS20260726',
+      customer: 'Priyanshu K.',
+      itemCount: 3,
+      amountPaise: 629700,
+      status: OrderStatus.isNew,
+    ),
+    DashboardOrder(
+      id: '#SS20260725',
+      customer: 'Vivek M.',
+      itemCount: 3,
+      amountPaise: 249900,
+      status: OrderStatus.packed,
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -40,23 +69,32 @@ class DashboardScreen extends StatelessWidget {
               top: 0,
               left: 0,
               right: 0,
-              child: DashboardHeader(height: headerHeight),
+              child: DashboardHeader(height: DashboardScreen.headerHeight),
             ),
             // Unpositioned, so this is what gives the Stack its height — the
             // offset is real layout, not a paint-time translation, and the
-            // scroll extent covers the grid.
+            // scroll extent covers everything below.
             Padding(
-              padding: const EdgeInsets.only(top: _gridTop),
+              padding: const EdgeInsets.only(top: DashboardScreen.gridTop),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   StatGrid(),
-                  // Phase 4+ sections go here.
+                  SizedBox(height: AppSpacing.x6),
+                  BrandMonogram(),
+                  SizedBox(height: AppSpacing.x6),
+                  RecentOrdersSection(orders: _recentOrders),
+                  SizedBox(height: AppSpacing.x6),
                 ],
               ),
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: AdminBottomNav(
+        currentIndex: _navIndex,
+        // Tabs are inert until the router lands.
+        onSelect: (index) => setState(() => _navIndex = index),
       ),
     );
   }
