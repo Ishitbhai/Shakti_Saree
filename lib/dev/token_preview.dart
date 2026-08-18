@@ -4,6 +4,7 @@ import '../core/theme/app_colors.dart';
 import '../core/theme/app_spacing.dart';
 import '../core/theme/app_typography.dart';
 import '../core/utils/formatters.dart';
+import '../admin/dashboard/presentation/dashboard_screen.dart';
 import '../admin/dashboard/presentation/widgets/dashboard_header.dart';
 
 /// Throwaway screen that renders every design token so they can be eyeballed
@@ -21,7 +22,7 @@ class TokenPreview extends StatelessWidget {
         // themselves instead.
         padding: EdgeInsets.zero,
         children: const [
-          DashboardHeader(),
+          DashboardHeader(height: DashboardScreen.headerHeight),
           SizedBox(height: AppSpacing.x6),
           _Section(title: 'Colours', child: _ColourGrid()),
           _Section(title: 'Type scale', child: _TypeSpecimens()),

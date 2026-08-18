@@ -11,32 +11,19 @@ import '../../../../core/utils/formatters.dart';
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({
     super.key,
+    required this.height,
     this.adminName = 'Admin',
     this.storeName = 'Shakti Saree',
     this.onAvatarTap,
   });
 
+  /// Exact block height. Owned by [DashboardScreen], which also owns the card
+  /// overlap — the two only make sense together, so neither is declared here.
+  final double height;
+
   final String adminName;
   final String storeName;
   final VoidCallback? onAvatarTap;
-
-  /// Design height. A minimum rather than a fixed size so the block grows
-  /// instead of clipping when the platform text scale is turned up.
-  static const double minHeight = 200;
-
-  /// How far the stat grid is lifted into this block. Owned here, next to the
-  /// padding that reserves room for it — [DashboardScreen] reads it rather
-  /// than declaring its own copy.
-  static const double cardOverlap = 40;
-
-  /// Clear space demanded between the date line and the top of the cards.
-  static const double minCardGap = 12;
-
-  /// Empty runway kept below the text for the cards to sit in. Deriving it
-  /// from the two constants above is what guarantees the gap survives a
-  /// notch and a large text scale: the block grows, so the cards move down
-  /// with it.
-  static const double _bottomReserve = cardOverlap + minCardGap;
 
   static const double _avatarSize = 38;
 
@@ -47,7 +34,7 @@ class DashboardHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: minHeight),
+      height: height,
       decoration: const BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.vertical(
@@ -58,13 +45,14 @@ class DashboardHeader extends StatelessWidget {
         AppSpacing.x5,
         topInset + AppSpacing.x4,
         AppSpacing.x5,
-        _bottomReserve,
+        0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
-        // Top-aligned: the slack belongs below the date line, where the
-        // cards land, not above the eyebrow.
+        // Top-aligned, in reading order. The leftover space at the bottom is
+        // the runway the cards land on — nothing may push into it.
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
