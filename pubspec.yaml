@@ -51,6 +51,15 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# path_provider_android 2.3.x pulls in package:jni, whose Gradle module fails
+# to configure under AGP 8.11 (":jni:compileDebugJavaWithJavac" cannot resolve
+# its dependencies). Nothing here uses path_provider directly — it arrives via
+# google_fonts' font cache — so pinning to the last pre-JNI release keeps the
+# Android build working. Drop this once package:jni builds cleanly, or once
+# the fonts are bundled as assets and google_fonts is removed.
+dependency_overrides:
+  path_provider_android: 2.2.17
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
