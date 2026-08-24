@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../shell/presentation/widgets/admin_bottom_nav.dart';
 import '../domain/dashboard_order.dart';
 import 'widgets/brand_monogram.dart';
 import 'widgets/dashboard_header.dart';
@@ -10,7 +9,9 @@ import 'widgets/recent_orders_section.dart';
 import 'widgets/stat_grid.dart';
 
 /// The admin dashboard: header, stat grid, brand monogram and recent orders.
-class DashboardScreen extends StatefulWidget {
+///
+/// The bottom bar belongs to the shell that hosts this tab, not here.
+class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   /// Exact height of the maroon block.
@@ -29,14 +30,7 @@ class DashboardScreen extends StatefulWidget {
   /// Where the grid starts, measured from the top of the stack.
   static const double gridTop = headerHeight - cardOverlap;
 
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  int _navIndex = 0;
-
-  /// Hardcoded until the repository lands in Phase 6.
+  /// Hardcoded until the repository lands.
   static const List<DashboardOrder> _recentOrders = [
     DashboardOrder(
       id: '#SS20260726',
@@ -69,14 +63,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: 0,
               left: 0,
               right: 0,
-              child: DashboardHeader(height: DashboardScreen.headerHeight),
+              child: DashboardHeader(height: headerHeight),
             ),
             // Unpositioned, so this is what gives the Stack its height — the
             // offset is real layout, not a paint-time translation, and the
             // scroll extent covers everything below.
-            Padding(
-              padding: const EdgeInsets.only(top: DashboardScreen.gridTop),
-              child: const Column(
+            const Padding(
+              padding: EdgeInsets.only(top: gridTop),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   StatGrid(),
@@ -92,11 +86,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: AdminBottomNav(
-        currentIndex: _navIndex,
-        // Tabs are inert until the router lands.
-        onSelect: (index) => setState(() => _navIndex = index),
       ),
     );
   }

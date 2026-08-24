@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'admin/dashboard/presentation/dashboard_screen.dart';
+import 'admin/shell/presentation/admin_shell.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 
@@ -37,8 +37,8 @@ class ShaktiSareeAdminApp extends StatelessWidget {
       // Light-only app — no dark theme is supplied, so this pins it
       // regardless of the device setting.
       themeMode: ThemeMode.light,
-      // TEMPORARY: points straight at the dashboard until the router lands.
-      home: const DashboardScreen(),
+      // TEMPORARY: the tab shell stands in until go_router lands.
+      home: const AdminShell(),
     );
   }
 }

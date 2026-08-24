@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/tinted_pill.dart';
 import '../../domain/dashboard_order.dart';
 
-/// Small rounded chip showing an order's status.
+/// Status chip for an order.
 ///
-/// The status-to-colour mapping lives here rather than on [OrderStatus] so
-/// the domain layer stays free of anything visual.
+/// The status-to-colour mapping lives here rather than on [OrderStatus] so the
+/// domain layer stays free of anything visual.
 class StatusPill extends StatelessWidget {
   const StatusPill({super.key, required this.status});
 
@@ -40,20 +39,10 @@ class StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = _palette;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.x3,
-        vertical: AppSpacing.x1,
-      ),
-      decoration: BoxDecoration(
-        color: palette.background,
-        borderRadius: AppRadii.pillRadius,
-      ),
-      child: Text(
-        status.label,
-        style: AppTypography.pill.copyWith(color: palette.foreground),
-      ),
+    return TintedPill(
+      label: status.label,
+      background: palette.background,
+      foreground: palette.foreground,
     );
   }
 }
