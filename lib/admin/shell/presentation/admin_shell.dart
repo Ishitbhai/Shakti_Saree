@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../dashboard/presentation/dashboard_screen.dart';
+import '../../orders/presentation/orders_screen.dart';
 import '../../products/presentation/products_screen.dart';
 import 'widgets/admin_bottom_nav.dart';
 
@@ -30,7 +31,7 @@ class _AdminShellState extends State<AdminShell> {
         children: const [
           DashboardScreen(),
           ProductsScreen(),
-          _NotBuiltYet(title: 'Orders'),
+          OrdersScreen(),
           _NotBuiltYet(title: 'Users'),
           _NotBuiltYet(title: 'More'),
         ],

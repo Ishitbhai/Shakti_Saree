@@ -1,18 +1,4 @@
-/// Where an order sits in the fulfilment flow.
-///
-/// `isNew` rather than `new`, which is a reserved word.
-enum OrderStatus {
-  isNew('New'),
-  packed('Packed'),
-  shipped('Shipped'),
-  delivered('Delivered'),
-  cancelled('Cancelled');
-
-  const OrderStatus(this.label);
-
-  /// Text shown on the status pill.
-  final String label;
-}
+import '../../shared/domain/order_status.dart';
 
 /// One row of the dashboard's recent-orders list.
 ///

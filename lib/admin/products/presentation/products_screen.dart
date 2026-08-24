@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
+import '../../shared/widgets/admin_page_header.dart';
 import '../domain/product.dart';
 import 'widgets/product_tile.dart';
 
@@ -12,7 +13,6 @@ class ProductsScreen extends StatelessWidget {
   const ProductsScreen({super.key});
 
   static const double _screenPadding = AppSpacing.x5;
-  static const double _iconButton = 40;
 
   /// Hardcoded until the repository lands.
   static const List<Product> _products = [
@@ -65,7 +65,14 @@ class ProductsScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _ProductsAppBar(total: _products.length),
+            AdminPageHeader(
+              title: 'Products',
+              subtitle: '${Formatters.count(_products.length)} total',
+              action: const AdminHeaderAction(
+                icon: Icons.add,
+                label: 'Add product',
+              ),
+            ),
             const Padding(
               padding: EdgeInsets.fromLTRB(
                 _screenPadding,
@@ -93,85 +100,6 @@ class ProductsScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductsAppBar extends StatelessWidget {
-  const _ProductsAppBar({required this.total});
-
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        ProductsScreen._screenPadding,
-        AppSpacing.x4,
-        ProductsScreen._screenPadding,
-        AppSpacing.x2,
-      ),
-      child: Row(
-        children: [
-          _SquareIconButton(
-            icon: Icons.arrow_back,
-            label: 'Back',
-            // Only pops when this screen was pushed; inside the tab shell
-            // there is nothing to go back to.
-            onTap: Navigator.canPop(context)
-                ? () => Navigator.pop(context)
-                : null,
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text('Products', style: AppTypography.displaySmall),
-                Text(
-                  '${Formatters.count(total)} total',
-                  style: AppTypography.caption,
-                ),
-              ],
-            ),
-          ),
-          const _SquareIconButton(icon: Icons.add, label: 'Add product'),
-        ],
-      ),
-    );
-  }
-}
-
-class _SquareIconButton extends StatelessWidget {
-  const _SquareIconButton({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      button: true,
-      child: Material(
-        color: AppColors.surface,
-        clipBehavior: Clip.antiAlias,
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadii.cardRadius,
-          side: BorderSide(color: AppColors.border),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            height: ProductsScreen._iconButton,
-            width: ProductsScreen._iconButton,
-            child: Icon(icon, size: 20, color: AppColors.textDark),
-          ),
         ),
       ),
     );
