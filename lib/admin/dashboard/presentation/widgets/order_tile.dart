@@ -5,7 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../domain/dashboard_order.dart';
-import 'status_pill.dart';
+import '../../../shared/widgets/status_pill.dart';
 
 /// One row in the recent-orders list.
 class OrderTile extends StatelessWidget {
@@ -22,7 +22,7 @@ class OrderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final amount = Formatters.rupeesFromPaise(order.amountPaise);
-    final items = '${Formatters.count(order.itemCount)} items';
+    final items = Formatters.items(order.itemCount);
 
     return MergeSemantics(
       child: Semantics(

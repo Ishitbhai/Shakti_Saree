@@ -32,4 +32,28 @@ class Formatters {
 
   /// `26 Jul 2026`.
   static String date(DateTime value) => _date.format(value);
+
+  /// How long ago something happened, worded the way the designs word it.
+  ///
+  /// Falls back to [date] past a week, because '23 days ago' reads worse than
+  /// the date itself. Pass [now] to make callers testable.
+  static String relativeTime(DateTime value, {DateTime? now}) {
+    final elapsed = (now ?? DateTime.now()).difference(value);
+
+    if (elapsed.inMinutes < 1) return 'just now';
+    if (elapsed.inMinutes < 60) return '${elapsed.inMinutes} min ago';
+    if (elapsed.inHours < 24) {
+      final plural = elapsed.inHours == 1 ? '' : 's';
+      return '${elapsed.inHours} hour$plural ago';
+    }
+    if (elapsed.inDays == 1) return 'yesterday';
+    if (elapsed.inDays < 7) return '${elapsed.inDays} days ago';
+    return date(value);
+  }
+
+  /// `1 item` / `3 items` — the singular matters in the designs.
+  static String items(int quantity) {
+    final plural = quantity == 1 ? '' : 's';
+    return '${count(quantity)} item$plural';
+  }
 }
