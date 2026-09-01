@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shakti_saree/user/screens/checkout_screen.dart';
 
 void main() {
   runApp(const ShaktiSareeAdminApp());
@@ -18,7 +19,7 @@ class ShaktiSareeAdminApp extends StatelessWidget {
       // Light-only app — no dark theme is supplied, so this pins it
       // regardless of the device setting.
       themeMode: ThemeMode.light,
-      home: const Placeholder(),
+      home: const CheckoutScreen(),
     );
   }
 }
