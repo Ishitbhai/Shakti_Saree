@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import '../widgets/app_back_button.dart';
+import 'order_success_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -343,7 +344,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     height: 52,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Navigation will be added later
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const OrderSuccessScreen(),
+                          ),
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
