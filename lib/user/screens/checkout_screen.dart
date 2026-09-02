@@ -394,15 +394,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     required bool isActive,
   }) {
     return Container(
-      width: 25,
-      height: 25,
+      width: 28,
+      height: 28,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: isActive ? AppColors.primary : AppColors.muted,
         shape: BoxShape.circle,
       ),
+
       child: icon != null
-          ? const Icon(Icons.check, color: AppColors.white, size: 15)
+          ? Icon(icon, color: AppColors.white, size: 16)
           : Text(
               number ?? '',
               style: AppTextStyles.caption.copyWith(
@@ -412,7 +413,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
     );
   }
-
   // ================= RADIO BUTTON =================
 
   Widget _buildRadioButton(bool isSelected) {
