@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
+import '../widgets/app_back_button.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -30,30 +31,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   children: [
                     Text('Checkout', style: AppTextStyles.pageTitle),
 
-                    Align(
+                    const Align(
                       alignment: Alignment.centerLeft,
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(13),
-                            border: Border.all(
-                              color: AppColors.muted,
-                              width: 1,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back,
-                            color: AppColors.black,
-                            size: 22,
-                          ),
-                        ),
-                      ),
+                      child: AppBackButton(),
                     ),
                   ],
                 ),
