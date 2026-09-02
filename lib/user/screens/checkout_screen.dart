@@ -45,116 +45,132 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             // ================= PROGRESS INDICATOR =================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
-              child: Column(
-                children: [
-                  // Circles and connecting lines
-                  SizedBox(
-                    height: 25,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Lines behind circles
-                        Positioned(
-                          left: 55,
-                          right: 55,
-                          top: 12,
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 1.5,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              Expanded(
-                                child: Container(
-                                  height: 1,
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Available width of the progress indicator
+                  final double totalWidth = constraints.maxWidth;
 
-                        // Circles
-                        Row(
+                  // Width of each circle
+                  const double circleSize = 28;
+
+                  // Distance between the center of each step
+                  final double stepWidth = totalWidth / 3;
+
+                  return Column(
+                    children: [
+                      // ================= CIRCLES + LINES =================
+                      SizedBox(
+                        height: circleSize,
+                        child: Stack(
                           children: [
-                            Expanded(
-                              child: Center(
-                                child: _buildStepCircle(
-                                  icon: Icons.check,
-                                  isActive: true,
-                                ),
+                            // ================= CONNECTING LINES =================
+
+                            // First Line
+                            Positioned(
+                              left: stepWidth / 2,
+                              top: circleSize / 2 - 1,
+                              width: stepWidth,
+                              child: Container(
+                                height: 2,
+                                color: AppColors.primary,
                               ),
                             ),
-                            Expanded(
-                              child: Center(
-                                child: _buildStepCircle(
-                                  number: '2',
-                                  isActive: true,
-                                ),
+
+                            // Second Line
+                            Positioned(
+                              left: stepWidth + (stepWidth / 2),
+                              top: circleSize / 2 - 1,
+                              width: stepWidth,
+                              child: Container(
+                                height: 2,
+                                color: AppColors.muted,
                               ),
                             ),
-                            Expanded(
-                              child: Center(
-                                child: _buildStepCircle(
-                                  number: '3',
-                                  isActive: false,
+
+                            // ================= CIRCLES =================
+                            Row(
+                              children: [
+                                // STEP 1
+                                Expanded(
+                                  child: Center(
+                                    child: _buildStepCircle(
+                                      icon: Icons.check,
+                                      isActive: true,
+                                    ),
+                                  ),
                                 ),
-                              ),
+
+                                // STEP 2
+                                Expanded(
+                                  child: Center(
+                                    child: _buildStepCircle(
+                                      number: '2',
+                                      isActive: true,
+                                    ),
+                                  ),
+                                ),
+
+                                // STEP 3
+                                Expanded(
+                                  child: Center(
+                                    child: _buildStepCircle(
+                                      number: '3',
+                                      isActive: false,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  // Labels - EXACTLY CENTERED BELOW CIRCLES
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            'Address',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
                       ),
 
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            'Payment',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ),
+                      const SizedBox(height: 8),
 
-                      Expanded(
-                        child: Center(
-                          child: Text(
-                            'Confirm',
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.muted,
+                      // ================= LABELS =================
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Address',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Payment',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Confirm',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
               ),
             ),
-
             // ================= SCROLLABLE CONTENT =================
             Expanded(
               child: SingleChildScrollView(
