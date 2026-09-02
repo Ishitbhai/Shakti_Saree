@@ -22,7 +22,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER =================
             Padding(
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
               child: SizedBox(
@@ -42,30 +41,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
 
             const SizedBox(height: 10),
-            // ================= PROGRESS INDICATOR =================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  // Available width of the progress indicator
                   final double totalWidth = constraints.maxWidth;
 
-                  // Width of each circle
                   const double circleSize = 28;
 
-                  // Distance between the center of each step
                   final double stepWidth = totalWidth / 3;
 
                   return Column(
                     children: [
-                      // ================= CIRCLES + LINES =================
                       SizedBox(
                         height: circleSize,
                         child: Stack(
                           children: [
-                            // ================= CONNECTING LINES =================
 
-                            // First Line
                             Positioned(
                               left: stepWidth / 2,
                               top: circleSize / 2 - 1,
@@ -76,7 +68,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
 
-                            // Second Line
                             Positioned(
                               left: stepWidth + (stepWidth / 2),
                               top: circleSize / 2 - 1,
@@ -87,10 +78,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
 
-                            // ================= CIRCLES =================
                             Row(
                               children: [
-                                // STEP 1
                                 Expanded(
                                   child: Center(
                                     child: _buildStepCircle(
@@ -100,7 +89,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ),
                                 ),
 
-                                // STEP 2
                                 Expanded(
                                   child: Center(
                                     child: _buildStepCircle(
@@ -110,7 +98,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ),
                                 ),
 
-                                // STEP 3
                                 Expanded(
                                   child: Center(
                                     child: _buildStepCircle(
@@ -127,7 +114,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                       const SizedBox(height: 8),
 
-                      // ================= LABELS =================
                       Row(
                         children: [
                           Expanded(
@@ -171,19 +157,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 },
               ),
             ),
-            // ================= SCROLLABLE CONTENT =================
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ================= DELIVERY ADDRESS =================
                     Text('Delivery Address', style: AppTextStyles.sectionTitle),
 
                     const SizedBox(height: 10),
 
-                    // Address Card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(14),
@@ -197,12 +180,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Selected Radio
                           _buildRadioButton(true),
 
                           const SizedBox(width: 12),
 
-                          // Address Details
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +254,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     const SizedBox(height: 14),
 
-                    // ================= ADD NEW ADDRESS =================
                     GestureDetector(
                       onTap: () {},
                       child: Row(
@@ -298,12 +278,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     const SizedBox(height: 24),
 
-                    // ================= PAYMENT METHOD =================
                     Text('Payment Method', style: AppTextStyles.sectionTitle),
 
                     const SizedBox(height: 10),
 
-                    // UPI
                     _buildPaymentOption(
                       title: 'UPI / GPay / PhonePe',
                       value: 'UPI',
@@ -312,7 +290,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     const SizedBox(height: 12),
 
-                    // COD
                     _buildPaymentOption(
                       title: 'Cash on Delivery',
                       value: 'COD',
@@ -323,7 +300,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
 
-            // ================= BOTTOM PAYMENT =================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
@@ -335,7 +311,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
               child: Row(
                 children: [
-                  // Total Amount
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +329,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   ),
 
-                  // Pay Button
                   SizedBox(
                     width: 180,
                     height: 52,
@@ -386,7 +360,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ================= STEP CIRCLE =================
 
   Widget _buildStepCircle({
     IconData? icon,
@@ -413,7 +386,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
     );
   }
-  // ================= RADIO BUTTON =================
 
   Widget _buildRadioButton(bool isSelected) {
     return Container(
@@ -442,7 +414,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ================= PAYMENT OPTION =================
 
   Widget _buildPaymentOption({
     required String title,
