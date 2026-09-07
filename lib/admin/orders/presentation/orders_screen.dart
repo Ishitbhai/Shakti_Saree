@@ -7,6 +7,8 @@ import '../../../core/utils/formatters.dart';
 import '../../shared/domain/order_status.dart';
 import '../../shared/widgets/admin_page_header.dart';
 import '../domain/admin_order.dart';
+import '../domain/order_detail.dart';
+import 'order_detail_screen.dart';
 import 'widgets/order_card.dart';
 import 'widgets/status_filter_chips.dart';
 
@@ -64,6 +66,68 @@ class _OrdersScreenState extends State<OrdersScreen> {
     ];
   }
 
+  /// Builds the fuller record the detail screen needs.
+  ///
+  /// The lines, address and payment breakdown are sample data — the list only
+  /// carries a summary, and the repository will supply the rest.
+  OrderDetail _detailFor(AdminOrder order) {
+    final placed = order.placedAt;
+
+    return OrderDetail(
+      id: order.id,
+      customer: 'Priyanshu Kateshiya',
+      phone: order.phone,
+      address: '301, Shakti Complex, Kalawad Road, Rajkot, Gujarat - 360005',
+      placedAt: placed,
+      status: order.status,
+      paidVia: 'UPI',
+      discountPaise: 50000,
+      timeline: [
+        OrderEvent(label: 'Order Placed', at: placed),
+        OrderEvent(
+          label: 'Payment Confirmed',
+          at: placed.add(const Duration(minutes: 1)),
+        ),
+        OrderEvent(
+          label: 'Packed',
+          at: order.status == OrderStatus.isNew
+              ? null
+              : placed.add(const Duration(hours: 3, minutes: 28)),
+        ),
+        const OrderEvent(label: 'Shipped'),
+      ],
+      lines: const [
+        OrderLine(
+          name: 'Banarasi Silk Saree',
+          sku: 'SS-1024',
+          quantity: 1,
+          pricePaise: 249900,
+        ),
+        OrderLine(
+          name: 'Kanjivaram Pure Silk',
+          sku: 'SS-1025',
+          quantity: 1,
+          pricePaise: 329900,
+        ),
+      ],
+    );
+  }
+
+  void _openDetail(AdminOrder order) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        // Enabled but inert: styling comes from the design, the handlers
+        // land with the repository.
+        builder: (_) => OrderDetailScreen(
+          detail: _detailFor(order),
+          onCall: () {},
+          onInvoice: () {},
+          onAdvanceStatus: () {},
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final orders = _orders;
@@ -101,10 +165,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
                           const SizedBox(height: AppSpacing.x4),
                       itemBuilder: (context, index) => OrderCard(
                         order: visible[index],
-                        // Enabled but inert: the buttons are styled from the
-                        // design, and the handlers land with the repository.
+                        // Inert until the repository lands; the button is
+                        // styled from the design either way.
                         onPrimaryAction: () {},
-                        onViewDetails: () {},
+                        onViewDetails: () => _openDetail(visible[index]),
                       ),
                     ),
             ),
