@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../shared/widgets/admin_page_header.dart';
+import '../shared/widgets/async_content.dart';
 import 'add_product_screen.dart';
 import 'product.dart';
 import 'products_repository.dart';
@@ -104,59 +105,25 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Widget _buildBody(List<Product>? products) {
-    final error = _error;
-    if (error != null) {
-      return _Message(text: error.message, onRetry: _load);
-    }
-    if (products == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (products.isEmpty) {
-      return const _Message(text: 'No products yet.');
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        ProductsScreen._screenPadding,
-        0,
-        ProductsScreen._screenPadding,
-        AppSpacing.x6,
-      ),
-      itemCount: products.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x3),
-      itemBuilder: (context, index) => ProductTile(
-        product: products[index],
-        swatch:
-            ProductsScreen._swatches[index % ProductsScreen._swatches.length],
-      ),
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message({required this.text, this.onRetry});
-
-  final String text;
-  final VoidCallback? onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(ProductsScreen._screenPadding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: AppTypography.bodySmall,
-            ),
-            if (onRetry != null) ...[
-              const SizedBox(height: AppSpacing.x3),
-              OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
-            ],
-          ],
+    return AsyncContent<List<Product>>(
+      value: products,
+      error: _error,
+      onRetry: _load,
+      isEmpty: (loaded) => loaded.isEmpty,
+      emptyMessage: 'No products yet.',
+      builder: (context, loaded) => ListView.separated(
+        padding: const EdgeInsets.fromLTRB(
+          ProductsScreen._screenPadding,
+          0,
+          ProductsScreen._screenPadding,
+          AppSpacing.x6,
+        ),
+        itemCount: loaded.length,
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x3),
+        itemBuilder: (context, index) => ProductTile(
+          product: loaded[index],
+          swatch:
+              ProductsScreen._swatches[index % ProductsScreen._swatches.length],
         ),
       ),
     );
