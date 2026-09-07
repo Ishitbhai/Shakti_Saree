@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'admin/shell/presentation/admin_shell.dart';
+import 'admin/shell/admin_shell.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 

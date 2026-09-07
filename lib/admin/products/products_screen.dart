@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/formatters.dart';
-import '../../shared/widgets/admin_page_header.dart';
-import '../domain/product.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/utils/formatters.dart';
+import '../shared/widgets/admin_page_header.dart';
+import 'product.dart';
 import 'add_product_screen.dart';
 import 'widgets/product_tile.dart';
 

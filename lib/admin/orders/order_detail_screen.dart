@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/formatters.dart';
-import '../../shared/widgets/admin_page_header.dart';
-import '../../shared/widgets/status_pill.dart';
-import '../domain/order_detail.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/utils/formatters.dart';
+import '../shared/widgets/admin_page_header.dart';
+import '../shared/widgets/status_pill.dart';
+import 'order_detail.dart';
 import 'widgets/order_timeline.dart';
 import 'widgets/payment_summary.dart';
 

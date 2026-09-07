@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../domain/dashboard_order.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../order.dart';
 import 'order_tile.dart';
 
 /// 'Recent Orders' heading with a 'View all' action, followed by the tiles.
