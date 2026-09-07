@@ -6,7 +6,7 @@ import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../shared/models/order_status.dart';
 import '../shared/widgets/admin_page_header.dart';
-import 'order.dart';
+import '../shared/models/order.dart';
 import 'order_detail.dart';
 import 'order_detail_screen.dart';
 import 'widgets/order_card.dart';
@@ -33,10 +33,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   /// Hardcoded until the repository lands. Timestamps are relative to now so
   /// the "16 min ago" wording stays true however long the demo runs.
-  static List<AdminOrder> get _orders {
+  static List<Order> get _orders {
     final now = DateTime.now();
     return [
-      AdminOrder(
+      Order(
         id: '#SS20260726',
         customer: 'priyanshu kateshiya',
         phone: '+91 98765 43210',
@@ -45,7 +45,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         status: OrderStatus.isNew,
         placedAt: now.subtract(const Duration(minutes: 16)),
       ),
-      AdminOrder(
+      Order(
         id: '#SS20260725',
         customer: 'Vivek Makvana',
         phone: '+91 90000 11111',
@@ -54,7 +54,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
         status: OrderStatus.isNew,
         placedAt: now.subtract(const Duration(hours: 1)),
       ),
-      AdminOrder(
+      Order(
         id: '#SS20260724',
         customer: 'Ishit vadhavana',
         phone: '+91 91234 56789',
@@ -70,13 +70,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
   ///
   /// The lines, address and payment breakdown are sample data — the list only
   /// carries a summary, and the repository will supply the rest.
-  OrderDetail _detailFor(AdminOrder order) {
-    final placed = order.placedAt;
+  OrderDetail _detailFor(Order order) {
+    // A detail record always has these; the summary type merely allows them
+    // to be absent, and every order in this list supplies both.
+    final placed = order.placedAt ?? DateTime.now();
 
     return OrderDetail(
       id: order.id,
       customer: 'Priyanshu Kateshiya',
-      phone: order.phone,
+      phone: order.phone ?? '',
       address: '301, Shakti Complex, Kalawad Road, Rajkot, Gujarat - 360005',
       placedAt: placed,
       status: order.status,
@@ -113,7 +115,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
     );
   }
 
-  void _openDetail(AdminOrder order) {
+  void _openDetail(Order order) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         // Enabled but inert: styling comes from the design, the handlers

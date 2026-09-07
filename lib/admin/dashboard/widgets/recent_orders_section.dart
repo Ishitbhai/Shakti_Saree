@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
-import '../order.dart';
+import '../../shared/models/order.dart';
 import 'order_tile.dart';
 
 /// 'Recent Orders' heading with a 'View all' action, followed by the tiles.
@@ -14,9 +14,9 @@ class RecentOrdersSection extends StatelessWidget {
     this.onOrderTap,
   });
 
-  final List<DashboardOrder> orders;
+  final List<Order> orders;
   final VoidCallback? onViewAll;
-  final ValueChanged<DashboardOrder>? onOrderTap;
+  final ValueChanged<Order>? onOrderTap;
 
   static const double _screenPadding = AppSpacing.x5;
 
