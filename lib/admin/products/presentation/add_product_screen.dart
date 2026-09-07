@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -26,6 +27,9 @@ class AddProductScreen extends StatefulWidget {
     'Daily Wear',
   ];
 
+  /// Cap on how many photos a listing can carry.
+  static const int maxImages = 5;
+
   @override
   State<AddProductScreen> createState() => _AddProductScreenState();
 }
@@ -42,6 +46,35 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   String _category = AddProductScreen.categories.first;
   bool _featured = true;
+
+  final _picker = ImagePicker();
+  final List<PickedImage> _images = [];
+
+  /// Opens the gallery and appends what comes back, up to the cap.
+  ///
+  /// Bytes are read here so the thumbnails render the same way on mobile and
+  /// on web, where a file path is a blob URL rather than something on disk.
+  Future<void> _pickImages() async {
+    final remaining = AddProductScreen.maxImages - _images.length;
+    if (remaining <= 0) return;
+
+    try {
+      final picked = await _picker.pickMultiImage(limit: remaining);
+      if (picked.isEmpty) return;
+
+      final loaded = [
+        for (final file in picked.take(remaining))
+          PickedImage(name: file.name, bytes: await file.readAsBytes()),
+      ];
+      if (!mounted) return;
+      setState(() => _images.addAll(loaded));
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open the gallery: $error')),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -74,7 +107,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
                   AppSpacing.x8,
                 ),
                 children: [
-                  const ImageUploadBox(),
+                  ImageUploadBox(
+                    images: _images,
+                    maxImages: AddProductScreen.maxImages,
+                    onAdd: _pickImages,
+                    onRemove: (index) =>
+                        setState(() => _images.removeAt(index)),
+                  ),
                   const SizedBox(height: AppSpacing.x5),
                   LabelledField(
                     label: 'Product Name',
