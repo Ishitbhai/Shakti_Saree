@@ -1,4 +1,4 @@
-import '../../shared/domain/order_status.dart';
+import '../shared/models/order_status.dart';
 
 /// One row of the dashboard's recent-orders list.
 ///

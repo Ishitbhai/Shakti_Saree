@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../dashboard/presentation/dashboard_screen.dart';
-import '../../orders/presentation/orders_screen.dart';
-import '../../products/presentation/products_screen.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_typography.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../orders/orders_screen.dart';
+import '../products/products_screen.dart';
 import 'widgets/admin_bottom_nav.dart';
 
 /// Holds the admin tabs and the bar that switches between them.

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/formatters.dart';
-import '../../shared/widgets/admin_page_header.dart';
-import '../../shared/widgets/labelled_field.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/utils/formatters.dart';
+import '../shared/widgets/admin_page_header.dart';
+import '../shared/widgets/labelled_field.dart';
 import 'widgets/image_upload_box.dart';
 
 /// Form for creating a product listing.

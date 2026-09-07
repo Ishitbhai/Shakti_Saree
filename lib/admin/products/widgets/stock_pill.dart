@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/tinted_pill.dart';
-import '../../domain/product.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/tinted_pill.dart';
+import '../product.dart';
 
 /// Stock chip for a product: the count when healthy, a warning otherwise.
 class StockPill extends StatelessWidget {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/formatters.dart';
-import '../../domain/dashboard_order.dart';
-import '../../../shared/widgets/status_pill.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/formatters.dart';
+import '../order.dart';
+import '../../shared/widgets/status_pill.dart';
 
 /// One row in the recent-orders list.
 class OrderTile extends StatelessWidget {

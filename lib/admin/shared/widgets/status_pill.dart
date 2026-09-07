@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/tinted_pill.dart';
-import '../domain/order_status.dart';
+import '../models/order_status.dart';
 
 /// Status chip for an order.
 ///

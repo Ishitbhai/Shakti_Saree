@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shakti_saree/admin/products/presentation/widgets/image_upload_box.dart';
+import 'package:shakti_saree/admin/products/widgets/image_upload_box.dart';
 import 'package:shakti_saree/core/theme/app_theme.dart';
 
 /// Smallest valid 1x1 PNG, so Image.memory has something real to decode.

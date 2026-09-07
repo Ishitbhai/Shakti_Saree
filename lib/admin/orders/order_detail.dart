@@ -1,4 +1,4 @@
-import '../../shared/domain/order_status.dart';
+import '../shared/models/order_status.dart';
 
 /// One product line on an order.
 class OrderLine {

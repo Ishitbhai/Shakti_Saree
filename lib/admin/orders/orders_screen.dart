@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/utils/formatters.dart';
-import '../../shared/domain/order_status.dart';
-import '../../shared/widgets/admin_page_header.dart';
-import '../domain/admin_order.dart';
-import '../domain/order_detail.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_typography.dart';
+import '../../core/utils/formatters.dart';
+import '../shared/models/order_status.dart';
+import '../shared/widgets/admin_page_header.dart';
+import 'order.dart';
+import 'order_detail.dart';
 import 'order_detail_screen.dart';
 import 'widgets/order_card.dart';
 import 'widgets/status_filter_chips.dart';
