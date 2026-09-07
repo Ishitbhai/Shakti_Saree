@@ -12,6 +12,10 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Shakti Saree needs your photo library to attach product images to a listing.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Shakti Saree needs the camera to photograph a product for a listing.</string>
 	<key>CFBundleName</key>
 	<string>shakti_saree</string>
 	<key>CFBundlePackageType</key>
