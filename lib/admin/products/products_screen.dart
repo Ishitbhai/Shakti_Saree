@@ -1,53 +1,24 @@
 import 'package:flutter/material.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
 import '../shared/widgets/admin_page_header.dart';
-import 'product.dart';
 import 'add_product_screen.dart';
+import 'product.dart';
+import 'products_repository.dart';
 import 'widgets/product_tile.dart';
 
 /// Admin product catalogue: search, then a scrolling list of products.
-class ProductsScreen extends StatelessWidget {
-  const ProductsScreen({super.key});
+class ProductsScreen extends StatefulWidget {
+  const ProductsScreen({super.key, this.repository});
+
+  /// Injectable so tests can supply their own catalogue or a failing one.
+  final ProductsRepository? repository;
 
   static const double _screenPadding = AppSpacing.x5;
-
-  /// Hardcoded until the repository lands.
-  static const List<Product> _products = [
-    Product(
-      name: 'Banarasi Silk Saree',
-      sku: 'SS-1024',
-      pricePaise: 249900,
-      stock: 24,
-    ),
-    Product(
-      name: 'Kanjivaram Pure Silk',
-      sku: 'SS-1025',
-      pricePaise: 329900,
-      stock: 12,
-    ),
-    Product(
-      name: 'Cotton Daily Saree',
-      sku: 'SS-1026',
-      pricePaise: 169900,
-      stock: 4,
-    ),
-    Product(
-      name: 'Georgette Party Wear',
-      sku: 'SS-1027',
-      pricePaise: 189900,
-      stock: 0,
-    ),
-    Product(
-      name: 'Paithani Silk Saree',
-      sku: 'SS-1028',
-      pricePaise: 415000,
-      stock: 8,
-    ),
-  ];
 
   /// Placeholder photo tints, cycled by list position so the same product
   /// always gets the same colour. Every entry is an existing token.
@@ -60,7 +31,40 @@ class ProductsScreen extends StatelessWidget {
   ];
 
   @override
+  State<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends State<ProductsScreen> {
+  late final ProductsRepository _repository =
+      widget.repository ?? const InMemoryProductsRepository();
+
+  List<Product>? _products;
+  ApiException? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final products = await _repository.fetchProducts();
+      if (!mounted) return;
+      setState(() {
+        _products = products;
+        _error = null;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final products = _products;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -68,7 +72,11 @@ class ProductsScreen extends StatelessWidget {
           children: [
             AdminPageHeader(
               title: 'Products',
-              subtitle: '${Formatters.count(_products.length)} total',
+              // Blank until the count is known, so the header keeps its
+              // height instead of jumping when the catalogue arrives.
+              subtitle: products == null
+                  ? ''
+                  : '${Formatters.count(products.length)} total',
               action: AdminHeaderAction(
                 icon: Icons.add,
                 label: 'Add product',
@@ -81,30 +89,73 @@ class ProductsScreen extends StatelessWidget {
             ),
             const Padding(
               padding: EdgeInsets.fromLTRB(
-                _screenPadding,
+                ProductsScreen._screenPadding,
                 AppSpacing.x2,
-                _screenPadding,
+                ProductsScreen._screenPadding,
                 AppSpacing.x4,
               ),
               child: _SearchField(),
             ),
-            Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  _screenPadding,
-                  0,
-                  _screenPadding,
-                  AppSpacing.x6,
-                ),
-                itemCount: _products.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AppSpacing.x3),
-                itemBuilder: (context, index) => ProductTile(
-                  product: _products[index],
-                  swatch: _swatches[index % _swatches.length],
-                ),
-              ),
+            Expanded(child: _buildBody(products)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(List<Product>? products) {
+    final error = _error;
+    if (error != null) {
+      return _Message(text: error.message, onRetry: _load);
+    }
+    if (products == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (products.isEmpty) {
+      return const _Message(text: 'No products yet.');
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        ProductsScreen._screenPadding,
+        0,
+        ProductsScreen._screenPadding,
+        AppSpacing.x6,
+      ),
+      itemCount: products.length,
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x3),
+      itemBuilder: (context, index) => ProductTile(
+        product: products[index],
+        swatch:
+            ProductsScreen._swatches[index % ProductsScreen._swatches.length],
+      ),
+    );
+  }
+}
+
+class _Message extends StatelessWidget {
+  const _Message({required this.text, this.onRetry});
+
+  final String text;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(ProductsScreen._screenPadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall,
             ),
+            if (onRetry != null) ...[
+              const SizedBox(height: AppSpacing.x3),
+              OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
+            ],
           ],
         ),
       ),
