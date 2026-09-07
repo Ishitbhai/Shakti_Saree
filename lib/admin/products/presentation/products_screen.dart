@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../shared/widgets/admin_page_header.dart';
 import '../domain/product.dart';
+import 'add_product_screen.dart';
 import 'widgets/product_tile.dart';
 
 /// Admin product catalogue: search, then a scrolling list of products.
@@ -68,9 +69,14 @@ class ProductsScreen extends StatelessWidget {
             AdminPageHeader(
               title: 'Products',
               subtitle: '${Formatters.count(_products.length)} total',
-              action: const AdminHeaderAction(
+              action: AdminHeaderAction(
                 icon: Icons.add,
                 label: 'Add product',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AddProductScreen(),
+                  ),
+                ),
               ),
             ),
             const Padding(
