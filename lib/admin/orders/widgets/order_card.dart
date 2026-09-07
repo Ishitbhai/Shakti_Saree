@@ -5,7 +5,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
 import '../../shared/widgets/status_pill.dart';
-import '../order.dart';
+import '../../shared/models/order.dart';
 
 /// One order in the admin list: header, customer details, and the two actions.
 class OrderCard extends StatelessWidget {
@@ -16,7 +16,7 @@ class OrderCard extends StatelessWidget {
     this.onViewDetails,
   });
 
-  final AdminOrder order;
+  final Order order;
 
   /// Accept / Ship / Mark Delivered, depending on the status.
   final VoidCallback? onPrimaryAction;
@@ -31,6 +31,10 @@ class OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final action = order.status.nextActionLabel;
+    // A summary Order may carry neither; the list always supplies both, but
+    // the type allows their absence so the rows are dropped rather than faked.
+    final placedAt = order.placedAt;
+    final phone = order.phone;
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -57,12 +61,13 @@ class OrderCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.titleMedium,
                       ),
-                      Text(
-                        Formatters.relativeTime(order.placedAt),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.caption,
-                      ),
+                      if (placedAt != null)
+                        Text(
+                          Formatters.relativeTime(placedAt),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption,
+                        ),
                     ],
                   ),
                 ),
@@ -99,8 +104,10 @@ class OrderCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.x2),
-            _Detail(icon: Icons.call_outlined, text: order.phone),
+            if (phone != null) ...[
+              const SizedBox(height: AppSpacing.x2),
+              _Detail(icon: Icons.call_outlined, text: phone),
+            ],
             const SizedBox(height: AppSpacing.x4),
             Row(
               children: [

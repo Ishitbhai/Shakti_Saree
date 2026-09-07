@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../shared/models/order_status.dart';
-import 'order.dart';
+import '../shared/models/order.dart';
 import 'widgets/brand_monogram.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/recent_orders_section.dart';
@@ -32,15 +32,15 @@ class DashboardScreen extends StatelessWidget {
   static const double gridTop = headerHeight - cardOverlap;
 
   /// Hardcoded until the repository lands.
-  static const List<DashboardOrder> _recentOrders = [
-    DashboardOrder(
+  static const List<Order> _recentOrders = [
+    Order(
       id: '#SS20260726',
       customer: 'Priyanshu K.',
       itemCount: 3,
       amountPaise: 629700,
       status: OrderStatus.isNew,
     ),
-    DashboardOrder(
+    Order(
       id: '#SS20260725',
       customer: 'Vivek M.',
       itemCount: 3,
