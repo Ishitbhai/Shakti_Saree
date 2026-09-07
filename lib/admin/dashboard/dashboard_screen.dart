@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../shared/models/order_status.dart';
 import '../shared/models/order.dart';
+import '../shared/widgets/async_content.dart';
+import 'dashboard_repository.dart';
 import 'widgets/brand_monogram.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/recent_orders_section.dart';
@@ -12,8 +14,11 @@ import 'widgets/stat_grid.dart';
 /// The admin dashboard: header, stat grid, brand monogram and recent orders.
 ///
 /// The bottom bar belongs to the shell that hosts this tab, not here.
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key, this.repository});
+
+  /// Injectable so tests can supply their own orders or a failing source.
+  final DashboardRepository? repository;
 
   /// Exact height of the maroon block.
   ///
@@ -31,23 +36,36 @@ class DashboardScreen extends StatelessWidget {
   /// Where the grid starts, measured from the top of the stack.
   static const double gridTop = headerHeight - cardOverlap;
 
-  /// Hardcoded until the repository lands.
-  static const List<Order> _recentOrders = [
-    Order(
-      id: '#SS20260726',
-      customer: 'Priyanshu K.',
-      itemCount: 3,
-      amountPaise: 629700,
-      status: OrderStatus.isNew,
-    ),
-    Order(
-      id: '#SS20260725',
-      customer: 'Vivek M.',
-      itemCount: 3,
-      amountPaise: 249900,
-      status: OrderStatus.packed,
-    ),
-  ];
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late final DashboardRepository _repository =
+      widget.repository ?? const InMemoryDashboardRepository();
+
+  List<Order>? _recentOrders;
+  ApiException? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final orders = await _repository.fetchRecentOrders();
+      if (!mounted) return;
+      setState(() {
+        _recentOrders = orders;
+        _error = null;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() => _error = error);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,24 +82,32 @@ class DashboardScreen extends StatelessWidget {
               top: 0,
               left: 0,
               right: 0,
-              child: DashboardHeader(height: headerHeight),
+              child: DashboardHeader(height: DashboardScreen.headerHeight),
             ),
             // Unpositioned, so this is what gives the Stack its height — the
             // offset is real layout, not a paint-time translation, and the
             // scroll extent covers everything below.
-            const Padding(
-              padding: EdgeInsets.only(top: gridTop),
+            Padding(
+              padding: const EdgeInsets.only(top: DashboardScreen.gridTop),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  StatGrid(),
-                  SizedBox(height: AppSpacing.x6),
-                  BrandMonogram(),
+                  const StatGrid(),
+                  const SizedBox(height: AppSpacing.x6),
+                  const BrandMonogram(),
                   // Wider than the gap above it — the design lets the
                   // monogram breathe before the list starts.
-                  SizedBox(height: AppSpacing.x16),
-                  RecentOrdersSection(orders: _recentOrders),
-                  SizedBox(height: AppSpacing.x6),
+                  const SizedBox(height: AppSpacing.x16),
+                  AsyncContent<List<Order>>(
+                    value: _recentOrders,
+                    error: _error,
+                    onRetry: _load,
+                    isEmpty: (loaded) => loaded.isEmpty,
+                    emptyMessage: 'No recent orders.',
+                    builder: (context, loaded) =>
+                        RecentOrdersSection(orders: loaded),
+                  ),
+                  const SizedBox(height: AppSpacing.x6),
                 ],
               ),
             ),
