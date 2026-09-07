@@ -15,10 +15,20 @@ enum OrderStatus {
   final String label;
 
   /// The one action an admin is expected to take next, or null when the order
-  /// needs nothing further.
+  /// needs nothing further. Short, for the narrow buttons on the list.
   String? get nextActionLabel => switch (this) {
     OrderStatus.isNew => 'Accept',
     OrderStatus.packed => 'Ship',
+    OrderStatus.shipped => 'Mark Delivered',
+    OrderStatus.delivered => null,
+    OrderStatus.cancelled => null,
+  };
+
+  /// The same action worded in full, for the wide button on the detail
+  /// screen. Null wherever [nextActionLabel] is null.
+  String? get nextActionLabelLong => switch (this) {
+    OrderStatus.isNew => 'Accept Order',
+    OrderStatus.packed => 'Mark Shipped',
     OrderStatus.shipped => 'Mark Delivered',
     OrderStatus.delivered => null,
     OrderStatus.cancelled => null,

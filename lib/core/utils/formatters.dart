@@ -30,8 +30,17 @@ class Formatters {
   /// designs show prices.
   static String rupeesFromPaise(int paise) => _rupees.format(paise / 100);
 
+  static final DateFormat _dayTime = DateFormat('d MMM, hh:mm a');
+  static final DateFormat _dateTime = DateFormat('d MMM yyyy, hh:mm a');
+
   /// `26 Jul 2026`.
   static String date(DateTime value) => _date.format(value);
+
+  /// `26 Jul, 10:42 AM` — for timeline steps, where the year is redundant.
+  static String dayTime(DateTime value) => _dayTime.format(value);
+
+  /// `26 Jul 2026, 10:42 AM`.
+  static String dateTime(DateTime value) => _dateTime.format(value);
 
   /// How long ago something happened, worded the way the designs word it.
   ///
