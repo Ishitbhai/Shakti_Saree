@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/utils/formatters.dart';
@@ -9,16 +9,13 @@ import '../shared/models/order_status.dart';
 import '../shared/widgets/admin_page_header.dart';
 import '../shared/widgets/async_content.dart';
 import 'order_detail_screen.dart';
-import 'orders_repository.dart';
+import 'orders_providers.dart';
 import 'widgets/order_card.dart';
 import 'widgets/status_filter_chips.dart';
 
 /// Admin orders list, filtered by fulfilment status.
-class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({super.key, this.repository});
-
-  /// Injectable so tests can supply their own orders or a failing source.
-  final OrdersRepository? repository;
+class OrdersScreen extends ConsumerStatefulWidget {
+  const OrdersScreen({super.key});
 
   /// The statuses an admin works through, in order.
   static const List<OrderStatus> filters = [
@@ -29,42 +26,19 @@ class OrdersScreen extends StatefulWidget {
   ];
 
   @override
-  State<OrdersScreen> createState() => _OrdersScreenState();
+  ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
 }
 
-class _OrdersScreenState extends State<OrdersScreen> {
-  late final OrdersRepository _repository =
-      widget.repository ?? const InMemoryOrdersRepository();
-
+class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   OrderStatus _filter = OrderStatus.isNew;
-  List<Order>? _orders;
-  ApiException? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final orders = await _repository.fetchOrders();
-      if (!mounted) return;
-      setState(() {
-        _orders = orders;
-        _error = null;
-      });
-    } on ApiException catch (error) {
-      if (!mounted) return;
-      setState(() => _error = error);
-    }
-  }
 
   Future<void> _openDetail(Order order) async {
     // The in-memory source answers immediately. Once this is a network call,
     // the tap needs feedback — either a spinner on the button or a detail
     // screen that loads itself.
-    final detail = await _repository.fetchOrderDetail(order.id);
+    final detail = await ref
+        .read(ordersRepositoryProvider)
+        .fetchOrderDetail(order.id);
     if (!mounted) return;
 
     await Navigator.of(context).push(
@@ -83,9 +57,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orders = _orders;
-    final newToday =
-        orders?.where((o) => o.status == OrderStatus.isNew).length ?? 0;
+    final orders = ref.watch(ordersProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -96,9 +68,15 @@ class _OrdersScreenState extends State<OrdersScreen> {
               title: 'Orders',
               // Blank until the count is known, so the header keeps its
               // height instead of jumping when the orders arrive.
-              subtitle: orders == null
-                  ? ''
-                  : '${Formatters.count(newToday)} new today',
+              subtitle: orders.maybeWhen(
+                data: (loaded) {
+                  final newToday = loaded
+                      .where((o) => o.status == OrderStatus.isNew)
+                      .length;
+                  return '${Formatters.count(newToday)} new today';
+                },
+                orElse: () => '',
+              ),
             ),
             const SizedBox(height: AppSpacing.x2),
             StatusFilterChips(
@@ -109,9 +87,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
             const SizedBox(height: AppSpacing.x4),
             Expanded(
               child: AsyncContent<List<Order>>(
-                value: orders,
-                error: _error,
-                onRetry: _load,
+                state: orders,
+                onRetry: () => ref.invalidate(ordersProvider),
                 builder: (context, loaded) => _buildList(
                   loaded.where((o) => o.status == _filter).toList(),
                 ),

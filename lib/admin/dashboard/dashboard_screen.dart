@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/network/api_exception.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../shared/models/order.dart';
 import '../shared/widgets/async_content.dart';
-import 'dashboard_repository.dart';
+import 'dashboard_providers.dart';
 import 'widgets/brand_monogram.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/recent_orders_section.dart';
@@ -14,11 +14,8 @@ import 'widgets/stat_grid.dart';
 /// The admin dashboard: header, stat grid, brand monogram and recent orders.
 ///
 /// The bottom bar belongs to the shell that hosts this tab, not here.
-class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key, this.repository});
-
-  /// Injectable so tests can supply their own orders or a failing source.
-  final DashboardRepository? repository;
+class DashboardScreen extends ConsumerWidget {
+  const DashboardScreen({super.key});
 
   /// Exact height of the maroon block.
   ///
@@ -37,38 +34,9 @@ class DashboardScreen extends StatefulWidget {
   static const double gridTop = headerHeight - cardOverlap;
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final recentOrders = ref.watch(recentOrdersProvider);
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  late final DashboardRepository _repository =
-      widget.repository ?? const InMemoryDashboardRepository();
-
-  List<Order>? _recentOrders;
-  ApiException? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      final orders = await _repository.fetchRecentOrders();
-      if (!mounted) return;
-      setState(() {
-        _recentOrders = orders;
-        _error = null;
-      });
-    } on ApiException catch (error) {
-      if (!mounted) return;
-      setState(() => _error = error);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
@@ -82,13 +50,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: 0,
               left: 0,
               right: 0,
-              child: DashboardHeader(height: DashboardScreen.headerHeight),
+              child: DashboardHeader(height: headerHeight),
             ),
             // Unpositioned, so this is what gives the Stack its height — the
             // offset is real layout, not a paint-time translation, and the
             // scroll extent covers everything below.
             Padding(
-              padding: const EdgeInsets.only(top: DashboardScreen.gridTop),
+              padding: const EdgeInsets.only(top: gridTop),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -99,9 +67,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   // monogram breathe before the list starts.
                   const SizedBox(height: AppSpacing.x16),
                   AsyncContent<List<Order>>(
-                    value: _recentOrders,
-                    error: _error,
-                    onRetry: _load,
+                    state: recentOrders,
+                    onRetry: () => ref.invalidate(recentOrdersProvider),
                     isEmpty: (loaded) => loaded.isEmpty,
                     emptyMessage: 'No recent orders.',
                     builder: (context, loaded) =>

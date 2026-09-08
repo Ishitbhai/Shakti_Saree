@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'admin/shell/admin_shell.dart';
 import 'core/theme/app_colors.dart';
@@ -22,7 +23,9 @@ void main() {
     ),
   );
 
-  runApp(const ShaktiSareeAdminApp());
+  // Riverpod needs this above every consumer; without it, watching a
+  // provider throws at runtime.
+  runApp(const ProviderScope(child: ShaktiSareeAdminApp()));
 }
 
 class ShaktiSareeAdminApp extends StatelessWidget {

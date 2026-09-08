@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/products/product.dart';
+import 'package:shakti_saree/admin/products/products_providers.dart';
 import 'package:shakti_saree/admin/products/products_repository.dart';
 import 'package:shakti_saree/admin/products/products_screen.dart';
 import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
@@ -28,13 +31,22 @@ class _SlowRepository implements ProductsRepository {
   Future<List<Product>> fetchProducts() => completer.future;
 }
 
-Widget _host(Widget child) => MaterialApp(
-  theme: AppTheme.light,
-  home: MediaQuery(
-    data: const MediaQueryData(padding: EdgeInsets.only(top: 47)),
-    child: child,
-  ),
-);
+Widget _host(Widget child, {List<Override> overrides = const []}) =>
+    ProviderScope(
+      overrides: overrides,
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: MediaQuery(
+          data: const MediaQueryData(padding: EdgeInsets.only(top: 47)),
+          child: child,
+        ),
+      ),
+    );
+
+/// Swaps the catalogue source for one the test controls.
+List<Override> _using(ProductsRepository repository) => [
+  productsRepositoryProvider.overrideWithValue(repository),
+];
 
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
@@ -66,7 +78,9 @@ void main() {
     addTearDown(tester.view.reset);
 
     final repository = _SlowRepository();
-    await tester.pumpWidget(_host(ProductsScreen(repository: repository)));
+    await tester.pumpWidget(
+      _host(const ProductsScreen(), overrides: _using(repository)),
+    );
     await tester.pump();
 
     // Header stays put; only the list area waits.
@@ -85,7 +99,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      _host(ProductsScreen(repository: _FailingRepository())),
+      _host(const ProductsScreen(), overrides: _using(_FailingRepository())),
     );
     await tester.pumpAndSettle();
 
@@ -100,7 +114,7 @@ void main() {
     addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
-      _host(ProductsScreen(repository: _EmptyRepository())),
+      _host(const ProductsScreen(), overrides: _using(_EmptyRepository())),
     );
     await tester.pumpAndSettle();
 
