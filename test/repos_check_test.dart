@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shakti_saree/admin/dashboard/dashboard_providers.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_repository.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_screen.dart';
 import 'package:shakti_saree/admin/orders/order_detail.dart';
+import 'package:shakti_saree/admin/orders/orders_providers.dart';
 import 'package:shakti_saree/admin/orders/orders_repository.dart';
 import 'package:shakti_saree/admin/orders/orders_screen.dart';
 import 'package:shakti_saree/admin/orders/widgets/order_card.dart';
@@ -26,13 +30,17 @@ class _FailingDashboard implements DashboardRepository {
       throw const NetworkUnavailable();
 }
 
-Widget _host(Widget child) => MaterialApp(
-  theme: AppTheme.light,
-  home: MediaQuery(
-    data: const MediaQueryData(padding: EdgeInsets.only(top: 47)),
-    child: child,
-  ),
-);
+Widget _host(Widget child, {List<Override> overrides = const []}) =>
+    ProviderScope(
+      overrides: overrides,
+      child: MaterialApp(
+        theme: AppTheme.light,
+        home: MediaQuery(
+          data: const MediaQueryData(padding: EdgeInsets.only(top: 47)),
+          child: child,
+        ),
+      ),
+    );
 
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
@@ -104,7 +112,12 @@ void main() {
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
-        _host(OrdersScreen(repository: _FailingOrders())),
+        _host(
+          const OrdersScreen(),
+          overrides: [
+            ordersRepositoryProvider.overrideWithValue(_FailingOrders()),
+          ],
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -136,7 +149,12 @@ void main() {
       addTearDown(tester.view.reset);
 
       await tester.pumpWidget(
-        _host(DashboardScreen(repository: _FailingDashboard())),
+        _host(
+          const DashboardScreen(),
+          overrides: [
+            dashboardRepositoryProvider.overrideWithValue(_FailingDashboard()),
+          ],
+        ),
       );
       await tester.pumpAndSettle();
 
