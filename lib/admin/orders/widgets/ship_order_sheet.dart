@@ -7,7 +7,7 @@ import '../../shared/widgets/async_content.dart';
 import '../../shared/widgets/labelled_field.dart';
 import '../order_detail.dart';
 import '../orders_api_contract.dart';
-import 'busy_label.dart';
+import '../../shared/widgets/busy_label.dart';
 
 /// Runs the ship transition and answers with the updated order.
 typedef ShipSubmit =
