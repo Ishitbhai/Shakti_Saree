@@ -13,7 +13,7 @@ import '../shared/widgets/status_pill.dart';
 import 'order_detail.dart';
 import 'orders_providers.dart';
 import 'orders_repository.dart';
-import 'widgets/busy_label.dart';
+import '../shared/widgets/busy_label.dart';
 import 'widgets/cancel_order_sheet.dart';
 import 'widgets/order_timeline.dart';
 import 'widgets/payment_summary.dart';
