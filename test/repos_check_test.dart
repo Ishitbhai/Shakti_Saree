@@ -12,7 +12,7 @@ import 'package:shakti_saree/admin/orders/orders_repository.dart';
 import 'package:shakti_saree/admin/orders/orders_screen.dart';
 import 'package:shakti_saree/admin/orders/widgets/order_card.dart';
 import 'package:shakti_saree/admin/shared/models/order.dart';
-import 'package:shakti_saree/core/network/api_exception.dart';
+import 'package:shakti_saree/core/errors/api_exception.dart';
 import 'package:shakti_saree/core/theme/app_theme.dart';
 
 class _FailingOrders implements OrdersRepository {

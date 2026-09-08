@@ -13,8 +13,8 @@ abstract interface class DashboardRepository {
 /// Serves the sample strip from memory.
 ///
 /// Stands in until the backend exists. The API implementation belongs beside
-/// this one and takes a `DioClient`, calling `getList('/orders/recent')`;
-/// nothing above this file changes when it arrives.
+/// this one and brings its own HTTP client; nothing above this file changes
+/// when it arrives.
 class InMemoryDashboardRepository implements DashboardRepository {
   const InMemoryDashboardRepository();
 

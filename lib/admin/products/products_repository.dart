@@ -4,7 +4,7 @@ import 'product.dart';
 ///
 /// Screens depend on this, never on a data source, so the in-memory sample
 /// below can be swapped for an HTTP implementation without a screen changing.
-/// Failures surface as `ApiException` from `core/network`.
+/// Failures surface as `ApiException` from `core/errors`.
 abstract interface class ProductsRepository {
   /// The whole catalogue, newest listing last.
   Future<List<Product>> fetchProducts();
@@ -13,9 +13,8 @@ abstract interface class ProductsRepository {
 /// Serves the sample catalogue from memory.
 ///
 /// Stands in until the backend exists. The API implementation belongs beside
-/// this one and takes a `DioClient`, calling `getList('/products')` and
-/// mapping each row onto [Product]; nothing above this file changes when it
-/// arrives.
+/// this one, brings its own HTTP client and maps each row onto [Product];
+/// nothing above this file changes when it arrives.
 class InMemoryProductsRepository implements ProductsRepository {
   const InMemoryProductsRepository();
 
