@@ -10,7 +10,7 @@ import 'package:shakti_saree/admin/products/products_providers.dart';
 import 'package:shakti_saree/admin/products/products_repository.dart';
 import 'package:shakti_saree/admin/products/products_screen.dart';
 import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
-import 'package:shakti_saree/core/network/api_exception.dart';
+import 'package:shakti_saree/core/errors/api_exception.dart';
 import 'package:shakti_saree/core/theme/app_theme.dart';
 
 class _FailingRepository implements ProductsRepository {
