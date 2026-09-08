@@ -6,17 +6,27 @@ import '../../../core/theme/app_typography.dart';
 import '../../shared/models/order_status.dart';
 
 /// Horizontal row of status filters above the orders list.
+///
+/// Already scrolls, so the full set of statuses fits however narrow the
+/// screen is — chips run off the right edge rather than being dropped.
 class StatusFilterChips extends StatelessWidget {
   const StatusFilterChips({
     super.key,
     required this.statuses,
     required this.selected,
     required this.onSelect,
+    this.allLabel = 'All',
   });
 
   final List<OrderStatus> statuses;
-  final OrderStatus selected;
-  final ValueChanged<OrderStatus> onSelect;
+
+  /// The chosen status, or null for [allLabel] — every order, unfiltered.
+  final OrderStatus? selected;
+
+  /// Called with null when the 'All' chip is tapped.
+  final ValueChanged<OrderStatus?> onSelect;
+
+  final String allLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +35,14 @@ class StatusFilterChips extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.x5),
       child: Row(
         children: [
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.x2),
+            child: _Chip(
+              label: allLabel,
+              selected: selected == null,
+              onTap: () => onSelect(null),
+            ),
+          ),
           for (final status in statuses)
             Padding(
               padding: const EdgeInsets.only(right: AppSpacing.x2),

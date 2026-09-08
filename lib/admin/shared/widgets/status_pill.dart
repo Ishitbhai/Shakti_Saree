@@ -18,6 +18,13 @@ class StatusPill extends StatelessWidget {
       background: AppColors.tintMaroon,
       foreground: AppColors.primary,
     ),
+    // Same family as New — the order has been acknowledged but is still
+    // entirely ours, and it reads as one step along from the maroon pill
+    // rather than as a different kind of thing.
+    OrderStatus.accepted => (
+      background: AppColors.tintMaroon,
+      foreground: AppColors.primaryLight,
+    ),
     OrderStatus.packed => (
       background: AppColors.warningBg,
       foreground: AppColors.warning,

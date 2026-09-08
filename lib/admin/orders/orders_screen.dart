@@ -17,12 +17,18 @@ import 'widgets/status_filter_chips.dart';
 class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key});
 
-  /// The statuses an admin works through, in order.
+  /// The statuses an admin works through, in flow order, preceded by an
+  /// 'All' chip the widget adds itself.
+  ///
+  /// Every status appears: an order that reaches one missing from this list
+  /// would be filtered out of every tab and become unreachable.
   static const List<OrderStatus> filters = [
     OrderStatus.isNew,
+    OrderStatus.accepted,
     OrderStatus.packed,
     OrderStatus.shipped,
     OrderStatus.delivered,
+    OrderStatus.cancelled,
   ];
 
   @override
@@ -30,7 +36,9 @@ class OrdersScreen extends ConsumerStatefulWidget {
 }
 
 class _OrdersScreenState extends ConsumerState<OrdersScreen> {
-  OrderStatus _filter = OrderStatus.isNew;
+  /// Null is the 'All' chip. Opens on New because that is the queue an admin
+  /// actually works, not because the other tabs matter less.
+  OrderStatus? _filter = OrderStatus.isNew;
 
   Future<void> _openDetail(Order order) async {
     // The in-memory source answers immediately. Once this is a network call,
@@ -43,14 +51,10 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        // Enabled but inert: styling comes from the design, the handlers
-        // land with the repository.
-        builder: (_) => OrderDetailScreen(
-          detail: detail,
-          onCall: () {},
-          onInvoice: () {},
-          onAdvanceStatus: () {},
-        ),
+        // The status action is the screen's own business now; Call and
+        // Invoice are still inert, styled from the design.
+        builder: (_) =>
+            OrderDetailScreen(detail: detail, onCall: () {}, onInvoice: () {}),
       ),
     );
   }
@@ -89,9 +93,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               child: AsyncContent<List<Order>>(
                 state: orders,
                 onRetry: () => ref.invalidate(ordersProvider),
-                builder: (context, loaded) => _buildList(
-                  loaded.where((o) => o.status == _filter).toList(),
-                ),
+                builder: (context, loaded) => _buildList(_visible(loaded)),
               ),
             ),
           ],
@@ -100,9 +102,21 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     );
   }
 
+  /// The orders the current chip admits — everything, when the chip is 'All'.
+  List<Order> _visible(List<Order> orders) {
+    final filter = _filter;
+    if (filter == null) return orders;
+    return orders.where((order) => order.status == filter).toList();
+  }
+
   Widget _buildList(List<Order> visible) {
     if (visible.isEmpty) {
-      return AsyncMessage(text: 'No ${_filter.label.toLowerCase()} orders');
+      final filter = _filter;
+      return AsyncMessage(
+        text: filter == null
+            ? 'No orders yet'
+            : 'No ${filter.label.toLowerCase()} orders',
+      );
     }
 
     return ListView.separated(
