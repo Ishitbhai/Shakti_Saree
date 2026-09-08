@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shakti_saree/user/screens/my_orders_screen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
@@ -19,25 +20,43 @@ class AppBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(index: 0, label: 'Home', icon: Icons.home_outlined),
           _buildNavItem(
+            context: context,
+            index: 0,
+            label: 'Home',
+            icon: Icons.home_outlined,
+          ),
+          _buildNavItem(
+            context: context,
             index: 1,
             label: 'Category',
             icon: Icons.grid_view_outlined,
           ),
           _buildNavItem(
+            context: context,
             index: 2,
             label: 'Cart',
             icon: Icons.shopping_bag_outlined,
           ),
-          _buildNavItem(index: 3, label: 'Orders', icon: Icons.view_in_ar),
-          _buildNavItem(index: 4, label: 'Profile', icon: Icons.person_outline),
+          _buildNavItem(
+            context: context,
+            index: 3,
+            label: 'Orders',
+            icon: Icons.view_in_ar,
+          ),
+          _buildNavItem(
+            context: context,
+            index: 4,
+            label: 'Profile',
+            icon: Icons.person_outline,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildNavItem({
+    required BuildContext context,
     required int index,
     required String label,
     required IconData icon,
@@ -47,8 +66,11 @@ class AppBottomNavBar extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        if (onTap != null) {
-          onTap!(index);
+        if (index == 3) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
+          );
         }
       },
       behavior: HitTestBehavior.opaque,
