@@ -10,12 +10,19 @@ class Product {
     required this.sku,
     required this.pricePaise,
     required this.stock,
+    this.swatchIndex = 0,
   });
 
   final String name;
   final String sku;
   final int pricePaise;
   final int stock;
+
+  /// Which placeholder tint stands in for the product photo.
+  ///
+  /// An index rather than a colour, so the model stays clear of anything
+  /// visual; `ProductSwatches` turns it into one.
+  final int swatchIndex;
 
   /// At or below this, a product is flagged as running low.
   static const int lowStockThreshold = 5;

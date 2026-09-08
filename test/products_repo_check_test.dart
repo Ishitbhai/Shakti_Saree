@@ -13,18 +13,36 @@ import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
 import 'package:shakti_saree/core/errors/api_exception.dart';
 import 'package:shakti_saree/core/theme/app_theme.dart';
 
-class _FailingRepository implements ProductsRepository {
+/// Reads only. Subclasses say what the read does; a test that reaches a write
+/// fails loudly rather than quietly passing.
+class _ReadOnlyRepository implements ProductsRepository {
+  @override
+  Future<List<Product>> fetchProducts() async => const [];
+
+  @override
+  Future<Product> updateProduct({
+    required String originalSku,
+    required Product product,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<RemovedProduct> deleteProduct(String sku) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> restoreProduct(RemovedProduct removed) =>
+      throw UnimplementedError();
+}
+
+class _FailingRepository extends _ReadOnlyRepository {
   @override
   Future<List<Product>> fetchProducts() async =>
       throw const NetworkUnavailable();
 }
 
-class _EmptyRepository implements ProductsRepository {
-  @override
-  Future<List<Product>> fetchProducts() async => const [];
-}
+class _EmptyRepository extends _ReadOnlyRepository {}
 
-class _SlowRepository implements ProductsRepository {
+class _SlowRepository extends _ReadOnlyRepository {
   final completer = Completer<List<Product>>();
 
   @override

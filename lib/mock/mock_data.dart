@@ -1,4 +1,5 @@
 import '../admin/orders/order_detail.dart';
+import '../admin/products/product.dart';
 import '../admin/shared/models/order.dart';
 import '../admin/shared/models/order_status.dart';
 
@@ -373,6 +374,48 @@ class MockData {
       ),
     ];
   }
+
+  /// The sample product catalogue.
+  ///
+  /// Each carries its own placeholder tint, so a product keeps its colour
+  /// wherever it appears and whatever order the list is in.
+  static List<Product> products() => const [
+    Product(
+      name: 'Banarasi Silk Saree',
+      sku: 'SS-1024',
+      pricePaise: 249900,
+      stock: 24,
+      swatchIndex: 0,
+    ),
+    Product(
+      name: 'Kanjivaram Pure Silk',
+      sku: 'SS-1025',
+      pricePaise: 329900,
+      stock: 12,
+      swatchIndex: 1,
+    ),
+    Product(
+      name: 'Cotton Daily Saree',
+      sku: 'SS-1026',
+      pricePaise: 169900,
+      stock: 4,
+      swatchIndex: 2,
+    ),
+    Product(
+      name: 'Georgette Party Wear',
+      sku: 'SS-1027',
+      pricePaise: 189900,
+      stock: 0,
+      swatchIndex: 3,
+    ),
+    Product(
+      name: 'Paithani Silk Saree',
+      sku: 'SS-1028',
+      pricePaise: 415000,
+      stock: 8,
+      swatchIndex: 4,
+    ),
+  ];
 
   /// The same orders as list summaries.
   static List<Order> summaries() => [
