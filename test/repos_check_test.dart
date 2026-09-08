@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_providers.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_repository.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_screen.dart';
+import 'package:shakti_saree/admin/dashboard/dashboard_stats.dart';
 import 'package:shakti_saree/admin/orders/order_detail.dart';
 import 'package:shakti_saree/admin/orders/orders_providers.dart';
 import 'package:shakti_saree/admin/orders/orders_repository.dart';
@@ -86,10 +87,18 @@ class _OnlyNewOrders implements OrdersRepository {
       throw UnimplementedError();
 }
 
+/// The strip fails; the figures do not.
+///
+/// They are separate reads, and the point of the test below is that one
+/// falling over does not take the other with it.
 class _FailingDashboard implements DashboardRepository {
   @override
   Future<List<Order>> fetchRecentOrders() async =>
       throw const NetworkUnavailable();
+
+  @override
+  Future<DashboardStats> fetchStats() async =>
+      const DashboardStats(totalOrders: 14, products: 5, customers: 14);
 }
 
 Widget _host(Widget child, {List<Override> overrides = const []}) =>
@@ -205,9 +214,81 @@ void main() {
     });
   });
 
+  group('one store behind both screens', () {
+    test(
+      'a transition on the orders side is what the dashboard reads',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        final orders = container.read(ordersRepositoryProvider);
+        final dashboard = container.read(dashboardRepositoryProvider);
+
+        final before = await dashboard.fetchRecentOrders();
+        expect(before.first.status, OrderStatus.isNew);
+
+        await orders.acceptOrder(before.first.id);
+
+        // Same order, moved on — not a second copy still saying 'New'.
+        final after = await dashboard.fetchRecentOrders();
+        expect(after.first.id, before.first.id);
+        expect(after.first.status, OrderStatus.accepted);
+      },
+    );
+
+    test(
+      'the store keeps a transition for the life of the container',
+      () async {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        final orders = container.read(ordersRepositoryProvider);
+        final id = (await orders.fetchOrders()).first.id;
+
+        await orders.acceptOrder(id);
+        await orders.markPacked(id);
+
+        // Read back through a fresh call, not the value the write returned.
+        final reread = await orders.fetchOrderDetail(id);
+        expect(reread.status, OrderStatus.packed);
+        expect(reread.reachedAt.containsKey(OrderStatus.accepted), isTrue);
+      },
+    );
+
+    testWidgets('the strip catches up after a transition elsewhere', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_host(const DashboardScreen()));
+      await tester.pumpAndSettle();
+
+      // Three new and one accepted among the four newest.
+      expect(find.text('New'), findsNWidgets(3));
+      expect(find.text('Accepted'), findsOneWidget);
+
+      // Accept one through the orders repository — the other screen's door
+      // into the same store — without touching the dashboard at all.
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(DashboardScreen)),
+        listen: false,
+      );
+      await container.read(ordersRepositoryProvider).acceptOrder('#SS20260914');
+      await tester.pumpAndSettle();
+
+      // The strip moved on its own; nothing invalidated it by hand.
+      expect(find.text('New'), findsNWidgets(2));
+      expect(find.text('Accepted'), findsNWidgets(2));
+    });
+  });
+
   group('dashboard', () {
-    testWidgets('recent orders strip is unchanged', (tester) async {
-      tester.view.physicalSize = const Size(390, 2000);
+    testWidgets('the strip shows the latest orders from the store', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
@@ -215,11 +296,31 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Recent Orders'), findsOneWidget);
-      expect(find.text('Priyanshu K.  •  3 items'), findsOneWidget);
-      expect(find.text('Vivek M.  •  3 items'), findsOneWidget);
-      expect(find.text('₹6,297'), findsOneWidget);
-      expect(find.text('New'), findsOneWidget);
-      expect(find.text('Packed'), findsOneWidget);
+
+      // The four newest sample orders, newest first, with their real totals.
+      expect(find.text('Priyanshu Kateshiya  •  2 items'), findsOneWidget);
+      expect(find.text('₹4,149'), findsOneWidget);
+      expect(find.text('Meera Trivedi  •  1 item'), findsOneWidget);
+      expect(find.text('Nidhi Chauhan  •  2 items'), findsOneWidget);
+
+      // Far enough down the list to reach a second status.
+      expect(find.text('New'), findsNWidgets(3));
+      expect(find.text('Accepted'), findsOneWidget);
+    });
+
+    testWidgets('the KPI tiles count what the store holds', (tester) async {
+      tester.view.physicalSize = const Size(390, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(_host(const DashboardScreen()));
+      await tester.pumpAndSettle();
+
+      // Fourteen sample orders from fourteen distinct customers, against a
+      // five-line catalogue. Nothing here is written down in the widget.
+      expect(find.bySemanticsLabel('Total Orders, 14'), findsOneWidget);
+      expect(find.bySemanticsLabel('Customers, 14'), findsOneWidget);
+      expect(find.bySemanticsLabel('Products, 5'), findsOneWidget);
     });
 
     testWidgets('stat grid keeps rendering while orders fail', (tester) async {
@@ -237,9 +338,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The KPI figures still come from the widget, so they survive.
-      expect(find.text('1,248'), findsOneWidget);
-      expect(find.text('2,150'), findsOneWidget);
+      // Two separate reads: the figures survive a strip that could not load.
+      expect(find.bySemanticsLabel('Total Orders, 14'), findsOneWidget);
+      expect(find.bySemanticsLabel('Customers, 14'), findsOneWidget);
       expect(find.text(const NetworkUnavailable().message), findsOneWidget);
     });
   });

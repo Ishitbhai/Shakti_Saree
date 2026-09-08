@@ -11,6 +11,7 @@ import 'package:shakti_saree/admin/orders/orders_repository.dart';
 import 'package:shakti_saree/admin/orders/orders_screen.dart';
 import 'package:shakti_saree/admin/orders/widgets/order_card.dart';
 import 'package:shakti_saree/admin/orders/widgets/order_timeline.dart';
+import 'package:shakti_saree/admin/shared/admin_tab.dart';
 import 'package:shakti_saree/admin/shared/models/order.dart';
 import 'package:shakti_saree/admin/shared/models/order_status.dart';
 import 'package:shakti_saree/admin/shared/widgets/status_pill.dart';
@@ -177,8 +178,16 @@ OrderDetail _detailAt(
   );
 }
 
-Widget _host(Widget child, OrdersRepository repository) => ProviderScope(
-  overrides: [ordersRepositoryProvider.overrideWithValue(repository)],
+/// Hosts a screen, optionally against a repository the test controls.
+///
+/// With no repository the real one is used, backed by the shared order store
+/// — which is what the app runs on, so anything checked that way is checked
+/// end to end.
+Widget _host(Widget child, [OrdersRepository? repository]) => ProviderScope(
+  overrides: [
+    if (repository != null)
+      ordersRepositoryProvider.overrideWithValue(repository),
+  ],
   child: MaterialApp(
     theme: AppTheme.light,
     home: MediaQuery(
@@ -187,6 +196,13 @@ Widget _host(Widget child, OrdersRepository repository) => ProviderScope(
     ),
   ),
 );
+
+/// A real store-backed repository, outside any widget tree.
+OrdersRepository _liveRepository() {
+  final container = ProviderContainer();
+  addTearDown(container.dispose);
+  return container.read(ordersRepositoryProvider);
+}
 
 /// The status shown on the pill, as distinct from the same word appearing as
 /// a step in the timeline.
@@ -733,7 +749,7 @@ void main() {
     // Against the real repository, so the timestamps are the ones the
     // transitions recorded rather than ones a test made up.
     test('real transitions build the steps they should', () async {
-      final repository = InMemoryOrdersRepository();
+      final repository = _liveRepository();
       final id = (await repository.fetchOrders()).first.id;
 
       await repository.acceptOrder(id);
@@ -768,7 +784,7 @@ void main() {
     });
 
     test('a real cancellation truncates the steps', () async {
-      final repository = InMemoryOrdersRepository();
+      final repository = _liveRepository();
       final id = (await repository.fetchOrders()).first.id;
 
       await repository.acceptOrder(id);
@@ -895,9 +911,7 @@ void main() {
     /// Opens the first New order from the list, on the real repository.
     Future<void> openFirstNewOrder(WidgetTester tester) async {
       _phone(tester);
-      await tester.pumpWidget(
-        _host(const OrdersScreen(), InMemoryOrdersRepository()),
-      );
+      await tester.pumpWidget(_host(const OrdersScreen()));
       await tester.pumpAndSettle();
       await tester.tap(find.text('View Details').first);
       await tester.pumpAndSettle();
@@ -905,9 +919,46 @@ void main() {
 
     /// The detail screen's own back square, not the list's behind it.
     Future<void> popBack(WidgetTester tester) async {
-      await tester.tap(find.bySemanticsLabel('Back').last);
+      await tester.tap(find.bySemanticsLabel('Back'));
       await tester.pumpAndSettle();
     }
+
+    testWidgets('back pops a pushed screen', (tester) async {
+      _phone(tester);
+      await tester.pumpWidget(_host(const OrdersScreen()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('View Details').first);
+      await tester.pumpAndSettle();
+      expect(find.byType(OrderDetailScreen), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Back'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(OrderDetailScreen), findsNothing);
+      expect(find.text('Orders'), findsOneWidget);
+    });
+
+    testWidgets('back at the root of a tab steps left', (tester) async {
+      _phone(tester);
+      await tester.pumpWidget(_host(const OrdersScreen()));
+      await tester.pumpAndSettle();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(OrdersScreen)),
+        listen: false,
+      );
+      // Sitting on the Orders tab, with nothing pushed on top of it.
+      container.read(adminTabProvider.notifier).select(2);
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('Back'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Back'));
+      await tester.pumpAndSettle();
+
+      // Nothing to pop, so it moves to the tab before this one.
+      expect(container.read(adminTabProvider), 1);
+    });
 
     testWidgets('reflects the new status when you pop back', (tester) async {
       await openFirstNewOrder(tester);
@@ -982,9 +1033,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(
-        _host(const OrdersScreen(), InMemoryOrdersRepository()),
-      );
+      await tester.pumpWidget(_host(const OrdersScreen()));
       await tester.pumpAndSettle();
 
       // Opens on New, so an accepted order is nowhere to be seen.

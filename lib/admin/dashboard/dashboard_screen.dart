@@ -6,6 +6,7 @@ import '../../core/theme/app_spacing.dart';
 import '../shared/models/order.dart';
 import '../shared/widgets/async_content.dart';
 import 'dashboard_providers.dart';
+import 'dashboard_stats.dart';
 import 'widgets/brand_monogram.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/recent_orders_section.dart';
@@ -36,6 +37,7 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recentOrders = ref.watch(recentOrdersProvider);
+    final stats = ref.watch(dashboardStatsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,7 +62,13 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const StatGrid(),
+                  // The tiles keep their own counsel: a failing strip below
+                  // does not take the figures down with it, and vice versa.
+                  AsyncContent<DashboardStats>(
+                    state: stats,
+                    onRetry: () => ref.invalidate(dashboardStatsProvider),
+                    builder: (context, loaded) => StatGrid(stats: loaded),
+                  ),
                   const SizedBox(height: AppSpacing.x6),
                   const BrandMonogram(),
                   // Wider than the gap above it — the design lets the
