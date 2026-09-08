@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
+import '../admin_tab.dart';
 
 /// Header used by the admin list screens: a back square, a centred title with
 /// a count beneath it, and an optional action on the right.
 ///
 /// When there is no [action] an invisible square takes its place, so the title
 /// stays optically centred.
-class AdminPageHeader extends StatelessWidget {
+class AdminPageHeader extends ConsumerWidget {
   const AdminPageHeader({
     super.key,
     required this.title,
@@ -23,8 +25,22 @@ class AdminPageHeader extends StatelessWidget {
 
   static const double squareSize = 40;
 
+  /// Leaves the screen by whichever route it has.
+  ///
+  /// A pushed screen pops. At the root of a tab there is nothing to pop, so
+  /// back steps to the tab on the left instead.
+  void _goBack(BuildContext context, WidgetRef ref) {
+    if (Navigator.canPop(context)) {
+      // maybePop, not pop: a screen guarding unsaved changes with a PopScope
+      // has to get a say, and a plain pop would walk straight past it.
+      Navigator.maybePop(context);
+      return;
+    }
+    ref.read(adminTabProvider.notifier).back();
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final trailing = action;
 
     return Padding(
@@ -39,11 +55,7 @@ class AdminPageHeader extends StatelessWidget {
           AdminHeaderSquare(
             icon: Icons.arrow_back,
             label: 'Back',
-            // Only pops when this screen was pushed; inside the tab shell
-            // there is nothing to go back to.
-            onTap: Navigator.canPop(context)
-                ? () => Navigator.pop(context)
-                : null,
+            onTap: () => _goBack(context, ref),
           ),
           Expanded(
             child: Column(

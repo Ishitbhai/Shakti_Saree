@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../dashboard_stats.dart';
 import 'brand_plate.dart';
 import 'stat_card.dart';
 
@@ -10,9 +11,13 @@ import 'stat_card.dart';
 /// Built from [Row] + [Expanded] rather than a [GridView] so each tile sizes
 /// to its own content; [IntrinsicHeight] then squares up the pair in a row.
 ///
-/// Values are hardcoded until the repository lands in Phase 6.
+/// The figures are given, not declared here — they are counted from what the
+/// app holds, so the tiles cannot go on claiming a number after the thing
+/// they were counting has changed.
 class StatGrid extends StatelessWidget {
-  const StatGrid({super.key});
+  const StatGrid({super.key, required this.stats});
+
+  final DashboardStats stats;
 
   static const double _gutter = AppSpacing.x3;
   static const double _rowGap = AppSpacing.x3;
@@ -20,8 +25,8 @@ class StatGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: _screenPadding),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _screenPadding),
       child: Column(
         children: [
           IntrinsicHeight(
@@ -31,16 +36,16 @@ class StatGrid extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                     icon: Icons.receipt_long,
-                    value: 1248,
+                    value: stats.totalOrders,
                     label: 'Total Orders',
                   ),
                 ),
-                SizedBox(width: _gutter),
-                Expanded(child: BrandPlate()),
+                const SizedBox(width: _gutter),
+                const Expanded(child: BrandPlate()),
               ],
             ),
           ),
-          SizedBox(height: _rowGap),
+          const SizedBox(height: _rowGap),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -48,17 +53,17 @@ class StatGrid extends StatelessWidget {
                 Expanded(
                   child: StatCard(
                     icon: Icons.inventory_2,
-                    value: 320,
+                    value: stats.products,
                     label: 'Products',
                     iconBackground: AppColors.infoBg,
                     iconColor: AppColors.info,
                   ),
                 ),
-                SizedBox(width: _gutter),
+                const SizedBox(width: _gutter),
                 Expanded(
                   child: StatCard(
                     icon: Icons.group,
-                    value: 2150,
+                    value: stats.customers,
                     label: 'Customers',
                     iconBackground: AppColors.warningBg,
                     iconColor: AppColors.warning,

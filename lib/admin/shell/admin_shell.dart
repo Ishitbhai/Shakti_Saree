@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../orders/orders_screen.dart';
 import '../products/products_screen.dart';
+import '../shared/admin_tab.dart';
 import 'widgets/admin_bottom_nav.dart';
 
 /// Holds the admin tabs and the bar that switches between them.
@@ -12,22 +14,20 @@ import 'widgets/admin_bottom_nav.dart';
 /// An [IndexedStack] keeps each tab alive, so scroll position and any
 /// half-typed input survive switching away and back. Replaced by go_router
 /// once real navigation lands.
-class AdminShell extends StatefulWidget {
+///
+/// Which tab is showing lives in [adminTabProvider] rather than here, so the
+/// screens inside a tab can move between them too.
+class AdminShell extends ConsumerWidget {
   const AdminShell({super.key});
 
   @override
-  State<AdminShell> createState() => _AdminShellState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final index = ref.watch(adminTabProvider);
 
-class _AdminShellState extends State<AdminShell> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
-        index: _index,
+        index: index,
         children: const [
           DashboardScreen(),
           ProductsScreen(),
@@ -37,8 +37,8 @@ class _AdminShellState extends State<AdminShell> {
         ],
       ),
       bottomNavigationBar: AdminBottomNav(
-        currentIndex: _index,
-        onSelect: (index) => setState(() => _index = index),
+        currentIndex: index,
+        onSelect: ref.read(adminTabProvider.notifier).select,
       ),
     );
   }
