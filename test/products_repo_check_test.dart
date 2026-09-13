@@ -20,6 +20,9 @@ class _ReadOnlyRepository implements ProductsRepository {
   Future<List<Product>> fetchProducts() async => const [];
 
   @override
+  Future<Product> createProduct(Product product) => throw UnimplementedError();
+
+  @override
   Future<Product> updateProduct({
     required String originalSku,
     required Product product,
