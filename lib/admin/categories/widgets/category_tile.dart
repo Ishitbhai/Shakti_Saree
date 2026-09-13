@@ -37,87 +37,83 @@ class CategoryTile extends StatelessWidget {
         ? '1 product'
         : '${Formatters.count(listing.productCount)} products';
 
-    return MergeSemantics(
-      child: Semantics(
-        label:
-            '${listing.name}, $count, '
-            '${listing.isHidden ? 'hidden' : 'active'}',
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadii.cardRadius,
-            boxShadow: AppShadows.softShadow,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(_padding),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ExcludeSemantics(
-                  child: Container(
-                    height: _swatch,
-                    width: _swatch,
-                    decoration: BoxDecoration(
-                      color: Swatches.at(listing.swatchIndex),
-                      borderRadius: AppRadii.cardRadius,
-                    ),
-                  ),
+    // No MergeSemantics around the whole row: the edit and delete buttons and
+    // the overflow are real controls, and merging them into one node would
+    // leave a screen reader with a sentence and nothing to press.
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadii.cardRadius,
+        boxShadow: AppShadows.softShadow,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(_padding),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ExcludeSemantics(
+              child: Container(
+                height: _swatch,
+                width: _swatch,
+                decoration: BoxDecoration(
+                  color: Swatches.at(listing.swatchIndex),
+                  borderRadius: AppRadii.cardRadius,
                 ),
-                const SizedBox(width: AppSpacing.x3),
-                Expanded(
-                  child: ExcludeSemantics(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          listing.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.titleMedium,
-                        ),
-                        Text(count, style: AppTypography.caption),
-                        const SizedBox(height: AppSpacing.x1),
-                        _VisibilityPill(isHidden: listing.isHidden),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.x2),
-                Column(
+              ),
+            ),
+            const SizedBox(width: AppSpacing.x3),
+            Expanded(
+              child: MergeSemantics(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    _Overflow(
-                      isHidden: listing.isHidden,
-                      onToggleHidden: onToggleHidden,
+                    Text(
+                      listing.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.titleMedium,
                     ),
+                    Text(count, style: AppTypography.caption),
                     const SizedBox(height: AppSpacing.x1),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _ActionButton(
-                          icon: Icons.edit_outlined,
-                          tooltip: 'Edit ${listing.name}',
-                          background: AppColors.tintMaroon,
-                          foreground: AppColors.primary,
-                          onTap: onEdit,
-                        ),
-                        const SizedBox(width: AppSpacing.x2),
-                        _ActionButton(
-                          icon: Icons.delete_outline,
-                          tooltip: 'Delete ${listing.name}',
-                          background: AppColors.errorBg,
-                          foreground: AppColors.error,
-                          onTap: onDelete,
-                        ),
-                      ],
+                    _VisibilityPill(isHidden: listing.isHidden),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.x2),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _Overflow(
+                  isHidden: listing.isHidden,
+                  onToggleHidden: onToggleHidden,
+                ),
+                const SizedBox(height: AppSpacing.x1),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ActionButton(
+                      icon: Icons.edit_outlined,
+                      tooltip: 'Edit ${listing.name}',
+                      background: AppColors.tintMaroon,
+                      foreground: AppColors.primary,
+                      onTap: onEdit,
+                    ),
+                    const SizedBox(width: AppSpacing.x2),
+                    _ActionButton(
+                      icon: Icons.delete_outline,
+                      tooltip: 'Delete ${listing.name}',
+                      background: AppColors.errorBg,
+                      foreground: AppColors.error,
+                      onTap: onDelete,
                     ),
                   ],
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
