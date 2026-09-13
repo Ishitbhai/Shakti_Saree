@@ -36,92 +36,88 @@ class ProductTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MergeSemantics(
-      child: Semantics(
-        label:
-            '${product.name}, SKU ${product.sku}, '
-            '${Formatters.rupeesFromPaise(product.pricePaise)}',
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadii.cardRadius,
-            boxShadow: AppShadows.softShadow,
-          ),
-          child: Material(
-            color: AppColors.transparent,
-            borderRadius: AppRadii.cardRadius,
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onTap,
-              child: Padding(
-                padding: const EdgeInsets.all(_padding),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ExcludeSemantics(
-                      child: Container(
-                        height: _thumb,
-                        width: _thumb,
-                        decoration: BoxDecoration(
-                          color: swatch,
-                          borderRadius: AppRadii.cardRadius,
-                        ),
-                      ),
+    // No MergeSemantics around the whole row: the edit and delete buttons are
+    // real controls, and merging them into one node would leave a screen
+    // reader with a sentence and no way to press either.
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: AppRadii.cardRadius,
+        boxShadow: AppShadows.softShadow,
+      ),
+      child: Material(
+        color: AppColors.transparent,
+        borderRadius: AppRadii.cardRadius,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(_padding),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ExcludeSemantics(
+                  child: Container(
+                    height: _thumb,
+                    width: _thumb,
+                    decoration: BoxDecoration(
+                      color: swatch,
+                      borderRadius: AppRadii.cardRadius,
                     ),
-                    const SizedBox(width: AppSpacing.x3),
-                    Expanded(
-                      child: ExcludeSemantics(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              product.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.titleMedium,
-                            ),
-                            Text(
-                              'SKU: ${product.sku}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.caption,
-                            ),
-                            const SizedBox(height: AppSpacing.x1),
-                            Text(
-                              Formatters.rupeesFromPaise(product.pricePaise),
-                              style: AppTypography.price,
-                            ),
-                            const SizedBox(height: AppSpacing.x1),
-                            StockPill(product: product),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.x2),
-                    Column(
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.x3),
+                Expanded(
+                  child: MergeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _ActionButton(
-                          icon: Icons.edit_outlined,
-                          tooltip: 'Edit ${product.name}',
-                          background: AppColors.tintMaroon,
-                          foreground: AppColors.primary,
-                          onTap: onEdit,
+                        Text(
+                          product.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.titleMedium,
                         ),
-                        const SizedBox(height: AppSpacing.x2),
-                        _ActionButton(
-                          icon: Icons.delete_outline,
-                          tooltip: 'Delete ${product.name}',
-                          background: AppColors.errorBg,
-                          foreground: AppColors.error,
-                          onTap: onDelete,
+                        Text(
+                          'SKU: ${product.sku}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.caption,
                         ),
+                        const SizedBox(height: AppSpacing.x1),
+                        Text(
+                          Formatters.rupeesFromPaise(product.pricePaise),
+                          style: AppTypography.price,
+                        ),
+                        const SizedBox(height: AppSpacing.x1),
+                        StockPill(product: product),
                       ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.x2),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _ActionButton(
+                      icon: Icons.edit_outlined,
+                      tooltip: 'Edit ${product.name}',
+                      background: AppColors.tintMaroon,
+                      foreground: AppColors.primary,
+                      onTap: onEdit,
+                    ),
+                    const SizedBox(height: AppSpacing.x2),
+                    _ActionButton(
+                      icon: Icons.delete_outline,
+                      tooltip: 'Delete ${product.name}',
+                      background: AppColors.errorBg,
+                      foreground: AppColors.error,
+                      onTap: onDelete,
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
           ),
         ),
