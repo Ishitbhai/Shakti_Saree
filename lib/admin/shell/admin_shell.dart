@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
+import '../categories/categories_screen.dart';
 import '../customers/customers_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../orders/orders_screen.dart';
@@ -34,28 +34,13 @@ class AdminShell extends ConsumerWidget {
           ProductsScreen(),
           OrdersScreen(),
           CustomersScreen(),
-          _NotBuiltYet(title: 'More'),
+          CategoriesScreen(),
         ],
       ),
       bottomNavigationBar: AdminBottomNav(
         currentIndex: index,
         onSelect: ref.read(adminTabProvider.notifier).select,
       ),
-    );
-  }
-}
-
-/// Stand-in for a tab whose screen has not been designed yet.
-class _NotBuiltYet extends StatelessWidget {
-  const _NotBuiltYet({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(child: Text(title, style: AppTypography.sectionTitle)),
     );
   }
 }

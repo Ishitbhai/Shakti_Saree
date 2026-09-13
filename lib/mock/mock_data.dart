@@ -1,3 +1,4 @@
+import '../admin/categories/category.dart';
 import '../admin/orders/order_detail.dart';
 import '../admin/products/product.dart';
 import '../admin/shared/models/order.dart';
@@ -386,6 +387,7 @@ class MockData {
       pricePaise: 249900,
       stock: 24,
       swatchIndex: 0,
+      category: 'Banarasi',
     ),
     Product(
       name: 'Kanjivaram Pure Silk',
@@ -393,6 +395,7 @@ class MockData {
       pricePaise: 329900,
       stock: 12,
       swatchIndex: 1,
+      category: 'Kanjivaram',
     ),
     Product(
       name: 'Cotton Daily Saree',
@@ -400,6 +403,7 @@ class MockData {
       pricePaise: 169900,
       stock: 4,
       swatchIndex: 2,
+      category: 'Cotton Saree',
     ),
     Product(
       name: 'Georgette Party Wear',
@@ -407,6 +411,7 @@ class MockData {
       pricePaise: 189900,
       stock: 0,
       swatchIndex: 3,
+      category: 'Georgette',
     ),
     Product(
       name: 'Paithani Silk Saree',
@@ -414,7 +419,28 @@ class MockData {
       pricePaise: 415000,
       stock: 8,
       swatchIndex: 4,
+      category: 'Paithani',
     ),
+  ];
+
+  /// The sample categories, in the order the admin list shows them.
+  ///
+  /// Twelve, so the grouping screen has a real list to work with. The five
+  /// seeded products sit across five of them; the rest are empty, which is
+  /// what a category looks like before anything is filed under it.
+  static List<Category> categories() => const [
+    Category(name: 'Silk Saree', swatchIndex: 0),
+    Category(name: 'Banarasi', swatchIndex: 1),
+    Category(name: 'Cotton Saree', swatchIndex: 2),
+    Category(name: 'Georgette', swatchIndex: 3),
+    Category(name: 'Kanjivaram', swatchIndex: 4, isHidden: true),
+    Category(name: 'Bridal Wear', swatchIndex: 0),
+    Category(name: 'Designer', swatchIndex: 1),
+    Category(name: 'Daily Wear', swatchIndex: 2),
+    Category(name: 'Chanderi', swatchIndex: 3),
+    Category(name: 'Patola', swatchIndex: 4),
+    Category(name: 'Paithani', swatchIndex: 0),
+    Category(name: 'Organza', swatchIndex: 1, isHidden: true),
   ];
 
   /// The same orders as list summaries.

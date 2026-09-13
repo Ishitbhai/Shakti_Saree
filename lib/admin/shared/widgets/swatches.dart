@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// The placeholder tints a product listing can carry until real photos exist.
 ///
 /// The one place the palette is written down: the tile paints from it and the
 /// form offers it, so a colour chosen in the form is the colour that appears
 /// in the list.
-class ProductSwatches {
-  const ProductSwatches._();
+class Swatches {
+  const Swatches._();
 
   /// Every entry is an existing theme token — no literals here either.
   static const List<Color> palette = [

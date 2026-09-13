@@ -44,6 +44,30 @@ class ProductStore extends Notifier<List<Product>> {
     return updated;
   }
 
+  /// How many listings sit in a given grouping.
+  int countInCategory(String category) =>
+      state.where((product) => product.category == category).length;
+
+  /// Moves every listing from one grouping to another, answering with how
+  /// many moved.
+  ///
+  /// A product stores its category by name, so renaming a category without
+  /// this would leave its products pointing at one that no longer exists.
+  int moveCategory(String from, String to) {
+    var moved = 0;
+    state = [
+      for (final product in state)
+        if (product.category == from)
+          () {
+            moved++;
+            return product.copyWith(category: to);
+          }()
+        else
+          product,
+    ];
+    return moved;
+  }
+
   /// Takes a product out, answering with where it was.
   ///
   /// The position comes back because undo has to put it where it came from

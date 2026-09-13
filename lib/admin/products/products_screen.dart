@@ -9,7 +9,7 @@ import '../shared/widgets/admin_page_header.dart';
 import '../shared/widgets/async_content.dart';
 import 'add_product_screen.dart';
 import 'product.dart';
-import 'product_swatch.dart';
+import '../shared/widgets/swatches.dart';
 import 'products_providers.dart';
 import 'widgets/confirm_delete_dialog.dart';
 import 'widgets/product_tile.dart';
@@ -135,7 +135,7 @@ class ProductsScreen extends ConsumerWidget {
                       product: product,
                       // The product's own tint, so it keeps its colour
                       // wherever it ends up in the list.
-                      swatch: ProductSwatches.at(product.swatchIndex),
+                      swatch: Swatches.at(product.swatchIndex),
                       onEdit: () => _edit(context, product),
                       onDelete: () => _delete(context, ref, product),
                     );
