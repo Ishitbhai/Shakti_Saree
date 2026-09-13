@@ -12,7 +12,8 @@ import '../shared/widgets/async_content.dart';
 import '../shared/widgets/busy_label.dart';
 import '../shared/widgets/labelled_field.dart';
 import 'product.dart';
-import 'product_swatch.dart';
+import '../shared/widgets/swatch_picker.dart';
+import '../categories/categories_providers.dart';
 import 'products_providers.dart';
 import 'widgets/image_upload_box.dart';
 import 'widgets/stock_pill.dart';
@@ -24,27 +25,15 @@ import 'widgets/stock_pill.dart';
 /// with and what the submit button does. Pass [product] to edit that listing;
 /// leave it null to create.
 ///
-/// Only what the catalogue stores is saved — name, SKU, price, stock and the
-/// placeholder tint. Category, sale price, description and the featured flag
-/// are in the design but have nowhere on [Product] to go yet, so they are
-/// decoration until the model grows.
+/// Only what the catalogue stores is saved — name, SKU, price, stock, the
+/// category and the placeholder tint. Sale price, description and the
+/// featured flag are in the design but have nowhere on [Product] to go yet,
+/// so they are decoration until the model grows.
 class AddProductScreen extends ConsumerStatefulWidget {
   const AddProductScreen({super.key, this.product});
 
   /// The listing being edited, or null when creating a new one.
   final Product? product;
-
-  /// Options in the category dropdown.
-  static const List<String> categories = [
-    'Silk Saree',
-    'Banarasi',
-    'Cotton',
-    'Georgette',
-    'Kanjivaram',
-    'Designer',
-    'Bridal',
-    'Daily Wear',
-  ];
 
   /// Cap on how many photos a listing can carry.
   static const int maxImages = 5;
@@ -78,7 +67,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   );
   late final _description = TextEditingController();
 
-  late String _category = AddProductScreen.categories.first;
+  late String _category = _editing?.category ?? '';
   late bool _featured = !_isEditing;
   late int _swatchIndex = _editing?.swatchIndex ?? 0;
 
@@ -172,6 +161,19 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   /// Shown only once submit has been pressed, so typing is not nagged at.
   String? _shown(String? error) => _submitted ? error : null;
 
+  /// What the category dropdown offers.
+  ///
+  /// Uncategorised first, because a listing is allowed to belong nowhere.
+  /// Then the groupings on offer — and the listing's own category if that is
+  /// not among them, which happens when it has since been hidden or renamed
+  /// away. Leaving it out would mean opening the form on a value the
+  /// dropdown does not have, which is an assertion rather than a nicety.
+  List<String> _categoryOptions() {
+    final options = ['', ...ref.watch(categoryNamesProvider)];
+    if (!options.contains(_category)) options.add(_category);
+    return options;
+  }
+
   /// The listing as currently typed.
   ///
   /// Both the stock badge below and the save go through this, so what the
@@ -184,6 +186,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     pricePaise: (_digits(_price) ?? 0) * 100,
     stock: _digits(_stock) ?? 0,
     swatchIndex: _swatchIndex,
+    category: _category,
   );
 
   // -------------------------------------------------------- unsaved changes
@@ -323,7 +326,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     const SizedBox(height: AppSpacing.x4),
                     LabelledField(
                       label: 'Placeholder Colour',
-                      child: _SwatchPicker(
+                      child: SwatchPicker(
                         selected: _swatchIndex,
                         onSelect: (index) =>
                             setState(() => _swatchIndex = index),
@@ -352,10 +355,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                         ),
                         style: AppTypography.bodyMedium,
                         items: [
-                          for (final category in AddProductScreen.categories)
+                          for (final category in _categoryOptions())
                             DropdownMenuItem(
                               value: category,
-                              child: Text(category),
+                              child: Text(
+                                category.isEmpty ? 'Uncategorised' : category,
+                              ),
                             ),
                         ],
                         onChanged: (value) =>
@@ -473,52 +478,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Row of tappable tints standing in for the product photo.
-class _SwatchPicker extends StatelessWidget {
-  const _SwatchPicker({required this.selected, required this.onSelect});
-
-  final int selected;
-  final ValueChanged<int> onSelect;
-
-  /// Straight from the design; not on the base-4 scale.
-  static const double _size = 36;
-  static const double _ring = 3;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (var index = 0; index < ProductSwatches.count; index++) ...[
-          if (index > 0) const SizedBox(width: AppSpacing.x3),
-          Semantics(
-            label: 'Placeholder colour ${index + 1}',
-            button: true,
-            selected: index == selected,
-            child: InkWell(
-              onTap: () => onSelect(index),
-              customBorder: const CircleBorder(),
-              child: Container(
-                height: _size,
-                width: _size,
-                decoration: BoxDecoration(
-                  color: ProductSwatches.at(index),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: index == selected
-                        ? AppColors.textDark
-                        : AppColors.border,
-                    width: index == selected ? _ring : 1,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
     );
   }
 }
