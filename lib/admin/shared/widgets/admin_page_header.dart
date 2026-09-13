@@ -7,23 +7,34 @@ import '../../../core/theme/app_typography.dart';
 import '../admin_tab.dart';
 
 /// Header used by the admin list screens: a back square, a centred title with
-/// a count beneath it, and an optional action on the right.
+/// a count beneath it, and up to two actions on the right.
 ///
-/// When there is no [action] an invisible square takes its place, so the title
-/// stays optically centred.
+/// Blank squares stand in for whatever is missing, so the two sides weigh the
+/// same and the title stays optically centred however many actions there are.
 class AdminPageHeader extends ConsumerWidget {
   const AdminPageHeader({
     super.key,
     required this.title,
     required this.subtitle,
     this.action,
+    this.secondaryAction,
   });
 
   final String title;
   final String subtitle;
+
+  /// The screen's main action, at the far right.
   final AdminHeaderAction? action;
 
+  /// A second action, sitting to the left of [action].
+  ///
+  /// Only where a screen genuinely has two — the header is not a toolbar, and
+  /// the title has to stay readable between them.
+  final AdminHeaderAction? secondaryAction;
+
   static const double squareSize = 40;
+
+  static const double _actionGap = AppSpacing.x2;
 
   /// Leaves the screen by whichever route it has.
   ///
@@ -41,7 +52,7 @@ class AdminPageHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trailing = action;
+    final trailing = [?secondaryAction, ?action];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -57,6 +68,12 @@ class AdminPageHeader extends ConsumerWidget {
             label: 'Back',
             onTap: () => _goBack(context, ref),
           ),
+          // One blank square on the left for every action past the first, so
+          // the two sides weigh the same and the title stays centred.
+          for (var extra = 1; extra < trailing.length; extra++) ...[
+            const SizedBox(width: _actionGap),
+            const SizedBox.square(dimension: squareSize),
+          ],
           Expanded(
             child: Column(
               children: [
@@ -65,14 +82,17 @@ class AdminPageHeader extends ConsumerWidget {
               ],
             ),
           ),
-          if (trailing == null)
+          if (trailing.isEmpty)
             const SizedBox.square(dimension: squareSize)
           else
-            AdminHeaderSquare(
-              icon: trailing.icon,
-              label: trailing.label,
-              onTap: trailing.onTap,
-            ),
+            for (final (index, item) in trailing.indexed) ...[
+              if (index > 0) const SizedBox(width: _actionGap),
+              AdminHeaderSquare(
+                icon: item.icon,
+                label: item.label,
+                onTap: item.onTap,
+              ),
+            ],
         ],
       ),
     );

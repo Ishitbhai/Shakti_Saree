@@ -29,6 +29,9 @@ class _ReadOnlyRepository implements ProductsRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<int> updateStock(Map<String, int> bySku) => throw UnimplementedError();
+
+  @override
   Future<RemovedProduct> deleteProduct(String sku) =>
       throw UnimplementedError();
 

@@ -8,6 +8,7 @@ import '../../core/utils/formatters.dart';
 import '../shared/widgets/admin_page_header.dart';
 import '../shared/widgets/async_content.dart';
 import 'add_product_screen.dart';
+import 'inventory_screen.dart';
 import 'product.dart';
 import '../shared/widgets/swatches.dart';
 import 'products_providers.dart';
@@ -93,6 +94,15 @@ class ProductsScreen extends ConsumerWidget {
               subtitle: products.maybeWhen(
                 data: (loaded) => '${Formatters.count(loaded.length)} total',
                 orElse: () => '',
+              ),
+              secondaryAction: AdminHeaderAction(
+                icon: Icons.inventory_2_outlined,
+                label: 'Inventory',
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const InventoryScreen(),
+                  ),
+                ),
               ),
               action: AdminHeaderAction(
                 icon: Icons.add,

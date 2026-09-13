@@ -27,6 +27,13 @@ abstract interface class ProductsRepository {
     required Product product,
   });
 
+  /// Sets the stock of several listings at once, answering with how many
+  /// actually moved.
+  ///
+  /// Rejects a negative quantity: there is no such thing as less than none
+  /// on a shelf.
+  Future<int> updateStock(Map<String, int> bySku);
+
   /// Removes a listing, answering with enough to put it back.
   Future<RemovedProduct> deleteProduct(String sku);
 
@@ -80,6 +87,18 @@ class InMemoryProductsRepository implements ProductsRepository {
       throw BadRequest(409, 'SKU ${product.sku} is already in use.');
     }
     return _store.replace(originalSku, product);
+  }
+
+  @override
+  Future<int> updateStock(Map<String, int> bySku) async {
+    final negative = bySku.entries.where((entry) => entry.value < 0);
+    if (negative.isNotEmpty) {
+      throw BadRequest(
+        400,
+        'Stock cannot be negative: check ${negative.first.key}.',
+      );
+    }
+    return _store.setStock(bySku);
   }
 
   @override

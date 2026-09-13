@@ -68,6 +68,31 @@ class ProductStore extends Notifier<List<Product>> {
     return moved;
   }
 
+  /// Sets the stock of several listings at once.
+  ///
+  /// One write rather than one per product: the inventory screen saves a
+  /// whole screenful at a time, and stepping the list through a dozen
+  /// intermediate states would have every watcher rebuild a dozen times.
+  /// Unknown SKUs are ignored — a listing deleted while the screen was open
+  /// is not a reason to lose the rest of the edit.
+  int setStock(Map<String, int> bySku) {
+    if (bySku.isEmpty) return 0;
+
+    var changed = 0;
+    state = [
+      for (final product in state)
+        if (bySku.containsKey(product.sku) &&
+            bySku[product.sku] != product.stock)
+          () {
+            changed++;
+            return product.copyWith(stock: bySku[product.sku]);
+          }()
+        else
+          product,
+    ];
+    return changed;
+  }
+
   /// Puts a new listing at the end of the catalogue.
   ///
   /// The end, because the list reads newest last — a new listing appearing at
