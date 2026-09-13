@@ -4,8 +4,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
-import '../../shared/models/order.dart';
-import '../../shared/widgets/status_pill.dart';
+import '../models/order.dart';
+import 'status_pill.dart';
 
 /// One row in the recent-orders list.
 class OrderTile extends StatelessWidget {

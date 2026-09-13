@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import '../customers/customers_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../orders/orders_screen.dart';
 import '../products/products_screen.dart';
@@ -32,7 +33,7 @@ class AdminShell extends ConsumerWidget {
           DashboardScreen(),
           ProductsScreen(),
           OrdersScreen(),
-          _NotBuiltYet(title: 'Users'),
+          CustomersScreen(),
           _NotBuiltYet(title: 'More'),
         ],
       ),

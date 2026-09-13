@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../shared/models/order.dart';
-import 'order_tile.dart';
+import '../../shared/widgets/order_tile.dart';
 
 /// 'Recent Orders' heading with a 'View all' action, followed by the tiles.
 class RecentOrdersSection extends StatelessWidget {
