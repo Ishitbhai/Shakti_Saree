@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shakti_saree/admin/categories/categories_screen.dart';
+import 'package:shakti_saree/admin/more/more_screen.dart';
 import 'package:shakti_saree/admin/shared/admin_tab.dart';
 import 'package:shakti_saree/admin/shell/admin_shell.dart';
 import 'package:shakti_saree/admin/shell/widgets/admin_bottom_nav.dart';
 import 'package:shakti_saree/core/theme/app_theme.dart';
+import 'package:shakti_saree/mock/mock_data.dart';
 
 /// Drives the real shell, so the bottom bar and the headers' back arrows are
 /// exercised against the same tab state the app runs on.
@@ -109,5 +112,26 @@ void main() {
     // Nothing to go back to from home, and the dashboard has its own header
     // rather than an AdminPageHeader.
     expect(visibleBack(), findsNothing);
+  });
+
+  testWidgets('the More tab is the settings page', (tester) async {
+    await pumpShell(tester);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AdminBottomNav),
+        matching: find.byIcon(AdminBottomNav.items[4].icon),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Signed-in admin, the two sections, and the way out — not the
+    // categories list, which now sits behind this page.
+    expect(find.byType(MoreScreen), findsOneWidget);
+    expect(find.text(MockData.admin().email), findsOneWidget);
+    expect(find.text('STORE'), findsOneWidget);
+    expect(find.text('SYSTEM'), findsOneWidget);
+    expect(find.text('Logout'), findsOneWidget);
+    expect(find.byType(CategoriesScreen), findsNothing);
   });
 }
