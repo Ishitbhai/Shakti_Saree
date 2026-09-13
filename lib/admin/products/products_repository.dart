@@ -11,6 +11,11 @@ abstract interface class ProductsRepository {
   /// The whole catalogue, newest listing last.
   Future<List<Product>> fetchProducts();
 
+  /// Adds a new listing and answers with what was stored.
+  ///
+  /// Rejects a SKU already in use, the same as an edit would.
+  Future<Product> createProduct(Product product);
+
   /// Saves an edited listing and answers with what was stored.
   ///
   /// [originalSku] identifies the row being edited; [product] may carry a
@@ -55,6 +60,14 @@ class InMemoryProductsRepository implements ProductsRepository {
 
   @override
   Future<List<Product>> fetchProducts() async => _store.products;
+
+  @override
+  Future<Product> createProduct(Product product) async {
+    if (_store.isSkuTaken(product.sku)) {
+      throw BadRequest(409, 'SKU ${product.sku} is already in use.');
+    }
+    return _store.add(product);
+  }
 
   @override
   Future<Product> updateProduct({

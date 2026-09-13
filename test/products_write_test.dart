@@ -239,6 +239,87 @@ void main() {
     });
   });
 
+  group('creating', () {
+    Future<void> openForm(WidgetTester tester) async {
+      _tallPhone(tester);
+      await tester.pumpWidget(_host());
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Add product'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('opens empty, not on the sample listing', (tester) async {
+      await openForm(tester);
+
+      expect(find.text('Add Product'), findsOneWidget);
+      expect(find.text('Publish'), findsOneWidget);
+
+      // Blank, so a new listing does not arrive holding a SKU the catalogue
+      // already has.
+      for (final label in ['Product Name', 'SKU Code', 'Price (₹)']) {
+        expect(
+          tester.widget<TextField>(_field(label)).controller!.text,
+          isEmpty,
+          reason: label,
+        );
+      }
+    });
+
+    testWidgets('an empty form will not publish', (tester) async {
+      await openForm(tester);
+      await tester.tap(find.text('Publish'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Give the product a name.'), findsOneWidget);
+      expect(find.text('A SKU is required.'), findsOneWidget);
+      expect(find.text('Price must be more than zero.'), findsOneWidget);
+      // Still on the form, and the catalogue is untouched.
+      expect(find.text('Add Product'), findsOneWidget);
+    });
+
+    testWidgets('a filled form lands on the list', (tester) async {
+      await openForm(tester);
+
+      await tester.enterText(_field('Product Name'), 'Chanderi Cotton Silk');
+      await tester.enterText(_field('SKU Code'), 'SS-1029');
+      await tester.enterText(_field('Price (₹)'), '2150');
+      await tester.enterText(_field('Stock Qty'), '2');
+      await tester.pumpAndSettle();
+
+      // The badge previews before it is saved.
+      expect(find.text('Low Stock'), findsOneWidget);
+
+      await tester.tap(find.text('Publish'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ProductTile), findsNWidgets(6));
+      expect(find.text('6 total'), findsOneWidget);
+      expect(find.text('Chanderi Cotton Silk'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: _tileFor('Chanderi Cotton Silk'),
+          matching: find.text('Low Stock'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a SKU the catalogue already has is refused', (tester) async {
+      await openForm(tester);
+
+      await tester.enterText(_field('Product Name'), 'Another Saree');
+      await tester.enterText(_field('SKU Code'), 'SS-1024');
+      await tester.enterText(_field('Price (₹)'), '1000');
+      await tester.enterText(_field('Stock Qty'), '5');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Publish'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('SKU SS-1024 is already in use.'), findsOneWidget);
+      expect(find.text('Add Product'), findsOneWidget);
+    });
+  });
+
   group('leaving the form', () {
     testWidgets('warns when there are unsaved changes', (tester) async {
       _tallPhone(tester);

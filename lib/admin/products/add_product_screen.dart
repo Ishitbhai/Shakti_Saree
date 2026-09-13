@@ -47,24 +47,24 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
   bool get _isEditing => _editing != null;
 
-  /// Editing opens on the stored listing. Creating still opens on the sample
-  /// from the design, which is what the mock shows.
-  late final _name = TextEditingController(
-    text: _editing?.name ?? 'Banarasi Silk Saree',
-  );
+  /// Editing opens on the stored listing; creating opens empty.
+  ///
+  /// The design's sample used to be typed in here, which was fine while the
+  /// form saved nothing. Now that it creates real records it cannot: the
+  /// sample carries SS-1024, which the catalogue already has, so a new
+  /// listing would open holding a SKU it is not allowed to keep.
+  late final _name = TextEditingController(text: _editing?.name ?? '');
   late final _price = TextEditingController(
-    text: Formatters.count((_editing?.pricePaise ?? 499900) ~/ 100),
+    text: _editing == null ? '' : Formatters.count(_editing!.pricePaise ~/ 100),
   );
   late final _stock = TextEditingController(
-    text: Formatters.count(_editing?.stock ?? 24),
+    text: _editing == null ? '' : Formatters.count(_editing!.stock),
   );
-  late final _sku = TextEditingController(text: _editing?.sku ?? 'SS-1024');
+  late final _sku = TextEditingController(text: _editing?.sku ?? '');
 
-  /// Nothing on the product to load these from, so an edit opens them empty
-  /// rather than showing the design's sample as though it were saved data.
-  late final _salePrice = TextEditingController(
-    text: _isEditing ? '' : Formatters.count(2499),
-  );
+  /// Nothing on the product to load these from, so they open empty whichever
+  /// mode this is.
+  late final _salePrice = TextEditingController();
   late final _description = TextEditingController();
 
   late String _category = _editing?.category ?? '';
@@ -242,14 +242,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   // ---------------------------------------------------------------- saving
   Future<void> _save() async {
     setState(() => _submitted = true);
-    final editing = _editing;
-    if (!_isValid || _saving || editing == null) return;
+    if (!_isValid || _saving) return;
 
+    final editing = _editing;
     setState(() => _saving = true);
     try {
-      await ref
-          .read(productsRepositoryProvider)
-          .updateProduct(originalSku: editing.sku, product: _draft);
+      final repository = ref.read(productsRepositoryProvider);
+      await (editing == null
+          ? repository.createProduct(_draft)
+          : repository.updateProduct(
+              originalSku: editing.sku,
+              product: _draft,
+            ));
       if (!mounted) return;
       // Saved, so there is nothing left to warn about.
       Navigator.of(context).pop();
@@ -340,6 +344,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                         textInputAction: TextInputAction.next,
                         style: AppTypography.bodyMedium,
                         decoration: InputDecoration(
+                          hintText: 'Banarasi Silk Saree',
                           errorText: _shown(_nameError),
                         ),
                       ),
@@ -411,6 +416,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                               textInputAction: TextInputAction.next,
                               style: AppTypography.bodyMedium,
                               decoration: InputDecoration(
+                                hintText: 'SS-1029',
                                 errorText: _shown(_skuError),
                               ),
                             ),
@@ -454,15 +460,17 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: _saving ? null : () => _leave(false),
-                            child: Text(_isEditing ? 'Cancel' : 'Save Draft'),
+                            // 'Save Draft' in the design, but there is no
+                            // draft flag on a product to save one against,
+                            // and a button that says Save while discarding
+                            // is worse than one with a plainer name.
+                            child: const Text('Cancel'),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.x3),
                         Expanded(
                           child: FilledButton(
-                            // Creating is still inert: the repository has no
-                            // create path yet, only an update.
-                            onPressed: _isEditing ? _save : () {},
+                            onPressed: _saving ? null : _save,
                             child: BusyLabel(
                               label: _isEditing ? 'Save Changes' : 'Publish',
                               busy: _saving,

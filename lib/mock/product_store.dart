@@ -68,6 +68,15 @@ class ProductStore extends Notifier<List<Product>> {
     return moved;
   }
 
+  /// Puts a new listing at the end of the catalogue.
+  ///
+  /// The end, because the list reads newest last — a new listing appearing at
+  /// the top would push everything the admin was looking at down a row.
+  Product add(Product product) {
+    state = [...state, product];
+    return product;
+  }
+
   /// Takes a product out, answering with where it was.
   ///
   /// The position comes back because undo has to put it where it came from
