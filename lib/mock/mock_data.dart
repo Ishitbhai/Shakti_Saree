@@ -1,4 +1,5 @@
 import '../admin/categories/category.dart';
+import '../admin/more/admin_profile.dart';
 import '../admin/orders/order_detail.dart';
 import '../admin/products/product.dart';
 import '../admin/shared/models/order.dart';
@@ -375,6 +376,16 @@ class MockData {
       ),
     ];
   }
+
+  /// Who is signed in.
+  ///
+  /// One fixed record: there is no sign-in, so there is nobody else it could
+  /// be.
+  static AdminProfile admin() => const AdminProfile(
+    name: 'Admin - Shakti Saree',
+    email: 'admin@shaktisaree.com',
+    role: 'Super Admin',
+  );
 
   /// The sample product catalogue.
   ///

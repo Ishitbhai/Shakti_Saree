@@ -7,7 +7,7 @@ import '../shared/models/order.dart';
 import '../shared/widgets/async_content.dart';
 import 'dashboard_providers.dart';
 import 'dashboard_stats.dart';
-import 'widgets/brand_monogram.dart';
+import '../shared/widgets/brand_monogram.dart';
 import 'widgets/dashboard_header.dart';
 import 'widgets/recent_orders_section.dart';
 import 'widgets/stat_grid.dart';
