@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/screens/my_orders_screen.dart';
+import 'package:shakti_saree/user/screens/profile_screen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
@@ -70,6 +71,12 @@ class AppBottomNavBar extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
+          );
+        }
+        if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfileScreen()),
           );
         }
       },
