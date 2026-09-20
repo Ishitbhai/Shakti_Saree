@@ -5,6 +5,7 @@ import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 import 'my_orders_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -168,7 +169,12 @@ class ProfileScreen extends StatelessWidget {
                       title: 'Edit Profile',
                       subtitle: 'Profile Saved',
                       onTap: () {
-                        // Will link to EditProfileScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditProfileScreen(),
+                          ),
+                        );
                       },
                     ),
                     Divider(
