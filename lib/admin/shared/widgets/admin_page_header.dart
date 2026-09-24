@@ -18,6 +18,7 @@ class AdminPageHeader extends ConsumerWidget {
     required this.subtitle,
     this.action,
     this.secondaryAction,
+    this.trailing,
   });
 
   final String title;
@@ -31,6 +32,13 @@ class AdminPageHeader extends ConsumerWidget {
   /// Only where a screen genuinely has two — the header is not a toolbar, and
   /// the title has to stay readable between them.
   final AdminHeaderAction? secondaryAction;
+
+  /// Something other than an action square at the far right — a badge, say.
+  ///
+  /// Takes the place of [action] and [secondaryAction] rather than sitting
+  /// beside them. It may be any width, so the title is centred in what is
+  /// left over rather than on the screen; a wide one pushes it along.
+  final Widget? trailing;
 
   static const double squareSize = 40;
 
@@ -52,7 +60,10 @@ class AdminPageHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trailing = [?secondaryAction, ?action];
+    final custom = trailing;
+    final actions = <AdminHeaderAction>[
+      if (custom == null) ...[?secondaryAction, ?action],
+    ];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -70,7 +81,7 @@ class AdminPageHeader extends ConsumerWidget {
           ),
           // One blank square on the left for every action past the first, so
           // the two sides weigh the same and the title stays centred.
-          for (var extra = 1; extra < trailing.length; extra++) ...[
+          for (var extra = 1; extra < actions.length; extra++) ...[
             const SizedBox(width: _actionGap),
             const SizedBox.square(dimension: squareSize),
           ],
@@ -82,10 +93,12 @@ class AdminPageHeader extends ConsumerWidget {
               ],
             ),
           ),
-          if (trailing.isEmpty)
+          if (custom != null)
+            custom
+          else if (actions.isEmpty)
             const SizedBox.square(dimension: squareSize)
           else
-            for (final (index, item) in trailing.indexed) ...[
+            for (final (index, item) in actions.indexed) ...[
               if (index > 0) const SizedBox(width: _actionGap),
               AdminHeaderSquare(
                 icon: item.icon,

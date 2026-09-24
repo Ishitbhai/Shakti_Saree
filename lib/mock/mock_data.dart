@@ -4,6 +4,7 @@ import '../admin/orders/order_detail.dart';
 import '../admin/products/product.dart';
 import '../admin/shared/models/order.dart';
 import '../admin/shared/models/order_status.dart';
+import '../admin/support/faq.dart';
 
 /// Sample orders for running the admin app without a backend.
 ///
@@ -457,6 +458,52 @@ class MockData {
     Category(name: 'Patola', swatchIndex: 4),
     Category(name: 'Paithani', swatchIndex: 0),
     Category(name: 'Organza', swatchIndex: 1, isHidden: true),
+  ];
+
+  /// The sample help questions, in the order the support screen lists them.
+  ///
+  /// Answers written the way an admin would need them: where to look, and
+  /// what to tell a customer who asks.
+  static List<Faq> faqs() => const [
+    Faq(
+      question: 'How to see status of my orders?',
+      answer:
+          'Go to Profile > My Orders. Every order there carries its live '
+          'status and a tracking link. Tracking starts working about 24 '
+          'hours after the order is placed.',
+    ),
+    Faq(
+      question: 'Can I apply a coupon code?',
+      answer:
+          'Coupon codes go in at checkout, one per order. A code that has '
+          'expired or does not cover the items in the basket is refused with '
+          'the reason.',
+    ),
+    Faq(
+      question: 'What is the return and refund policy?',
+      answer:
+          'Returns are accepted within 7 days of delivery, unworn and with '
+          'the tags on. Refunds reach the original payment method within 5 '
+          'to 7 working days of the parcel coming back.',
+    ),
+    Faq(
+      question: 'How much is the delivery charge?',
+      answer:
+          'Delivery is ₹99 on Cash on Delivery orders and free on everything '
+          'that is paid for up front.',
+    ),
+    Faq(
+      question: 'How long can a saree be?',
+      answer:
+          'Sarees are 5.5 metres, or 6.3 metres where a blouse piece is '
+          'included. The length is on every listing under the description.',
+    ),
+    Faq(
+      question: 'Is Cash on Delivery available?',
+      answer:
+          'Yes, on orders up to ₹10,000 and to pincodes our couriers cover. '
+          'Checkout says so before the order is placed if it is not on offer.',
+    ),
   ];
 
   /// The same orders as list summaries.
