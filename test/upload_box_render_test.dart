@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/products/widgets/image_upload_box.dart';
 import 'package:shakti_saree/core/theme/app_theme.dart';
 
@@ -29,8 +28,6 @@ Widget _host(Widget child) => MaterialApp(
 );
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   testWidgets('empty state prompts and reports the cap', (tester) async {
     var taps = 0;
     await tester.pumpWidget(_host(ImageUploadBox(onAdd: () => taps++)));

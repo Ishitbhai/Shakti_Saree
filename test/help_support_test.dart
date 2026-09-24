@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/more/more_screen.dart';
 import 'package:shakti_saree/admin/shared/widgets/labelled_field.dart';
 import 'package:shakti_saree/admin/support/faq.dart';
@@ -61,8 +60,6 @@ Future<List<Faq>> _stored(WidgetTester tester) =>
     _containerOf(tester).read(faqsRepositoryProvider).fetchFaqs();
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   Future<void> openSupport(WidgetTester tester) async {
     _tallPhone(tester);
     await tester.pumpWidget(_host(const HelpSupportScreen()));

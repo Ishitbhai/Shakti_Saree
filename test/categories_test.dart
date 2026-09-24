@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/categories/categories_providers.dart';
 import 'package:shakti_saree/admin/categories/categories_screen.dart';
 import 'package:shakti_saree/admin/categories/widgets/category_tile.dart';
@@ -38,8 +37,6 @@ ProviderContainer _containerOf(WidgetTester tester) =>
     );
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   group('the list', () {
     testWidgets('shows every grouping and how full it is', (tester) async {
       _tallPhone(tester);

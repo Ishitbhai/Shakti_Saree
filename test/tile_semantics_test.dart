@@ -2,7 +2,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/categories/category.dart';
 import 'package:shakti_saree/admin/categories/widgets/category_tile.dart';
 import 'package:shakti_saree/admin/more/admin_profile.dart';
@@ -46,8 +45,6 @@ void _expectOwnButton(WidgetTester tester, String label) {
 }
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   testWidgets('a product row keeps its buttons reachable', (tester) async {
     _phone(tester);
     // Disposed inline: the framework checks for leaked handles before

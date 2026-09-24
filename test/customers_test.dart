@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/customers/customer.dart';
 import 'package:shakti_saree/admin/customers/customers_providers.dart';
 import 'package:shakti_saree/admin/customers/customers_screen.dart';
@@ -42,8 +41,6 @@ ProviderContainer _container() {
 }
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   group('the list', () {
     testWidgets('counts everyone who has ordered', (tester) async {
       _tallPhone(tester);

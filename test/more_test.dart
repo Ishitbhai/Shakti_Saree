@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/categories/categories_screen.dart';
 import 'package:shakti_saree/admin/more/more_screen.dart';
 import 'package:shakti_saree/admin/products/products_providers.dart';
@@ -32,8 +31,6 @@ ProviderContainer _containerOf(WidgetTester tester) =>
     );
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   group('the page', () {
     testWidgets('shows who is signed in', (tester) async {
       _tallPhone(tester);
