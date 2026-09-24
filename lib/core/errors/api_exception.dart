@@ -1,8 +1,14 @@
-/// A failure the app can reason about, mapped from whatever the transport
-/// threw.
+/// A failure the app can reason about, separate from whatever caused it.
 ///
-/// Repositories surface these instead of `DioException`, so nothing above the
-/// data layer has to know which HTTP client is in use.
+/// Everything above the data layer catches these rather than something a
+/// particular source throws: the in-memory repositories raise them for the
+/// rules they enforce — a SKU already in use, a category that still holds
+/// listings — and the tests raise the rest to put the failure and retry
+/// states on screen.
+///
+/// The names borrow HTTP's vocabulary because it is a familiar way to say
+/// what kind of failure something is, not because anything here makes a
+/// request. Nothing in this app does.
 sealed class ApiException implements Exception {
   const ApiException(this.message);
 
@@ -24,13 +30,6 @@ class NetworkUnavailable extends ApiException {
 class RequestTimeout extends ApiException {
   const RequestTimeout([
     super.message = 'The server took too long to respond. Please retry.',
-  ]);
-}
-
-/// 401/403 — the session is missing, expired or not permitted.
-class Unauthorized extends ApiException {
-  const Unauthorized([
-    super.message = 'Your session has expired. Sign in again.',
   ]);
 }
 
@@ -62,13 +61,6 @@ class ServerError extends ApiException {
 /// The caller cancelled the request; usually not worth showing.
 class RequestCancelled extends ApiException {
   const RequestCancelled([super.message = 'Request cancelled.']);
-}
-
-/// The response arrived but was not the shape the app expected.
-class MalformedResponse extends ApiException {
-  const MalformedResponse([
-    super.message = 'The server sent something unexpected.',
-  ]);
 }
 
 /// Nothing above matched.
