@@ -6,7 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../shared/widgets/async_content.dart';
 import '../../shared/widgets/labelled_field.dart';
 import '../order_detail.dart';
-import '../orders_api_contract.dart';
+import '../order_options.dart';
 import '../../shared/widgets/busy_label.dart';
 
 /// Runs the ship transition and answers with the updated order.
@@ -81,7 +81,7 @@ class _ShipOrderSheetState extends State<ShipOrderSheet> {
     super.dispose();
   }
 
-  bool get _isOther => _selected == OrdersApiContract.otherCourierOption;
+  bool get _isOther => _selected == OrderOptions.otherCourierOption;
 
   /// What will actually be sent: the chosen carrier, or the typed one.
   String get _courierName =>
@@ -93,9 +93,9 @@ class _ShipOrderSheetState extends State<ShipOrderSheet> {
   /// consignments too differently for a stricter check to be safe.
   String? get _awbError {
     if (_awbNumber.isEmpty) return 'Enter the AWB number.';
-    if (_awbNumber.length < OrdersApiContract.awbMinLength) {
+    if (_awbNumber.length < OrderOptions.awbMinLength) {
       return 'That looks too short — AWB numbers are at least '
-          '${OrdersApiContract.awbMinLength} characters.';
+          '${OrderOptions.awbMinLength} characters.';
     }
     return null;
   }
@@ -164,11 +164,11 @@ class _ShipOrderSheetState extends State<ShipOrderSheet> {
                       hintText: 'Choose a courier',
                     ),
                     items: [
-                      for (final courier in OrdersApiContract.couriers)
+                      for (final courier in OrderOptions.couriers)
                         DropdownMenuItem(value: courier, child: Text(courier)),
                       const DropdownMenuItem(
-                        value: OrdersApiContract.otherCourierOption,
-                        child: Text(OrdersApiContract.otherCourierOption),
+                        value: OrderOptions.otherCourierOption,
+                        child: Text(OrderOptions.otherCourierOption),
                       ),
                     ],
                     onChanged: _submitting

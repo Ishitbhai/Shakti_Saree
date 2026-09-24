@@ -6,7 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../shared/widgets/async_content.dart';
 import '../../shared/widgets/labelled_field.dart';
 import '../order_detail.dart';
-import '../orders_api_contract.dart';
+import '../order_options.dart';
 import '../../shared/widgets/busy_label.dart';
 
 /// Runs the cancel transition and answers with the updated order.
@@ -103,7 +103,7 @@ class _CancelOrderSheetState extends State<CancelOrderSheet> {
     super.dispose();
   }
 
-  bool get _isOther => _selected == OrdersApiContract.otherReasonOption;
+  bool get _isOther => _selected == OrderOptions.otherReasonOption;
 
   /// What will actually be sent: the chosen line, or the typed one.
   String get _reason => _isOther ? _otherReason.text.trim() : (_selected ?? '');
@@ -166,12 +166,11 @@ class _CancelOrderSheetState extends State<CancelOrderSheet> {
                       hintText: 'Why is it being cancelled',
                     ),
                     items: [
-                      for (final reason
-                          in OrdersApiContract.cancellationReasons)
+                      for (final reason in OrderOptions.cancellationReasons)
                         DropdownMenuItem(value: reason, child: Text(reason)),
                       const DropdownMenuItem(
-                        value: OrdersApiContract.otherReasonOption,
-                        child: Text(OrdersApiContract.otherReasonOption),
+                        value: OrderOptions.otherReasonOption,
+                        child: Text(OrderOptions.otherReasonOption),
                       ),
                     ],
                     onChanged: _submitting
