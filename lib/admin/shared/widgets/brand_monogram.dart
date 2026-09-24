@@ -6,6 +6,10 @@ import '../../../core/theme/app_typography.dart';
 /// Gold circle carrying the two-letter mark, sitting between the stat grid
 /// and the recent orders list.
 ///
+/// Presentational: the callers hand it the signed-in admin's initials, so the
+/// mark follows a renamed profile. The default is the brand's own letters,
+/// for wherever there is no profile to read.
+///
 /// Decorative — hidden from screen readers.
 class BrandMonogram extends StatelessWidget {
   const BrandMonogram({super.key, this.initials = 'SS'});

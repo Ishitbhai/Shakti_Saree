@@ -45,9 +45,10 @@ void main() {
       expect(find.text(admin.name), findsOneWidget);
       expect(find.text(admin.email), findsOneWidget);
       expect(find.text(admin.role), findsOneWidget);
-      // First letter of the name on the avatar, 'SS' on the monogram.
-      expect(find.text('A'), findsOneWidget);
-      expect(find.text('SS'), findsOneWidget);
+      // First letter of the name on the avatar, both initials on the
+      // monogram — 'Priyanshu Kateshiya' gives P and PK.
+      expect(find.text(admin.initial), findsOneWidget);
+      expect(find.text(admin.initials), findsOneWidget);
     });
 
     testWidgets('lists the sections and the version', (tester) async {

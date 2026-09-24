@@ -5,12 +5,13 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../mock/category_store.dart';
-import '../../mock/mock_data.dart';
 import '../../mock/order_store.dart';
 import '../../mock/product_store.dart';
+import '../../mock/profile_store.dart';
 import '../categories/categories_screen.dart';
 import '../shared/admin_tab.dart';
 import '../shared/widgets/brand_monogram.dart';
+import 'edit_profile_screen.dart';
 import 'widgets/menu_section.dart';
 import 'widgets/more_header.dart';
 
@@ -67,6 +68,7 @@ class MoreScreen extends ConsumerWidget {
       ..invalidate(orderStoreProvider)
       ..invalidate(productStoreProvider)
       ..invalidate(categoryStoreProvider)
+      ..invalidate(profileStoreProvider)
       ..read(adminTabProvider.notifier).select(AdminTab.home);
 
     ScaffoldMessenger.of(
@@ -83,7 +85,7 @@ class MoreScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = MockData.admin();
+    final profile = ref.watch(profileStoreProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -93,7 +95,7 @@ class MoreScreen extends ConsumerWidget {
           children: [
             MoreHeader(profile: profile, onBack: () => _back(context, ref)),
             const SizedBox(height: AppSpacing.x6),
-            const BrandMonogram(),
+            BrandMonogram(initials: profile.initials),
             const SizedBox(height: AppSpacing.x8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: _screenPadding),
@@ -106,7 +108,11 @@ class MoreScreen extends ConsumerWidget {
                       MenuEntry(
                         icon: Icons.settings_outlined,
                         title: 'Admin Edit Profile',
-                        onTap: () => _notBuilt(context, 'Admin Edit Profile'),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const EditProfileScreen(),
+                          ),
+                        ),
                       ),
                       MenuEntry(
                         icon: Icons.people_outline,

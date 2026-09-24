@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../mock/profile_store.dart';
 import '../shared/models/order.dart';
 import '../shared/widgets/async_content.dart';
 import 'dashboard_providers.dart';
@@ -70,7 +71,9 @@ class DashboardScreen extends ConsumerWidget {
                     builder: (context, loaded) => StatGrid(stats: loaded),
                   ),
                   const SizedBox(height: AppSpacing.x6),
-                  const BrandMonogram(),
+                  BrandMonogram(
+                    initials: ref.watch(profileStoreProvider).initials,
+                  ),
                   // Wider than the gap above it — the design lets the
                   // monogram breathe before the list starts.
                   const SizedBox(height: AppSpacing.x16),
