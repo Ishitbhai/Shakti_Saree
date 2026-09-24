@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/categories/categories_screen.dart';
 import 'package:shakti_saree/admin/more/more_screen.dart';
 import 'package:shakti_saree/admin/shared/admin_tab.dart';
@@ -13,8 +12,6 @@ import 'package:shakti_saree/mock/mock_data.dart';
 /// Drives the real shell, so the bottom bar and the headers' back arrows are
 /// exercised against the same tab state the app runs on.
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   Future<void> pumpShell(WidgetTester tester) async {
     tester.view.physicalSize = const Size(390, 1600);
     tester.view.devicePixelRatio = 1.0;

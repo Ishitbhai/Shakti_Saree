@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/products/product.dart';
 import 'package:shakti_saree/admin/products/products_screen.dart';
 import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
@@ -57,8 +56,6 @@ Future<void> _openEditor(WidgetTester tester, String name) async {
 }
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   group('editing', () {
     testWidgets('opens on the listing that was tapped', (tester) async {
       _tallPhone(tester);

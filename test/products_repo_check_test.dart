@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/products/product.dart';
 import 'package:shakti_saree/admin/products/products_providers.dart';
 import 'package:shakti_saree/admin/products/products_repository.dart';
@@ -73,8 +72,6 @@ List<Override> _using(ProductsRepository repository) => [
 ];
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   testWidgets('renders the catalogue exactly as before', (tester) async {
     tester.view.physicalSize = const Size(390, 900);
     tester.view.devicePixelRatio = 1.0;

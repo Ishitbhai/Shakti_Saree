@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/orders/order_detail.dart';
 import 'package:shakti_saree/admin/orders/order_detail_screen.dart';
 import 'package:shakti_saree/admin/orders/orders_providers.dart';
@@ -216,8 +215,6 @@ void _phone(WidgetTester tester) {
 }
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   group('action bar', () {
     testWidgets('a new order offers Accept and Cancel', (tester) async {
       _phone(tester);

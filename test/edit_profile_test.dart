@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:shakti_saree/admin/more/admin_profile.dart';
 import 'package:shakti_saree/admin/more/edit_profile_screen.dart';
@@ -106,8 +105,6 @@ _FakeGallery _useGallery({Uint8List? returns, Exception? throws}) {
 }
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   /// Opens the form the way the app does — pushed from the More tab.
   ///
   /// Pumping it as the home route would leave nothing to pop, and the

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_providers.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_repository.dart';
 import 'package:shakti_saree/admin/dashboard/dashboard_screen.dart';
@@ -114,8 +113,6 @@ Widget _host(Widget child, {List<Override> overrides = const []}) =>
     );
 
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
-
   group('orders', () {
     testWidgets('renders a card per new order, in full', (tester) async {
       tester.view.physicalSize = const Size(390, 1400);

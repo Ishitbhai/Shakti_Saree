@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,8 +7,26 @@ import 'admin/shell/admin_shell.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 
+/// The bundled fonts and the licence each ships under.
+///
+/// Both are Open Font License, which asks that the licence travel with the
+/// font. google_fonts used to register this for us; now that the files are
+/// ours, so is the obligation.
+const Map<String, String> _fontLicences = {
+  'Inter': 'assets/fonts/OFL-Inter.txt',
+  'Playfair Display': 'assets/fonts/OFL-PlayfairDisplay.txt',
+};
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  LicenseRegistry.addLicense(() async* {
+    for (final entry in _fontLicences.entries) {
+      yield LicenseEntryWithLineBreaks([
+        entry.key,
+      ], await rootBundle.loadString(entry.value));
+    }
+  });
 
   // Draw behind the system bars so the maroon header runs to the top of the
   // screen instead of sitting under a tinted status-bar band.
