@@ -5,12 +5,14 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../mock/category_store.dart';
+import '../../mock/faq_store.dart';
 import '../../mock/order_store.dart';
 import '../../mock/product_store.dart';
 import '../../mock/profile_store.dart';
 import '../categories/categories_screen.dart';
 import '../shared/admin_tab.dart';
 import '../shared/widgets/brand_monogram.dart';
+import '../support/help_support_screen.dart';
 import 'edit_profile_screen.dart';
 import 'widgets/menu_section.dart';
 import 'widgets/more_header.dart';
@@ -36,7 +38,7 @@ class MoreScreen extends ConsumerWidget {
   /// Signs out by throwing away the session.
   ///
   /// There is no sign-in to return to, and nothing is stored anywhere but in
-  /// memory — so the session *is* the three stores, and discarding them is
+  /// memory — so the session *is* the stores, and discarding them is
   /// the honest meaning of logging out here. Everything returns to the seed
   /// data, exactly as a restart would leave it.
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
@@ -69,6 +71,7 @@ class MoreScreen extends ConsumerWidget {
       ..invalidate(productStoreProvider)
       ..invalidate(categoryStoreProvider)
       ..invalidate(profileStoreProvider)
+      ..invalidate(faqStoreProvider)
       ..read(adminTabProvider.notifier).select(AdminTab.home);
 
     ScaffoldMessenger.of(
@@ -141,8 +144,12 @@ class MoreScreen extends ConsumerWidget {
                       MenuEntry(
                         icon: Icons.help_outline,
                         title: 'Help & Support',
-                        subtitle: 'Docs, contact developer',
-                        onTap: () => _notBuilt(context, 'Help & Support'),
+                        subtitle: 'Guides for managing your panel',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const HelpSupportScreen(),
+                          ),
+                        ),
                       ),
                     ],
                   ),
