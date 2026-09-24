@@ -381,10 +381,15 @@ class MockData {
   ///
   /// One fixed record: there is no sign-in, so there is nobody else it could
   /// be.
-  static AdminProfile admin() => const AdminProfile(
-    name: 'Admin - Shakti Saree',
-    email: 'admin@shaktisaree.com',
+  ///
+  /// Not const: a [DateTime] has no const constructor.
+  static AdminProfile admin() => AdminProfile(
+    name: 'Priyanshu Kateshiya',
+    email: 'k@example.com',
     role: 'Super Admin',
+    mobile: '+91 98765 43210',
+    dateOfBirth: DateTime(2002, 8, 12),
+    gender: Gender.male,
   );
 
   /// The sample product catalogue.
