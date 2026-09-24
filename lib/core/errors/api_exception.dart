@@ -58,11 +58,6 @@ class ServerError extends ApiException {
   final int statusCode;
 }
 
-/// The caller cancelled the request; usually not worth showing.
-class RequestCancelled extends ApiException {
-  const RequestCancelled([super.message = 'Request cancelled.']);
-}
-
 /// Nothing above matched.
 class UnknownApiException extends ApiException {
   const UnknownApiException([
