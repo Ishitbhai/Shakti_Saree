@@ -59,24 +59,21 @@ void main() {
       expect(find.text('STORE'), findsOneWidget);
       expect(find.text('SYSTEM'), findsOneWidget);
       expect(find.text('Admin Edit Profile'), findsOneWidget);
-      expect(find.text('Staff & Roles'), findsOneWidget);
+      expect(find.text('Manage Categories'), findsOneWidget);
       expect(find.text('Help & Support'), findsOneWidget);
       expect(find.text('Shakti Saree Admin • v1.0.0'), findsOneWidget);
     });
   });
 
   group('the rows', () {
-    testWidgets('a row with nowhere to go says so rather than nothing', (
-      tester,
-    ) async {
+    testWidgets('every row leads somewhere', (tester) async {
       _tallPhone(tester);
       await tester.pumpWidget(_host());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Staff & Roles'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Staff & Roles has not been built yet'), findsOneWidget);
+      // Nothing on this tab is a dead end any more, so nothing wears the
+      // "Soon" label the menu shows a row with nowhere to go.
+      expect(find.text('Soon'), findsNothing);
     });
 
     testWidgets('categories is reachable from here', (tester) async {

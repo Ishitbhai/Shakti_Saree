@@ -79,13 +79,6 @@ class MoreScreen extends ConsumerWidget {
     ).showSnackBar(const SnackBar(content: Text('Back to the sample data')));
   }
 
-  /// Says plainly that a screen has not been built rather than doing nothing.
-  void _notBuilt(BuildContext context, String what) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$what has not been built yet')));
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileStoreProvider);
@@ -116,11 +109,6 @@ class MoreScreen extends ConsumerWidget {
                             builder: (_) => const EditProfileScreen(),
                           ),
                         ),
-                      ),
-                      MenuEntry(
-                        icon: Icons.people_outline,
-                        title: 'Staff & Roles',
-                        onTap: () => _notBuilt(context, 'Staff & Roles'),
                       ),
                       // Not on the settings mock, but the categories screen
                       // is reached from this tab and would otherwise have no
