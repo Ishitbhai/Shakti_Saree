@@ -23,6 +23,7 @@ class MoreHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     // Status bar height varies with the notch; read it rather than assuming.
     final topInset = MediaQuery.paddingOf(context).top;
+    final photo = profile.photo;
 
     return Container(
       width: double.infinity,
@@ -81,16 +82,27 @@ class MoreHeader extends StatelessWidget {
                     height: _avatar,
                     width: _avatar,
                     alignment: Alignment.center,
+                    clipBehavior: Clip.antiAlias,
                     decoration: const BoxDecoration(
                       color: AppColors.accent,
                       shape: BoxShape.circle,
                     ),
-                    child: Text(
-                      profile.initial,
-                      style: AppTypography.titleMedium.copyWith(
-                        color: AppColors.textOnAccent,
-                      ),
-                    ),
+                    // The picture where the admin has set one, their initial
+                    // where they have not.
+                    child: photo == null
+                        ? Text(
+                            profile.initial,
+                            style: AppTypography.titleMedium.copyWith(
+                              color: AppColors.textOnAccent,
+                            ),
+                          )
+                        : Image.memory(
+                            photo,
+                            fit: BoxFit.cover,
+                            width: _avatar,
+                            height: _avatar,
+                            gaplessPlayback: true,
+                          ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.x3),

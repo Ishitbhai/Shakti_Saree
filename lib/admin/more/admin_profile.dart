@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 /// Which of the three the profile form has selected.
 ///
 /// Three buttons rather than a free-text field, because that is all the form
@@ -33,6 +35,7 @@ class AdminProfile {
     required this.mobile,
     required this.dateOfBirth,
     required this.gender,
+    this.photo,
   });
 
   final String name;
@@ -50,6 +53,20 @@ class AdminProfile {
   final DateTime dateOfBirth;
 
   final Gender gender;
+
+  /// The profile picture, as encoded image bytes, or null for none.
+  ///
+  /// Bytes rather than a path, so the same code paints it on mobile, desktop
+  /// and web without touching `dart:io` — and because a picked file's path is
+  /// a temporary the system is free to delete, while what the profile holds
+  /// has to outlive the picker.
+  ///
+  /// In memory only, like everything else in the store: a restart loses it,
+  /// exactly as a restart loses an edited product.
+  final Uint8List? photo;
+
+  /// Whether there is a picture to show instead of [initials].
+  bool get hasPhoto => photo != null;
 
   /// The single letter on the More tab's avatar.
   String get initial =>
@@ -70,6 +87,11 @@ class AdminProfile {
     return (words.first[0] + last).toUpperCase();
   }
 
+  /// Carries the photo through untouched.
+  ///
+  /// Taking one *off* a profile cannot go through here — `photo ?? this.photo`
+  /// has no way to say "none" — so removing a picture builds the profile with
+  /// the constructor instead, which is what the form does.
   AdminProfile copyWith({
     String? name,
     String? email,
@@ -77,6 +99,7 @@ class AdminProfile {
     String? mobile,
     DateTime? dateOfBirth,
     Gender? gender,
+    Uint8List? photo,
   }) => AdminProfile(
     name: name ?? this.name,
     email: email ?? this.email,
@@ -84,6 +107,7 @@ class AdminProfile {
     mobile: mobile ?? this.mobile,
     dateOfBirth: dateOfBirth ?? this.dateOfBirth,
     gender: gender ?? this.gender,
+    photo: photo ?? this.photo,
   );
 
   @override
@@ -94,9 +118,36 @@ class AdminProfile {
       other.role == role &&
       other.mobile == mobile &&
       other.dateOfBirth == dateOfBirth &&
-      other.gender == gender;
+      other.gender == gender &&
+      _samePhoto(other.photo, photo);
 
+  /// Two pictures are the same picture when they are the same bytes.
+  ///
+  /// By content rather than by identity, because the picker hands back a new
+  /// list every time: choosing the same file again would otherwise leave the
+  /// form looking edited when nothing about it had changed. The length check
+  /// settles the ordinary case — a different picture — without walking
+  /// either list.
+  static bool _samePhoto(Uint8List? a, Uint8List? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null || a.length != b.length) return false;
+    for (var index = 0; index < a.length; index++) {
+      if (a[index] != b[index]) return false;
+    }
+    return true;
+  }
+
+  /// The photo is left out: equal profiles have to agree on their hash codes,
+  /// and two equal pictures are different objects. Its length stands in,
+  /// which is cheap and keeps the contract.
   @override
-  int get hashCode =>
-      Object.hash(name, email, role, mobile, dateOfBirth, gender);
+  int get hashCode => Object.hash(
+    name,
+    email,
+    role,
+    mobile,
+    dateOfBirth,
+    gender,
+    photo?.length,
+  );
 }

@@ -1,5 +1,8 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -18,13 +21,19 @@ import 'widgets/gender_selector.dart';
 /// a field edited back to the value it started with leaves nothing to save.
 ///
 /// Only what [AdminProfile] holds is editable. The role is carried through
-/// untouched — it is not the admin's to change — and the photo has nowhere to
-/// be stored at all.
+/// untouched — it is not the admin's to change.
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
 
   /// The earliest birth date the picker offers.
   static final DateTime earliestBirthDate = DateTime(1900);
+
+  /// How large a picked photo is kept.
+  ///
+  /// An avatar is never shown bigger than a coin, and the bytes live in
+  /// memory for as long as the app does — a 12-megapixel original would be
+  /// megabytes of it for no visible gain.
+  static const double maxPhotoSize = 512;
 
   @override
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -47,6 +56,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   late DateTime _dateOfBirth = _opened.dateOfBirth;
   late Gender _gender = _opened.gender;
+  late Uint8List? _photo = _opened.photo;
+
+  final _picker = ImagePicker();
 
   /// Set once Save has been pressed, so the form does not open already
   /// complaining about fields nobody has touched.
@@ -87,13 +99,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   /// The profile as currently typed.
   ///
   /// Trimmed, so trailing whitespace is neither saved nor mistaken for an
-  /// edit. Built from the stored record, so the role rides along untouched.
-  AdminProfile get _draft => _stored.copyWith(
+  /// edit. Spelled out with the constructor rather than [AdminProfile.copyWith]
+  /// so that a removed photo is a removed photo, and not a value copyWith
+  /// reads as "leave it alone". The role is the one thing carried over.
+  AdminProfile get _draft => AdminProfile(
     name: _name.text.trim(),
     email: _email.text.trim(),
+    role: _stored.role,
     mobile: _mobile.text.trim(),
     dateOfBirth: _dateOfBirth,
     gender: _gender,
+    photo: _photo,
   );
 
   bool get _isDirty => _draft != _stored;
@@ -162,13 +178,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
   }
 
-  /// Says plainly that something has not been built rather than doing
-  /// nothing — the same answer the unbuilt rows on the More tab give.
-  void _notBuilt(String what) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$what has not been built yet')));
+  /// Opens the gallery and takes the picture that comes back into the draft.
+  ///
+  /// Bytes are read here rather than a path kept, so the thumbnail renders
+  /// the same way on mobile and on web — where a file path is a blob URL
+  /// rather than something on disk — and so the picture survives the system
+  /// clearing up the temporary file the picker handed over.
+  ///
+  /// Nothing is stored until Save, like every other field on this form.
+  Future<void> _pickPhoto() async {
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: EditProfileScreen.maxPhotoSize,
+        maxHeight: EditProfileScreen.maxPhotoSize,
+      );
+      // Null means the gallery was closed without choosing anything, which
+      // is not a failure and should leave the draft exactly as it was.
+      if (picked == null) return;
+
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() => _photo = bytes);
+    } on Exception catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text('Could not open the gallery: $error')),
+        );
+    }
   }
+
+  /// Takes the picture off the draft, putting the initials back.
+  void _removePhoto() => setState(() => _photo = null);
 
   // -------------------------------------------------------- unsaved changes
   /// Asks before throwing away edits. Answers true if it is fine to leave.
@@ -223,8 +266,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           children: [
             _ProfileHeader(
               initials: _draft.initials,
+              photo: _photo,
               onBack: () => Navigator.maybePop(context),
-              onChangePhoto: () => _notBuilt('Change Photo'),
+              onChangePhoto: _pickPhoto,
+              onRemovePhoto: _photo == null ? null : _removePhoto,
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -328,11 +373,21 @@ class _ProfileHeader extends StatelessWidget {
     required this.initials,
     required this.onBack,
     required this.onChangePhoto,
+    this.photo,
+    this.onRemovePhoto,
   });
 
   final String initials;
+
+  /// The picture as the draft has it, or null while there is none.
+  final Uint8List? photo;
+
   final VoidCallback onBack;
   final VoidCallback onChangePhoto;
+
+  /// Null where there is no picture to take off, which is also when the
+  /// action has no business being on screen.
+  final VoidCallback? onRemovePhoto;
 
   /// Straight from the design; not on the base-4 scale.
   static const double _avatar = 72;
@@ -404,47 +459,82 @@ class _ProfileHeader extends StatelessWidget {
               left: 0,
               right: 0,
               bottom: -_avatar / 2,
-              child: Center(child: _Avatar(initials: initials)),
+              child: Center(
+                child: _Avatar(initials: initials, photo: photo),
+              ),
             ),
           ],
         ),
         // The half of the avatar hanging below the block, and the gap under
         // it.
         const SizedBox(height: _avatar / 2 + AppSpacing.x2),
-        TextButton(onPressed: onChangePhoto, child: const Text('Change Photo')),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: onChangePhoto,
+              child: Text(photo == null ? 'Change Photo' : 'Replace Photo'),
+            ),
+            // Only where there is something to remove — the design has one
+            // action, and a dead second one would be worse than none.
+            if (onRemovePhoto != null)
+              TextButton(
+                onPressed: onRemovePhoto,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textGrey,
+                ),
+                child: const Text('Remove Photo'),
+              ),
+          ],
+        ),
       ],
     );
   }
 }
 
-/// Gold circle carrying the admin's initials, with the camera badge.
+/// The picture — or the gold circle with the admin's initials where there is
+/// none — and the camera badge.
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.initials});
+  const _Avatar({required this.initials, this.photo});
 
   final String initials;
+  final Uint8List? photo;
 
   @override
   Widget build(BuildContext context) {
+    final photo = this.photo;
+
     return SizedBox.square(
       dimension: _ProfileHeader._avatar,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Decorative: the name field below says who this is, and Change
-          // Photo is the control.
+          // Decorative: the name field below says who this is, and the photo
+          // actions underneath are the controls.
           ExcludeSemantics(
             child: Container(
               alignment: Alignment.center,
+              clipBehavior: Clip.antiAlias,
               decoration: const BoxDecoration(
                 color: AppColors.accent,
                 shape: BoxShape.circle,
               ),
-              child: Text(
-                initials,
-                style: AppTypography.displaySmall.copyWith(
-                  color: AppColors.textOnAccent,
-                ),
-              ),
+              child: photo == null
+                  ? Text(
+                      initials,
+                      style: AppTypography.displaySmall.copyWith(
+                        color: AppColors.textOnAccent,
+                      ),
+                    )
+                  : Image.memory(
+                      photo,
+                      fit: BoxFit.cover,
+                      width: _ProfileHeader._avatar,
+                      height: _ProfileHeader._avatar,
+                      // The bytes are already in hand; fading in from nothing
+                      // would only make the avatar flicker on every rebuild.
+                      gaplessPlayback: true,
+                    ),
             ),
           ),
           const Positioned(
