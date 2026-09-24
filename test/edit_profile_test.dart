@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:shakti_saree/admin/more/admin_profile.dart';
 import 'package:shakti_saree/admin/more/edit_profile_screen.dart';
 import 'package:shakti_saree/admin/more/more_screen.dart';
@@ -48,6 +52,59 @@ AdminProfile _stored(WidgetTester tester) =>
 bool _saveEnabled(WidgetTester tester) =>
     tester.widget<FilledButton>(_saveButton).onPressed != null;
 
+/// A real 1x1 PNG — the avatar decodes whatever it is handed, and a fistful
+/// of arbitrary bytes would fail to decode.
+///
+/// A fresh list each call, the way the picker hands back a fresh one, so a
+/// test can tell "the same picture again" from "the very same object".
+Uint8List _png() => base64Decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGA'
+  'hKmMIQAAAABJRU5ErkJggg==',
+);
+
+/// Stands in for the gallery.
+///
+/// Extended rather than mocked with a package: image_picker is reached through
+/// its platform interface, so swapping the instance is all a fake needs to do
+/// — and [ImagePicker] then runs its own code down to the last step.
+class _FakeGallery extends ImagePickerPlatform {
+  _FakeGallery({this.returns, this.throws});
+
+  /// What choosing hands back. Null stands for a gallery closed without
+  /// choosing anything.
+  final Uint8List? returns;
+
+  /// Raised instead, for the case where the gallery will not open.
+  final Exception? throws;
+
+  /// How many times the gallery was opened.
+  int openings = 0;
+
+  @override
+  Future<XFile?> getImageFromSource({
+    required ImageSource source,
+    ImagePickerOptions options = const ImagePickerOptions(),
+  }) async {
+    openings++;
+    final failure = throws;
+    if (failure != null) throw failure;
+
+    final bytes = returns;
+    return bytes == null
+        ? null
+        : XFile.fromData(bytes, name: 'photo.png', mimeType: 'image/png');
+  }
+}
+
+/// Puts a fake gallery behind the picker for one test.
+_FakeGallery _useGallery({Uint8List? returns, Exception? throws}) {
+  final previous = ImagePickerPlatform.instance;
+  final gallery = _FakeGallery(returns: returns, throws: throws);
+  ImagePickerPlatform.instance = gallery;
+  addTearDown(() => ImagePickerPlatform.instance = previous);
+  return gallery;
+}
+
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
@@ -58,6 +115,29 @@ void main() {
   Future<void> openProfile(WidgetTester tester) async {
     _tallPhone(tester);
     await tester.pumpWidget(_host());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Admin Edit Profile'));
+    await tester.pumpAndSettle();
+  }
+
+  /// Opens the form on an admin who already has a photo.
+  ///
+  /// Stored before the screen is pushed, because the form takes its draft
+  /// from the store as it opens — a picture arriving after that would never
+  /// reach the draft.
+  Future<void> openProfileWearingPhoto(
+    WidgetTester tester,
+    Uint8List photo,
+  ) async {
+    _tallPhone(tester);
+    await tester.pumpWidget(_host());
+    await tester.pumpAndSettle();
+
+    final container = _containerOf(tester);
+    container
+        .read(profileStoreProvider.notifier)
+        .save(container.read(profileStoreProvider).copyWith(photo: photo));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Admin Edit Profile'));
@@ -112,15 +192,111 @@ void main() {
       }
     });
 
-    testWidgets('a photo it cannot store says so rather than nothing', (
+    testWidgets('an admin with no photo wears their initials', (tester) async {
+      await openProfile(tester);
+
+      expect(find.byType(Image), findsNothing);
+      expect(find.text('Change Photo'), findsOneWidget);
+      // Nothing to take off yet.
+      expect(find.text('Remove Photo'), findsNothing);
+    });
+  });
+
+  group('the photo', () {
+    testWidgets('choosing one shows it and leaves something to save', (
       tester,
     ) async {
+      final gallery = _useGallery(returns: _png());
       await openProfile(tester);
 
       await tester.tap(find.text('Change Photo'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Change Photo has not been built yet'), findsOneWidget);
+      expect(gallery.openings, 1);
+      expect(find.byType(Image), findsOneWidget);
+      expect(_saveEnabled(tester), isTrue);
+      // Not stored until Save, like every other field on the form.
+      expect(_stored(tester).photo, isNull);
+    });
+
+    testWidgets('saving stores the picture', (tester) async {
+      _useGallery(returns: _png());
+      await openProfile(tester);
+
+      await tester.tap(find.text('Change Photo'));
+      await tester.pumpAndSettle();
+      await save(tester);
+
+      expect(find.byType(EditProfileScreen), findsNothing);
+      expect(_stored(tester).photo, _png());
+      // And the More tab is wearing it.
+      expect(find.byType(Image), findsOneWidget);
+    });
+
+    testWidgets('a gallery closed without choosing changes nothing', (
+      tester,
+    ) async {
+      final gallery = _useGallery();
+      await openProfile(tester);
+
+      await tester.tap(find.text('Change Photo'));
+      await tester.pumpAndSettle();
+
+      expect(gallery.openings, 1);
+      expect(find.byType(Image), findsNothing);
+      expect(_saveEnabled(tester), isFalse);
+    });
+
+    testWidgets('a gallery that will not open says so', (tester) async {
+      _useGallery(throws: Exception('no permission'));
+      await openProfile(tester);
+
+      await tester.tap(find.text('Change Photo'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Could not open the gallery'), findsOneWidget);
+      expect(_saveEnabled(tester), isFalse);
+    });
+
+    testWidgets('the same picture again is not an edit', (tester) async {
+      // Already wearing this picture, and the gallery hands back the same
+      // file: a new list of identical bytes, which is not a change.
+      _useGallery(returns: _png());
+      await openProfileWearingPhoto(tester, _png());
+
+      await tester.tap(find.text('Replace Photo'));
+      await tester.pumpAndSettle();
+
+      expect(_saveEnabled(tester), isFalse);
+    });
+
+    testWidgets('a stored picture can be taken off again', (tester) async {
+      await openProfileWearingPhoto(tester, _png());
+      expect(find.byType(Image), findsOneWidget);
+
+      await tester.tap(find.text('Remove Photo'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(Image), findsNothing);
+      expect(_saveEnabled(tester), isTrue);
+
+      await save(tester);
+      expect(_stored(tester).photo, isNull);
+    });
+
+    testWidgets('discarding keeps the stored picture', (tester) async {
+      _useGallery(returns: _png());
+      await openProfile(tester);
+
+      await tester.tap(find.text('Change Photo'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Discard'));
+      await tester.pumpAndSettle();
+
+      expect(_stored(tester).photo, isNull);
     });
   });
 
