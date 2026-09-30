@@ -6,6 +6,7 @@ import '../styles/app_text_styles.dart';
 import '../widgets/app_bottom_nav_bar.dart';
 import 'my_orders_screen.dart';
 import 'edit_profile_screen.dart';
+import 'help_and_support_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -205,9 +206,14 @@ class ProfileScreen extends StatelessWidget {
                     _buildMenuItem(
                       icon: Icons.help_outline,
                       title: 'Help & Support',
-                      subtitle: 'FAQ',
+                      subtitle: 'FAQ, chat, call',
                       onTap: () {
-                        // Will link to HelpAndSupportScreen
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HelpAndSupportScreen(),
+                          ),
+                        );
                       },
                     ),
                   ],

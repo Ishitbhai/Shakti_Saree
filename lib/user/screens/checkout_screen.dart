@@ -4,6 +4,7 @@ import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import '../widgets/app_back_button.dart';
 import 'order_success_screen.dart';
+import 'add_edit_address_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -57,7 +58,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         height: circleSize,
                         child: Stack(
                           children: [
-
                             Positioned(
                               left: stepWidth / 2,
                               top: circleSize / 2 - 1,
@@ -218,10 +218,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                                     const Spacer(),
 
-                                    const Icon(
-                                      Icons.edit_outlined,
-                                      color: AppColors.primary,
-                                      size: 20,
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const AddEditAddressScreen(),
+                                          ),
+                                        );
+                                      },
+                                      child: const Icon(
+                                        Icons.edit_outlined,
+                                        color: AppColors.primary,
+                                        size: 20,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -255,7 +266,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const SizedBox(height: 14),
 
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddEditAddressScreen(),
+                          ),
+                        );
+                      },
                       child: Row(
                         children: [
                           const Icon(
@@ -360,7 +378,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-
   Widget _buildStepCircle({
     IconData? icon,
     String? number,
@@ -413,7 +430,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           : null,
     );
   }
-
 
   Widget _buildPaymentOption({
     required String title,
