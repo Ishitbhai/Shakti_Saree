@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/screens/my_orders_screen.dart';
 import 'package:shakti_saree/user/screens/profile_screen.dart';
+import 'package:shakti_saree/user/screens/home_screen.dart';
+import 'package:shakti_saree/user/screens/categories_screen.dart';
+import 'package:shakti_saree/user/screens/cart_screen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
@@ -67,6 +70,24 @@ class AppBottomNavBar extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
+        if (index == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        }
+        if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CategoriesScreen()),
+          );
+        }
+        if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CartScreen()),
+          );
+        }
         if (index == 3) {
           Navigator.push(
             context,
