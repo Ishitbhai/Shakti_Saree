@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shakti_saree/user/screens/my_orders_screen.dart';
+import 'package:shakti_saree/user/screens/MainNavigationScreen.dart';
+// import 'package:shakti_saree/user/screens/my_orders_screen.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
@@ -124,11 +125,13 @@ class OrderSuccessScreen extends StatelessWidget {
                 height: 48,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MyOrdersScreen(),
+                        builder: (context) =>
+                            const MainNavigationScreen(initialIndex: 3),
                       ),
+                      (route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(

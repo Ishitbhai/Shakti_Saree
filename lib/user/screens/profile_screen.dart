@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
-import '../widgets/app_bottom_nav_bar.dart';
+// import '../widgets/app_bottom_nav_bar.dart';
 import 'my_orders_screen.dart';
 import 'edit_profile_screen.dart';
 import 'help_and_support_screen.dart';
@@ -265,9 +265,6 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
       ),
-
-      // ================= BOTTOM NAVIGATION =================
-      bottomNavigationBar: const AppBottomNavBar(selectedIndex: 4),
     );
   }
 
