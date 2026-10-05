@@ -2,16 +2,16 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/categories/category.dart';
-import 'package:shakti_saree/admin/categories/widgets/category_tile.dart';
-import 'package:shakti_saree/admin/more/admin_profile.dart';
-import 'package:shakti_saree/admin/more/widgets/gender_selector.dart';
-import 'package:shakti_saree/admin/products/product.dart';
-import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
-import 'package:shakti_saree/admin/shared/widgets/swatches.dart';
-import 'package:shakti_saree/admin/support/faq.dart';
-import 'package:shakti_saree/admin/support/widgets/faq_tile.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
+import 'package:shakti_saree/admin/models/category.dart';
+import 'package:shakti_saree/admin/widgets/categories/category_tile.dart';
+import 'package:shakti_saree/admin/models/admin_profile.dart';
+import 'package:shakti_saree/admin/widgets/more/gender_selector.dart';
+import 'package:shakti_saree/admin/models/product.dart';
+import 'package:shakti_saree/admin/widgets/products/product_tile.dart';
+import 'package:shakti_saree/admin/styles/swatches.dart';
+import 'package:shakti_saree/admin/models/faq.dart';
+import 'package:shakti_saree/admin/widgets/support/faq_tile.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
 
 /// The rows carry an edit and a delete button each, an open help question
 /// carries the same two, and the profile form carries three gender buttons.

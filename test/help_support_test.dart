@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/more/more_screen.dart';
-import 'package:shakti_saree/admin/shared/widgets/labelled_field.dart';
-import 'package:shakti_saree/admin/support/faq.dart';
-import 'package:shakti_saree/admin/support/faqs_providers.dart';
-import 'package:shakti_saree/admin/support/help_support_screen.dart';
-import 'package:shakti_saree/admin/support/widgets/faq_tile.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
+import 'package:shakti_saree/admin/screens/more_screen.dart';
+import 'package:shakti_saree/admin/widgets/common/labelled_field.dart';
+import 'package:shakti_saree/admin/models/faq.dart';
+import 'package:shakti_saree/admin/data/providers/faqs_providers.dart';
+import 'package:shakti_saree/admin/screens/help_support_screen.dart';
+import 'package:shakti_saree/admin/widgets/support/faq_tile.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
 
 Widget _host(Widget child) => ProviderScope(
   child: MaterialApp(

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/orders/order_detail.dart';
-import 'package:shakti_saree/admin/shared/models/order_status.dart';
-import 'package:shakti_saree/mock/mock_data.dart';
+import 'package:shakti_saree/admin/models/order_detail.dart';
+import 'package:shakti_saree/admin/models/order_status.dart';
+import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
 /// Guards the sample data the app runs on.
 ///

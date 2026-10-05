@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/products/product.dart';
-import 'package:shakti_saree/admin/products/products_providers.dart';
-import 'package:shakti_saree/admin/products/products_repository.dart';
-import 'package:shakti_saree/admin/products/products_screen.dart';
-import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
-import 'package:shakti_saree/core/errors/api_exception.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
+import 'package:shakti_saree/admin/models/product.dart';
+import 'package:shakti_saree/admin/data/providers/products_providers.dart';
+import 'package:shakti_saree/admin/data/repositories/products_repository.dart';
+import 'package:shakti_saree/admin/screens/products_screen.dart';
+import 'package:shakti_saree/admin/widgets/products/product_tile.dart';
+import 'package:shakti_saree/admin/data/api_exception.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
 
 /// Reads only. Subclasses say what the read does; a test that reaches a write
 /// fails loudly rather than quietly passing.

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/core/utils/formatters.dart';
+import 'package:shakti_saree/admin/utils/formatters.dart';
 
 void main() {
   group('rupeesFromPaise', () {
