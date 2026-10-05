@@ -6,6 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/local_asset_image.dart';
+import '../products/products_providers.dart';
 import '../shared/models/order_status.dart';
 import '../shared/widgets/admin_page_header.dart';
 import '../shared/widgets/async_content.dart';
@@ -38,7 +40,8 @@ class OrderDetailScreen extends ConsumerStatefulWidget {
   final VoidCallback? onCall;
   final VoidCallback? onInvoice;
 
-  /// Placeholder photo tints, cycled by position. Every entry is a token.
+  /// What a line's frame falls back to when the catalogue has no photograph
+  /// for its SKU, cycled by position. Every entry is a token.
   static const List<Color> _swatches = [
     AppColors.primary,
     AppColors.warning,
@@ -149,6 +152,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // The lines carry a SKU, not a picture, so the photographs come from the
+    // catalogue. A SKU it does not know is left to its swatch.
+    final images = ref.watch(productImagesProvider);
+
     return Scaffold(
       // This screen is a single white sheet rather than cards on cream.
       backgroundColor: AppColors.surface,
@@ -201,6 +208,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                       swatch:
                           OrderDetailScreen._swatches[index %
                               OrderDetailScreen._swatches.length],
+                      image: images[detail.lines[index].sku],
                     ),
                   ],
                   const _SectionGap(),
@@ -313,10 +321,15 @@ class _IconLine extends StatelessWidget {
 }
 
 class _LineTile extends StatelessWidget {
-  const _LineTile({required this.line, required this.swatch});
+  const _LineTile({required this.line, required this.swatch, this.image});
 
   final OrderLine line;
   final Color swatch;
+
+  /// The listing's photograph, looked up by SKU, or null where the catalogue
+  /// has nothing to show — a listing deleted since the order was placed, or
+  /// one created in the app without a picture. The swatch takes over.
+  final String? image;
 
   /// Straight from the design; not on the base-4 scale.
   static const double _thumb = 46;
@@ -331,13 +344,10 @@ class _LineTile extends StatelessWidget {
         child: ExcludeSemantics(
           child: Row(
             children: [
-              Container(
-                height: _thumb,
-                width: _thumb,
-                decoration: BoxDecoration(
-                  color: swatch,
-                  borderRadius: AppRadii.cardRadius,
-                ),
+              LocalAssetImage(
+                assetPath: image,
+                size: _thumb,
+                tint: swatch,
               ),
               const SizedBox(width: AppSpacing.x3),
               Expanded(
