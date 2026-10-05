@@ -1,0 +1,506 @@
+import 'package:flutter/material.dart';
+
+import '../styles/app_colors.dart';
+import '../styles/app_text_styles.dart';
+import '../widgets/app_back_button.dart';
+import 'order_success_screen.dart';
+import 'add_edit_address_screen.dart';
+
+class CheckoutScreen extends StatefulWidget {
+  const CheckoutScreen({super.key});
+
+  @override
+  State<CheckoutScreen> createState() => _CheckoutScreenState();
+}
+
+class _CheckoutScreenState extends State<CheckoutScreen> {
+  // 1. Form / Selection Variables
+  String selectedPayment = 'UPI';
+  bool isAddressSelected = true;
+
+  // 2. Error Strings
+  String errAddress = '';
+  String errPayment = '';
+
+  // 3. Validation and Submit
+  void validateAndPay() {
+    setState(() {
+      bool isValid = true;
+
+      // Address validation
+      if (!isAddressSelected) {
+        errAddress = 'Please select a delivery address';
+        isValid = false;
+      } else {
+        errAddress = '';
+      }
+
+      // Payment validation
+      if (selectedPayment.isEmpty) {
+        errPayment = 'Please select a payment method';
+        isValid = false;
+      } else {
+        errPayment = '';
+      }
+
+      // Navigate to OrderSuccessScreen without passing data
+      if (isValid) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 8),
+              child: SizedBox(
+                height: 42,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Text('Checkout', style: AppTextStyles.pageTitle),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: AppBackButton(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final double totalWidth = constraints.maxWidth;
+                  const double circleSize = 28;
+                  final double stepWidth = totalWidth / 3;
+
+                  return Column(
+                    children: [
+                      SizedBox(
+                        height: circleSize,
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: stepWidth / 2,
+                              top: circleSize / 2 - 1,
+                              width: stepWidth,
+                              child: Container(
+                                height: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            Positioned(
+                              left: stepWidth + (stepWidth / 2),
+                              top: circleSize / 2 - 1,
+                              width: stepWidth,
+                              child: Container(
+                                height: 2,
+                                color: AppColors.muted,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Center(
+                                    child: _buildStepCircle(
+                                      icon: Icons.check,
+                                      isActive: true,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Center(
+                                    child: _buildStepCircle(
+                                      number: '2',
+                                      isActive: true,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Center(
+                                    child: _buildStepCircle(
+                                      number: '3',
+                                      isActive: false,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Address',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Payment',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                'Confirm',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.muted,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Delivery Address', style: AppTextStyles.sectionTitle),
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isAddressSelected = !isAddressSelected;
+                          errAddress = '';
+                        });
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: errAddress.isNotEmpty
+                                ? Colors.red
+                                : (isAddressSelected
+                                      ? AppColors.primary
+                                      : AppColors.muted),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildRadioButton(isAddressSelected),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Ishit Kumar',
+                                        style: AppTextStyles.body.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.pink,
+                                          borderRadius: BorderRadius.circular(
+                                            11,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'HOME',
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const AddEditAddressScreen(),
+                                            ),
+                                          );
+                                        },
+                                        child: const Icon(
+                                          Icons.edit_outlined,
+                                          color: AppColors.primary,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '301, Shakti Complex, Kalawad Road,\n'
+                                    'Rajkot, Gujarat - 360005',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '+91 12345 67890',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (errAddress.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        errAddress,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
+
+                    const SizedBox(height: 14),
+
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddEditAddressScreen(),
+                          ),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.add,
+                            size: 20,
+                            color: AppColors.black,
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Add New Address',
+                            style: AppTextStyles.action.copyWith(
+                              color: AppColors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Text('Payment Method', style: AppTextStyles.sectionTitle),
+                    const SizedBox(height: 10),
+
+                    _buildPaymentOption(
+                      title: 'Rozer Pay',
+                      value: 'UPI',
+                      icon: Icons.phone_outlined,
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    _buildPaymentOption(
+                      title: 'Cash on Delivery',
+                      value: 'COD',
+                      icon: Icons.view_in_ar,
+                    ),
+
+                    if (errPayment.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        errPayment,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+              decoration: const BoxDecoration(
+                color: AppColors.white,
+                border: Border(
+                  top: BorderSide(color: AppColors.muted, width: 1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Payable',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text('₹6,297', style: AppTextStyles.price),
+                      ],
+                    ),
+                  ),
+
+                  SizedBox(
+                    width: 180,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: validateAndPay,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text('Pay Now', style: AppTextStyles.payNow),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepCircle({
+    IconData? icon,
+    String? number,
+    required bool isActive,
+  }) {
+    return Container(
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.primary : AppColors.muted,
+        shape: BoxShape.circle,
+      ),
+      child: icon != null
+          ? Icon(icon, color: AppColors.white, size: 16)
+          : Text(
+              number ?? '',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+    );
+  }
+
+  Widget _buildRadioButton(bool isSelected) {
+    return Container(
+      width: 18,
+      height: 18,
+      margin: const EdgeInsets.only(top: 2),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: isSelected ? AppColors.primary : AppColors.muted,
+          width: 1.5,
+        ),
+      ),
+      child: isSelected
+          ? Center(
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildPaymentOption({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
+    final bool isSelected = selectedPayment == value;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedPayment = value;
+          errPayment = '';
+        });
+      },
+      child: Container(
+        width: double.infinity,
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.muted,
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            _buildRadioButton(isSelected),
+            const SizedBox(width: 14),
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : AppColors.muted,
+              size: 20,
+            ),
+            const SizedBox(width: 14),
+            Text(title, style: AppTextStyles.body),
+          ],
+        ),
+      ),
+    );
+  }
+}
