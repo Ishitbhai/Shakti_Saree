@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shakti_saree/admin/screens/categories_screen.dart';
 import 'package:shakti_saree/admin/screens/more_screen.dart';
 import 'package:shakti_saree/admin/data/admin_tab.dart';
+import 'package:shakti_saree/admin/models/order_status.dart';
 import 'package:shakti_saree/admin/screens/admin_shell.dart';
+import 'package:shakti_saree/admin/widgets/orders/status_filter_chips.dart';
 import 'package:shakti_saree/admin/widgets/navigation/admin_bottom_nav.dart';
 import 'package:shakti_saree/admin/styles/app_theme.dart';
 import 'package:shakti_saree/admin/data/mock/mock_data.dart';
@@ -67,6 +69,103 @@ void main() {
     // screen, which a route over the top of it would not.
     expect(container.read(adminTabProvider), AdminTab.orders);
     expect(find.text('Orders'), findsWidgets);
+  });
+
+  group('swiping the pages', () {
+    /// A drag across the pages, far enough to settle on the next one.
+    Future<void> swipe(WidgetTester tester, {required bool forward}) async {
+      await tester.drag(
+        find.byType(TabBarView),
+        Offset(forward ? -400 : 400, 0),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('left walks forward and the bar keeps up', (tester) async {
+      await pumpShell(tester);
+      final container = containerOf(tester);
+
+      // All the way out to the last tab, one swipe at a time. The bar is
+      // driven off the same state, so if it ever disagreed with the page
+      // this would catch it.
+      for (var expected = 1; expected < AdminBottomNav.items.length;
+          expected++) {
+        await swipe(tester, forward: true);
+        expect(
+          container.read(adminTabProvider),
+          expected,
+          reason: 'swipe $expected should land on tab $expected',
+        );
+        expect(
+          tester.widget<AdminBottomNav>(find.byType(AdminBottomNav))
+              .currentIndex,
+          expected,
+          reason: 'the bar should follow the swipe',
+        );
+      }
+    });
+
+    testWidgets('right walks back again', (tester) async {
+      await pumpShell(tester);
+      final container = containerOf(tester);
+
+      await swipe(tester, forward: true);
+      await swipe(tester, forward: true);
+      expect(container.read(adminTabProvider), 2);
+
+      await swipe(tester, forward: false);
+      expect(container.read(adminTabProvider), 1);
+    });
+
+    testWidgets('a tab keeps its state while another is showing', (
+      tester,
+    ) async {
+      await pumpShell(tester);
+      final container = containerOf(tester);
+
+      container.read(adminTabProvider.notifier).select(AdminTab.orders);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Accepted'));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<StatusFilterChips>(find.byType(StatusFilterChips))
+            .selected,
+        OrderStatus.accepted,
+      );
+
+      // Away and back. A TabBarView throws its off-screen pages away, so
+      // without the keep-alive the chip would be back on New.
+      await swipe(tester, forward: true);
+      await swipe(tester, forward: false);
+
+      expect(container.read(adminTabProvider), AdminTab.orders);
+      expect(
+        tester.widget<StatusFilterChips>(find.byType(StatusFilterChips))
+            .selected,
+        OrderStatus.accepted,
+        reason: 'the filter should have survived the swipe away',
+      );
+    });
+
+    testWidgets('a page keeps its controls separately labelled', (
+      tester,
+    ) async {
+      // A page inside a TabBarView has its semantics merged unless something
+      // stops it, which once collapsed the whole header into one node that a
+      // screen reader read as "Back Orders 3 new today".
+      final handle = tester.ensureSemantics();
+      await pumpShell(tester);
+
+      containerOf(tester).read(adminTabProvider.notifier).select(
+            AdminTab.orders,
+          );
+      await tester.pumpAndSettle();
+
+      expect(find.bySemanticsLabel('Back'), findsOneWidget);
+      expect(tester.getSemantics(find.bySemanticsLabel('Back')).label, 'Back');
+      handle.dispose();
+    });
   });
 
   // Products and Orders are the two tabs that carry an AdminPageHeader.
