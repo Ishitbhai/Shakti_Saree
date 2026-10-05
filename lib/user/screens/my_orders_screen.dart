@@ -1,12 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../resources/imagestrings.dart'; // Import your image strings file
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
-import '../widgets/app_bottom_nav_bar.dart';
 
-class MyOrdersScreen extends StatelessWidget {
+class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
+
+  @override
+  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
+}
+
+class _MyOrdersScreenState extends State<MyOrdersScreen> {
+  // State variables for orders list
+  late final List<Map<String, dynamic>> orders;
+
+  @override
+  void initState() {
+    super.initState();
+    orders = [
+      {
+        'orderId': '#ORD-89421',
+        'title': 'Banarasi Silk Saree',
+        'date': '12 Oct 2026',
+        'price': '₹2,499',
+        'status': 'Delivered',
+        'statusColor': AppColors.success,
+        'imagePath': image2,
+      },
+      {
+        'orderId': '#ORD-89310',
+        'title': 'Kanjivaram Saree',
+        'date': '28 Sep 2026',
+        'price': '₹3,299',
+        'status': 'In Transit',
+        'statusColor': const Color(0xFFD49657),
+        'imagePath': image3,
+      },
+      {
+        'orderId': '#ORD-88902',
+        'title': 'Cotton Daily Saree',
+        'date': '15 Sep 2026',
+        'price': '₹1,699',
+        'status': 'Delivered',
+        'statusColor': AppColors.success,
+        'imagePath': image4,
+      },
+      {
+        'orderId': '#ORD-87114',
+        'title': 'Banarasi Zari Border',
+        'date': '02 Aug 2026',
+        'price': '₹3,150',
+        'status': 'Cancelled',
+        'statusColor': const Color(0xFFDC2626),
+        'imagePath': image5,
+      },
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,162 +75,85 @@ class MyOrdersScreen extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     Text('My Orders', style: AppTextStyles.pageTitle),
-                    const Align(
+                    Align(
                       alignment: Alignment.centerLeft,
-                      child: AppBackButton(),
+                      child: AppBackButton(
+                        onTap: () {
+                          final tabController = DefaultTabController.maybeOf(
+                            context,
+                          );
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else if (tabController != null) {
+                            tabController.animateTo(0);
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
+
             // ================= ORDERS LIST =================
             Expanded(
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 8,
+                  horizontal: 18,
+                  vertical: 12,
                 ),
-                children: [
-                  _buildOrderCard(
-                    orderNumber: '#1',
-                    statusText: 'Out for delivery',
-                    statusBgColor: AppColors.peachStatus,
-                    statusTextColor: AppColors.black,
-                    productTitle: 'Banarasi Silk Saree',
-                    imageBgColor: AppColors.primary,
-                    quantity: 'Qty 1',
-                    price: '₹2,499',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOrderCard(
-                    orderNumber: '#2',
-                    statusText: 'Delivered',
-                    statusBgColor: AppColors.greenStatus,
-                    statusTextColor: AppColors.black,
-                    productTitle: 'Kanjivaram Pure Silk',
-                    imageBgColor: AppColors.yellowStatus,
-                    quantity: 'Qty 1',
-                    price: '₹3,299',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOrderCard(
-                    orderNumber: '#3',
-                    statusText: 'Delivered',
-                    statusBgColor: AppColors.greenStatus,
-                    statusTextColor: AppColors.black,
-                    productTitle: 'Cotton Daily Saree',
-                    imageBgColor: AppColors.greenStatus,
-                    quantity: 'Qty 2',
-                    price: '₹3,398',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOrderCard(
-                    orderNumber: '#4',
-                    statusText: 'Cancelled',
-                    statusBgColor: AppColors.pinkLight,
-                    statusTextColor: AppColors.primary,
-                    productTitle: 'Georgette Party Saree',
-                    imageBgColor: AppColors.blueStatus,
-                    quantity: 'Qty 1',
-                    price: '₹1,899',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOrderCard(
-                    orderNumber: '#5',
-                    statusText: 'Out for delivery',
-                    statusBgColor: AppColors.peachStatus,
-                    statusTextColor: AppColors.black,
-                    productTitle: 'Banarasi Silk Saree',
-                    imageBgColor: AppColors.primary,
-                    quantity: 'Qty 1',
-                    price: '₹2,499',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOrderCard(
-                    orderNumber: '#6',
-                    statusText: 'Delivered',
-                    statusBgColor: AppColors.greenStatus,
-                    statusTextColor: AppColors.black,
-                    productTitle: 'Kanjivaram Pure Silk',
-                    imageBgColor: AppColors.yellowStatus,
-                    quantity: 'Qty 1',
-                    price: '₹3,299',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOrderCard(
-                    orderNumber: '#7',
-                    statusText: 'Delivered',
-                    statusBgColor: AppColors.greenStatus,
-                    statusTextColor: AppColors.black,
-                    productTitle: 'Cotton Daily Saree',
-                    imageBgColor: AppColors.greenStatus,
-                    quantity: 'Qty 2',
-                    price: '₹3,398',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                  _buildOrderCard(
-                    orderNumber: '#8',
-                    statusText: 'Cancelled',
-                    statusBgColor: AppColors.pinkLight,
-                    statusTextColor: AppColors.primary,
-                    productTitle: 'Georgette Party Saree',
-                    imageBgColor: AppColors.blueStatus,
-                    quantity: 'Qty 1',
-                    price: '₹1,899',
-                    orderDate: 'Ordered on 26 Jul 2026',
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                child: Column(
+                  children: [
+                    for (int i = 0; i < orders.length; i++) ...[
+                      _buildOrderItem(
+                        orderId: orders[i]['orderId'],
+                        title: orders[i]['title'],
+                        date: orders[i]['date'],
+                        price: orders[i]['price'],
+                        status: orders[i]['status'],
+                        statusColor: orders[i]['statusColor'],
+                        imagePath: orders[i]['imagePath'],
+                      ),
+                      if (i != orders.length - 1) const SizedBox(height: 14),
+                    ],
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
-
-      // ================= BOTTOM NAVIGATION =================
-      bottomNavigationBar: const AppBottomNavBar(selectedIndex: 3),
     );
   }
 
-  // ================= HELPER WIDGETS =================
-  Widget _buildOrderCard({
-    required String orderNumber,
-    required String statusText,
-    required Color statusBgColor,
-    required Color statusTextColor,
-    required String productTitle,
-    required Color imageBgColor,
-    required String quantity,
+  Widget _buildOrderItem({
+    required String orderId,
+    required String title,
+    required String date,
     required String price,
-    required String orderDate,
+    required String status,
+    required Color statusColor,
+    required String imagePath,
   }) {
     return Container(
-      width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.black, width: 1),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.black.withOpacity(0.65), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card Header: Order Index & Status Pill
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                orderNumber,
+                orderId,
                 style: AppTextStyles.caption.copyWith(
+                  fontWeight: FontWeight.bold,
                   color: AppColors.muted,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
                 ),
               ),
               Container(
@@ -188,63 +162,71 @@ class MyOrdersScreen extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: statusBgColor,
-                  borderRadius: BorderRadius.circular(11),
+                  color: statusColor.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  statusText,
+                  status,
                   style: AppTextStyles.caption.copyWith(
-                    color: statusTextColor,
-                    fontWeight: FontWeight.w600,
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
                   ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(height: 10),
-          const Divider(color: AppColors.muted, height: 1),
           const SizedBox(height: 12),
-
-          // Product Details Row
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Product Preview Square
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: imageBgColor,
-                  borderRadius: BorderRadius.circular(12),
+              // Product Image Preview
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  imagePath,
+                  width: 62,
+                  height: 62,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 62,
+                      height: 62,
+                      color: AppColors.muted.withOpacity(0.2),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: AppColors.muted,
+                        size: 24,
+                      ),
+                    );
+                  },
                 ),
               ),
-
-              const SizedBox(width: 12),
-
-              // Product Info Column
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      productTitle,
-                      style: AppTextStyles.body.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$quantity • $price',
+                      title,
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.muted,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      orderDate,
+                      date,
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.muted,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      price,
+                      style: AppTextStyles.price.copyWith(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],

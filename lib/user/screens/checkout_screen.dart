@@ -4,6 +4,7 @@ import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import '../widgets/app_back_button.dart';
 import 'order_success_screen.dart';
+import 'add_edit_address_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -13,7 +14,44 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
+  // 1. Form / Selection Variables
   String selectedPayment = 'UPI';
+  bool isAddressSelected = true;
+
+  // 2. Error Strings
+  String errAddress = '';
+  String errPayment = '';
+
+  // 3. Validation and Submit
+  void validateAndPay() {
+    setState(() {
+      bool isValid = true;
+
+      // Address validation
+      if (!isAddressSelected) {
+        errAddress = 'Please select a delivery address';
+        isValid = false;
+      } else {
+        errAddress = '';
+      }
+
+      // Payment validation
+      if (selectedPayment.isEmpty) {
+        errPayment = 'Please select a payment method';
+        isValid = false;
+      } else {
+        errPayment = '';
+      }
+
+      // Navigate to OrderSuccessScreen without passing data
+      if (isValid) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const OrderSuccessScreen()),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +68,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   alignment: Alignment.center,
                   children: [
                     Text('Checkout', style: AppTextStyles.pageTitle),
-
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: AppBackButton(),
@@ -46,9 +83,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final double totalWidth = constraints.maxWidth;
-
                   const double circleSize = 28;
-
                   final double stepWidth = totalWidth / 3;
 
                   return Column(
@@ -57,7 +92,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         height: circleSize,
                         child: Stack(
                           children: [
-
                             Positioned(
                               left: stepWidth / 2,
                               top: circleSize / 2 - 1,
@@ -67,7 +101,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 color: AppColors.primary,
                               ),
                             ),
-
                             Positioned(
                               left: stepWidth + (stepWidth / 2),
                               top: circleSize / 2 - 1,
@@ -77,7 +110,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 color: AppColors.muted,
                               ),
                             ),
-
                             Row(
                               children: [
                                 Expanded(
@@ -88,7 +120,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     ),
                                   ),
                                 ),
-
                                 Expanded(
                                   child: Center(
                                     child: _buildStepCircle(
@@ -97,7 +128,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     ),
                                   ),
                                 ),
-
                                 Expanded(
                                   child: Center(
                                     child: _buildStepCircle(
@@ -111,9 +141,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ],
                         ),
                       ),
-
                       const SizedBox(height: 8),
-
                       Row(
                         children: [
                           Expanded(
@@ -127,7 +155,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
                           ),
-
                           Expanded(
                             child: Center(
                               child: Text(
@@ -139,7 +166,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                             ),
                           ),
-
                           Expanded(
                             child: Center(
                               child: Text(
@@ -164,98 +190,125 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Delivery Address', style: AppTextStyles.sectionTitle),
-
                     const SizedBox(height: 10),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: AppColors.primary,
-                          width: 1.5,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isAddressSelected = !isAddressSelected;
+                          errAddress = '';
+                        });
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: errAddress.isNotEmpty
+                                ? Colors.red
+                                : (isAddressSelected
+                                      ? AppColors.primary
+                                      : AppColors.muted),
+                            width: 1.5,
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildRadioButton(true),
-
-                          const SizedBox(width: 12),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      'Ishit Kumar',
-                                      style: AppTextStyles.body.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-
-                                    const SizedBox(width: 12),
-
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.pink,
-                                        borderRadius: BorderRadius.circular(11),
-                                      ),
-                                      child: Text(
-                                        'HOME',
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.primary,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildRadioButton(isAddressSelected),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Ishit Kumar',
+                                        style: AppTextStyles.body.copyWith(
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                    ),
-
-                                    const Spacer(),
-
-                                    const Icon(
-                                      Icons.edit_outlined,
-                                      color: AppColors.primary,
-                                      size: 20,
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Text(
-                                  '301, Shakti Complex, Kalawad Road,\n'
-                                  'Rajkot, Gujarat - 360005',
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    color: AppColors.muted,
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.pink,
+                                          borderRadius: BorderRadius.circular(
+                                            11,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          'HOME',
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const AddEditAddressScreen(),
+                                            ),
+                                          );
+                                        },
+                                        child: const Icon(
+                                          Icons.edit_outlined,
+                                          color: AppColors.primary,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Text(
-                                  '+91 12345 67890',
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.black,
-                                    fontWeight: FontWeight.bold,
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '301, Shakti Complex, Kalawad Road,\n'
+                                    'Rajkot, Gujarat - 360005',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: AppColors.muted,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '+91 12345 67890',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
+                    if (errAddress.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        errAddress,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
 
                     const SizedBox(height: 14),
 
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AddEditAddressScreen(),
+                          ),
+                        );
+                      },
                       child: Row(
                         children: [
                           const Icon(
@@ -263,9 +316,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             size: 20,
                             color: AppColors.black,
                           ),
-
                           const SizedBox(width: 5),
-
                           Text(
                             'Add New Address',
                             style: AppTextStyles.action.copyWith(
@@ -279,11 +330,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const SizedBox(height: 24),
 
                     Text('Payment Method', style: AppTextStyles.sectionTitle),
-
                     const SizedBox(height: 10),
 
                     _buildPaymentOption(
-                      title: 'UPI / GPay / PhonePe',
+                      title: 'Rozer Pay',
                       value: 'UPI',
                       icon: Icons.phone_outlined,
                     ),
@@ -295,6 +345,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       value: 'COD',
                       icon: Icons.view_in_ar,
                     ),
+
+                    if (errPayment.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        errPayment,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -321,9 +379,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             color: AppColors.muted,
                           ),
                         ),
-
                         const SizedBox(height: 3),
-
                         Text('₹6,297', style: AppTextStyles.price),
                       ],
                     ),
@@ -333,14 +389,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     width: 180,
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const OrderSuccessScreen(),
-                          ),
-                        );
-                      },
+                      onPressed: validateAndPay,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.white,
@@ -360,7 +409,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-
   Widget _buildStepCircle({
     IconData? icon,
     String? number,
@@ -374,7 +422,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         color: isActive ? AppColors.primary : AppColors.muted,
         shape: BoxShape.circle,
       ),
-
       child: icon != null
           ? Icon(icon, color: AppColors.white, size: 16)
           : Text(
@@ -414,7 +461,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-
   Widget _buildPaymentOption({
     required String title,
     required String value,
@@ -426,6 +472,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       onTap: () {
         setState(() {
           selectedPayment = value;
+          errPayment = '';
         });
       },
       child: Container(
@@ -443,17 +490,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Row(
           children: [
             _buildRadioButton(isSelected),
-
             const SizedBox(width: 14),
-
             Icon(
               icon,
               color: isSelected ? AppColors.primary : AppColors.muted,
               size: 20,
             ),
-
             const SizedBox(width: 14),
-
             Text(title, style: AppTextStyles.body),
           ],
         ),
