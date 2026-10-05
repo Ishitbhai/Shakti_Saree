@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../admin/screens/dashboard_scrren.dart';
 import 'MainNavigationScreen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
@@ -34,7 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Simple validation logic using regex
+  // Simple validation logic using regex & role-based routing
   void _handleLogin() {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -57,15 +58,25 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     });
 
-    // If no errors, proceed with navigation
+    // If no errors, proceed with conditional navigation
     if (_emailError == null && _passwordError == null) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const MainNavigationScreen(initialIndex: 0),
-        ),
-        (route) => false,
-      );
+      if (_isUserLogin) {
+        // User Navigation
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainNavigationScreen(initialIndex: 0),
+          ),
+          (route) => false,
+        );
+      } else {
+        // Admin Navigation
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          (route) => false,
+        );
+      }
     }
   }
 
