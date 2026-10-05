@@ -9,6 +9,13 @@ class AdminTab extends Notifier<int> {
   /// The tab the app opens on, and the leftmost in the bar.
   static const int home = 0;
 
+  /// Where Orders sits in the bar.
+  ///
+  /// Named here beside [home] because the dashboard sends the admin there
+  /// from its 'View all', and a bare 2 at that call site would say nothing
+  /// and would quietly point at the wrong tab if the bar were reordered.
+  static const int orders = 2;
+
   @override
   int build() => home;
 

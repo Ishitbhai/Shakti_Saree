@@ -51,6 +51,24 @@ void main() {
     expect(container.read(adminTabProvider), 2);
   });
 
+  testWidgets("the dashboard's 'View all' opens the Orders tab", (
+    tester,
+  ) async {
+    await pumpShell(tester);
+    final container = containerOf(tester);
+
+    // Starts on the dashboard, where the recent-orders strip lives.
+    expect(container.read(adminTabProvider), AdminTab.home);
+
+    await tester.tap(find.text('View all'));
+    await tester.pumpAndSettle();
+
+    // The tab, not a pushed route: the bar has to agree with what is on
+    // screen, which a route over the top of it would not.
+    expect(container.read(adminTabProvider), AdminTab.orders);
+    expect(find.text('Orders'), findsWidgets);
+  });
+
   // Products and Orders are the two tabs that carry an AdminPageHeader.
   // Back steps one to the left in the bar, so each has its own destination.
   for (final step in const [
