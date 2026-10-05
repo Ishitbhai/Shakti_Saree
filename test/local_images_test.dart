@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shakti_saree/admin/categories/category.dart';
 import 'package:shakti_saree/admin/categories/widgets/category_tile.dart';
+import 'package:shakti_saree/admin/orders/order_detail.dart';
+import 'package:shakti_saree/admin/orders/order_detail_screen.dart';
 import 'package:shakti_saree/admin/products/product.dart';
 import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
 import 'package:shakti_saree/admin/shared/widgets/swatches.dart';
@@ -197,6 +200,86 @@ void main() {
 
       final image = tester.widget<Image>(find.byType(Image));
       expect((image.image as AssetImage).assetName, category.image);
+    });
+  });
+
+  group('an order line', () {
+    /// The detail screen on its own, with the seeded catalogue behind it.
+    Future<void> openOrder(WidgetTester tester, OrderDetail detail) async {
+      tester.view.physicalSize = const Size(390, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: OrderDetailScreen(detail: detail),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    /// The thumbnail in the line carrying a given product name. The closest
+    /// Row around the name is the line itself.
+    LocalAssetImage thumbOf(WidgetTester tester, String name) =>
+        tester.widget<LocalAssetImage>(
+          find.descendant(
+            of: find
+                .ancestor(of: find.text(name), matching: find.byType(Row))
+                .first,
+            matching: find.byType(LocalAssetImage),
+          ),
+        );
+
+    testWidgets('wears the photo its SKU carries in the catalogue', (
+      tester,
+    ) async {
+      // #SS20260914 opens on Banarasi Silk Saree, SS-1024.
+      final detail = MockData.orders().first;
+      await openOrder(tester, detail);
+
+      expect(find.text('Banarasi Silk Saree'), findsOneWidget);
+      final thumb = thumbOf(tester, 'Banarasi Silk Saree');
+      expect(thumb.assetPath, isNotNull);
+      expect(
+        thumb.assetPath,
+        MockData.products().firstWhere((p) => p.sku == 'SS-1024').image,
+      );
+    });
+
+    testWidgets('falls back to its tint when the SKU is not in the catalogue', (
+      tester,
+    ) async {
+      // A listing deleted since the order was placed: the line stays, the
+      // photo cannot be found, and the row still draws.
+      final detail = MockData.orders().first;
+      await openOrder(
+        tester,
+        OrderDetail(
+          id: detail.id,
+          customer: detail.customer,
+          phone: detail.phone,
+          address: detail.address,
+          placedAt: detail.placedAt,
+          status: detail.status,
+          reachedAt: detail.reachedAt,
+          paidVia: detail.paidVia,
+          lines: const [
+            OrderLine(
+              name: 'Withdrawn Saree',
+              sku: 'SS-0000',
+              quantity: 1,
+              pricePaise: 100000,
+            ),
+          ],
+        ),
+      );
+
+      final thumb = thumbOf(tester, 'Withdrawn Saree');
+      expect(thumb.assetPath, isNull);
+      expect(find.byIcon(Icons.image_outlined), findsOneWidget);
     });
   });
 
