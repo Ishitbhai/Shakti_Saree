@@ -14,7 +14,12 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // State variables for cart items
+  // State variables for screen titles, labels, delivery rules, and items[cite: 23]
+  final String pageTitle = 'My Cart';
+  final String deliveryChargeLabel = 'FREE';
+  final int deliveryThreshold =
+      0; // Free delivery for all active items[cite: 23]
+
   late List<Map<String, dynamic>> cartItems;
 
   @override
@@ -45,6 +50,13 @@ class _CartScreenState extends State<CartScreen> {
     ];
   }
 
+  int get totalItemCount {
+    return cartItems.fold<int>(
+      0,
+      (sum, item) => sum + (item['quantity'] as int),
+    );
+  }
+
   int get subtotal {
     return cartItems.fold<int>(
       0,
@@ -55,9 +67,17 @@ class _CartScreenState extends State<CartScreen> {
   int get totalAmount => subtotal;
 
   void _removeItem(int index) {
+    final removedTitle = cartItems[index]['title'];
     setState(() {
       cartItems.removeAt(index);
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$removedTitle removed from cart'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   void _updateQuantity(int index, int delta) {
@@ -70,9 +90,36 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void _clearCart() {
+    if (cartItems.isEmpty) return;
+
     setState(() {
       cartItems.clear();
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Cart cleared'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _handleBackNavigation() {
+    final tabController = DefaultTabController.maybeOf(context);
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else if (tabController != null) {
+      tabController.animateTo(0);
+    }
+  }
+
+  void _handlePlaceOrder() {
+    if (cartItems.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CheckoutScreen()),
+    );
   }
 
   @override
@@ -82,33 +129,22 @@ class _CartScreenState extends State<CartScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER =================
+            // ================= HEADER =================[cite: 23]
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  AppBackButton(
-                    onTap: () {
-                      final tabController = DefaultTabController.maybeOf(
-                        context,
-                      );
-                      if (Navigator.canPop(context)) {
-                        Navigator.pop(context);
-                      } else if (tabController != null) {
-                        tabController.animateTo(0);
-                      }
-                    },
-                  ),
+                  AppBackButton(onTap: _handleBackNavigation),
                   Column(
                     children: [
                       Text(
-                        'My Cart',
+                        pageTitle,
                         style: AppTextStyles.pageTitle.copyWith(fontSize: 18),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${cartItems.length} items',
+                        '$totalItemCount items',
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.muted,
                           fontSize: 11,
@@ -116,7 +152,7 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ],
                   ),
-                  // Delete button on top: Clears all items in the cart
+                  // Delete button on top: Clears all items in the cart[cite: 23]
                   GestureDetector(
                     onTap: _clearCart,
                     child: Container(
@@ -141,98 +177,121 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
 
-            // ================= SCROLLABLE CONTENT =================
+            // ================= SCROLLABLE CONTENT =================[cite: 23]
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                child: Column(
-                  children: [
-                    for (int i = 0; i < cartItems.length; i++) ...[
-                      _buildCartItem(
-                        index: i,
-                        title: cartItems[i]['title'] as String,
-                        variant: cartItems[i]['variant'] as String,
-                        price: '₹${cartItems[i]['price']}',
-                        quantity: cartItems[i]['quantity'] as int,
-                        imagePath: cartItems[i]['imagePath'] as String,
-                      ),
-                      if (i != cartItems.length - 1) const SizedBox(height: 14),
-                    ],
-
-                    const SizedBox(height: 24),
-
-                    // ================= PRICE DETAILS CARD =================
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: AppColors.black.withOpacity(0.75),
-                          width: 1,
-                        ),
-                      ),
+              child: cartItems.isEmpty
+                  ? Center(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Price Details',
-                            style: AppTextStyles.sectionTitle.copyWith(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _buildPriceRow(
-                            'Subtotal (${cartItems.length} Items)',
-                            '₹$subtotal',
-                          ),
-                          const SizedBox(height: 10),
-                          _buildPriceRow(
-                            'Delivery Charges',
-                            'FREE',
-                            isHighlight: true,
-                          ),
-                          const SizedBox(height: 14),
-                          Divider(
+                          Icon(
+                            Icons.shopping_bag_outlined,
+                            size: 64,
                             color: AppColors.muted.withOpacity(0.5),
-                            height: 1,
                           ),
-                          const SizedBox(height: 14),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Total Amount',
-                                style: AppTextStyles.body.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Text(
-                                '₹$totalAmount',
-                                style: AppTextStyles.price.copyWith(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(height: 12),
+                          Text(
+                            'Your cart is empty',
+                            style: AppTextStyles.body.copyWith(
+                              color: AppColors.muted,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                    )
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        children: [
+                          for (int i = 0; i < cartItems.length; i++) ...[
+                            _buildCartItem(
+                              index: i,
+                              title: cartItems[i]['title'] as String,
+                              variant: cartItems[i]['variant'] as String,
+                              price: '₹${cartItems[i]['price']}',
+                              quantity: cartItems[i]['quantity'] as int,
+                              imagePath: cartItems[i]['imagePath'] as String,
+                            ),
+                            if (i != cartItems.length - 1)
+                              const SizedBox(height: 14),
+                          ],
 
-                    const SizedBox(height: 16),
-                  ],
-                ),
-              ),
+                          const SizedBox(height: 24),
+
+                          // ================= PRICE DETAILS CARD =================[cite: 23]
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(18),
+                            decoration: BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(
+                                color: AppColors.black.withOpacity(0.75),
+                                width: 1,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Price Details',
+                                  style: AppTextStyles.sectionTitle.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                _buildPriceRow(
+                                  'Subtotal ($totalItemCount Items)',
+                                  '₹$subtotal',
+                                ),
+                                const SizedBox(height: 10),
+                                _buildPriceRow(
+                                  'Delivery Charges',
+                                  deliveryChargeLabel,
+                                  isHighlight: true,
+                                ),
+                                const SizedBox(height: 14),
+                                Divider(
+                                  color: AppColors.muted.withOpacity(0.5),
+                                  height: 1,
+                                ),
+                                const SizedBox(height: 14),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      'Total Amount',
+                                      style: AppTextStyles.body.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    Text(
+                                      '₹$totalAmount',
+                                      style: AppTextStyles.price.copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
             ),
 
-            // ================= PINNED BOTTOM PLACE ORDER BAR =================
+            // ================= PINNED BOTTOM PLACE ORDER BAR =================[cite: 23]
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               decoration: BoxDecoration(
@@ -273,20 +332,14 @@ class _CartScreenState extends State<CartScreen> {
                     height: 48,
                     width: 180,
                     child: ElevatedButton(
-                      onPressed: cartItems.isEmpty
-                          ? null
-                          : () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const CheckoutScreen(),
-                                ),
-                              );
-                            },
+                      onPressed: cartItems.isEmpty ? null : _handlePlaceOrder,
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         backgroundColor: AppColors.primary,
                         foregroundColor: AppColors.white,
+                        disabledBackgroundColor: AppColors.muted.withOpacity(
+                          0.3,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -310,7 +363,7 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  // ================= HELPER WIDGETS =================
+  // ================= HELPER WIDGETS =================[cite: 23]
   Widget _buildCartItem({
     required int index,
     required String title,

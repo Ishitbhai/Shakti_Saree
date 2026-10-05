@@ -5,8 +5,55 @@ import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'MainNavigationScreen.dart';
 
-class ProductDetailScreen extends StatelessWidget {
+class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key});
+
+  @override
+  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends State<ProductDetailScreen> {
+  // State variables for product details, pricing, delivery, and cart state[cite: 22]
+  final String productImage = image1;
+  final String title = 'Banarasi Silk Saree\nwithGolden Zari Border';
+  final String stockStatus = 'In Stock';
+  final bool isInStock = true;
+  final String description =
+      'A Banarasi Silk Saree with a Golden Zari Border is a masterpiece of Indian textile heritage.';
+  final String price = '₹2,499';
+  final String originalPrice = '₹4,999';
+  final String discountPercentage = '50% OFF';
+  final String deliveryDateText = 'Free delivery by Tue, 29 Jul';
+  final String deliverySubtext = 'You will get free delivery for this order';
+
+  bool isAddedToCart = false;
+
+  void _handleAddToCart() {
+    setState(() {
+      isAddedToCart = !isAddedToCart;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isAddedToCart ? 'Added to Cart' : 'Removed from Cart',
+          style: const TextStyle(color: AppColors.white),
+        ),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _handleBuyNow() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MainNavigationScreen(initialIndex: 2),
+      ),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,20 +63,20 @@ class ProductDetailScreen extends StatelessWidget {
         bottom: true,
         child: Column(
           children: [
-            // ================= SCROLLABLE CONTENT (IMAGE + DETAILS) =================
+            // ================= SCROLLABLE CONTENT (IMAGE + DETAILS) =================[cite: 22]
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Product Image Preview
+                    // Top Product Image Preview[cite: 22]
                     Container(
                       width: double.infinity,
                       height: 380,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.primary,
                         image: DecorationImage(
-                          image: AssetImage(image1),
+                          image: AssetImage(productImage),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -55,19 +102,19 @@ class ProductDetailScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Details Section
+                    // Details Section[cite: 22]
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Title & In Stock
+                          // Title & In Stock[cite: 22]
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
                                 child: Text(
-                                  'Banarasi Silk Saree\nwithGolden Zari Border',
+                                  title,
                                   style: AppTextStyles.pageTitle.copyWith(
                                     fontSize: 18,
                                     height: 1.3,
@@ -77,9 +124,11 @@ class ProductDetailScreen extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'In Stock',
+                                stockStatus,
                                 style: AppTextStyles.caption.copyWith(
-                                  color: AppColors.black,
+                                  color: isInStock
+                                      ? AppColors.black
+                                      : AppColors.muted,
                                   fontWeight: FontWeight.w500,
                                   fontSize: 11,
                                 ),
@@ -89,9 +138,9 @@ class ProductDetailScreen extends StatelessWidget {
 
                           const SizedBox(height: 10),
 
-                          // Description
+                          // Description[cite: 22]
                           Text(
-                            'A Banarasi Silk Saree with a Golden Zari Border is a masterpiece of Indian textile heritage.',
+                            description,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: AppColors.black.withOpacity(0.85),
                               fontSize: 12,
@@ -102,12 +151,12 @@ class ProductDetailScreen extends StatelessWidget {
 
                           const SizedBox(height: 14),
 
-                          // Price & Discount Pill
+                          // Price & Discount Pill[cite: 22]
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                '₹2,499',
+                                price,
                                 style: AppTextStyles.pageTitle.copyWith(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -115,7 +164,7 @@ class ProductDetailScreen extends StatelessWidget {
                               ),
                               const SizedBox(width: 10),
                               Text(
-                                '₹4,999',
+                                originalPrice,
                                 style: AppTextStyles.bodySmall.copyWith(
                                   color: AppColors.muted,
                                   decoration: TextDecoration.lineThrough,
@@ -133,7 +182,7 @@ class ProductDetailScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  '50% OFF',
+                                  discountPercentage,
                                   style: AppTextStyles.caption.copyWith(
                                     color: AppColors.black,
                                     fontWeight: FontWeight.bold,
@@ -151,14 +200,14 @@ class ProductDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // ================= PINNED BOTTOM SECTION =================
+            // ================= PINNED BOTTOM SECTION =================[cite: 22]
             Container(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
               decoration: const BoxDecoration(color: AppColors.white),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Free Delivery Card
+                  // Free Delivery Card[cite: 22]
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -186,7 +235,7 @@ class ProductDetailScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Free delivery by Tue, 29 Jul',
+                                deliveryDateText,
                                 style: AppTextStyles.bodySmall.copyWith(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 12,
@@ -194,7 +243,7 @@ class ProductDetailScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'You will get free delivery for this order',
+                                deliverySubtext,
                                 style: AppTextStyles.caption.copyWith(
                                   color: AppColors.muted,
                                   fontSize: 10,
@@ -209,15 +258,15 @@ class ProductDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 14),
 
-                  // Bottom Action Buttons
+                  // Bottom Action Buttons[cite: 22]
                   Row(
                     children: [
-                      // Add to Cart Button (Does Nothing)
+                      // Add to Cart Button[cite: 22]
                       Expanded(
                         child: SizedBox(
                           height: 48,
                           child: OutlinedButton(
-                            onPressed: () {},
+                            onPressed: _handleAddToCart,
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(
                                 color: AppColors.primary,
@@ -228,7 +277,7 @@ class ProductDetailScreen extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              'Add to Cart',
+                              isAddedToCart ? 'Added' : 'Add to Cart',
                               style: AppTextStyles.button.copyWith(
                                 color: AppColors.black,
                                 fontSize: 13,
@@ -239,23 +288,12 @@ class ProductDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
 
-                      // Buy Now Button (Redirects to Cart inside MainNavigationScreen)
+                      // Buy Now Button (Redirects to Cart inside MainNavigationScreen)[cite: 22]
                       Expanded(
                         child: SizedBox(
                           height: 48,
                           child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const MainNavigationScreen(
-                                        initialIndex: 2,
-                                      ),
-                                ),
-                                (route) => false,
-                              );
-                            },
+                            onPressed: _handleBuyNow,
                             style: ElevatedButton.styleFrom(
                               elevation: 0,
                               backgroundColor: AppColors.primary,

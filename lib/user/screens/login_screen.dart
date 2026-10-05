@@ -15,14 +15,58 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  // State variables for form management and validation
   bool _isPasswordObscured = true;
   bool _isUserLogin = true;
+  String? _emailError;
+  String? _passwordError;
+
+  // Password Regex: >= 1 uppercase, >= 1 lowercase, >= 1 digit, >= 1 special char, min 6 characters
+  final RegExp _passwordRegex = RegExp(
+    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+={}\[\]:;"<>,./~`|\\])[A-Za-z\d@$!%*?&#^()_\-+={}\[\]:;"<>,./~`|\\]{6,}$',
+  );
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // Simple validation logic using regex
+  void _handleLogin() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+
+      if (email.isEmpty) {
+        _emailError = 'Please enter your email';
+      } else if (!email.contains('@') || !email.contains('.')) {
+        _emailError = 'Enter a valid email address';
+      }
+
+      if (password.isEmpty) {
+        _passwordError = 'Please enter your password';
+      } else if (!_passwordRegex.hasMatch(password)) {
+        _passwordError =
+            'Must have 1 uppercase, 1 lowercase, 1 number, 1 special char & min 6 chars';
+      }
+    });
+
+    // If no errors, proceed with navigation
+    if (_emailError == null && _passwordError == null) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MainNavigationScreen(initialIndex: 0),
+        ),
+        (route) => false,
+      );
+    }
   }
 
   @override
@@ -239,7 +283,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppColors.black.withOpacity(0.6),
+                          color: _emailError != null
+                              ? AppColors.primary
+                              : AppColors.black.withOpacity(0.6),
                           width: 1,
                         ),
                       ),
@@ -247,6 +293,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         style: AppTextStyles.body,
+                        onChanged: (_) {
+                          if (_emailError != null) {
+                            setState(() => _emailError = null);
+                          }
+                        },
                         decoration: InputDecoration(
                           hintText: 'Enter Your Email Address',
                           hintStyle: AppTextStyles.bodySmall.copyWith(
@@ -264,6 +315,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    if (_emailError != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        _emailError!,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
 
@@ -282,7 +343,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppColors.black.withOpacity(0.6),
+                          color: _passwordError != null
+                              ? AppColors.primary
+                              : AppColors.black.withOpacity(0.6),
                           width: 1,
                         ),
                       ),
@@ -290,6 +353,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         controller: _passwordController,
                         obscureText: _isPasswordObscured,
                         style: AppTextStyles.body,
+                        onChanged: (_) {
+                          if (_passwordError != null) {
+                            setState(() => _passwordError = null);
+                          }
+                        },
                         decoration: InputDecoration(
                           hintText: '••••••••',
                           hintStyle: AppTextStyles.bodySmall.copyWith(
@@ -322,6 +390,16 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
+                    if (_passwordError != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        _passwordError!,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
 
                     const SizedBox(height: 24),
 
@@ -330,16 +408,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const MainNavigationScreen(initialIndex: 0),
-                            ),
-                            (route) => false,
-                          );
-                        },
+                        onPressed: _handleLogin,
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor: AppColors.primary,

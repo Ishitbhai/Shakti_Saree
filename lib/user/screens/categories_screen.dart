@@ -6,13 +6,24 @@ import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'product_list_screen.dart';
 
-class CategoriesScreen extends StatelessWidget {
+class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // 8 Categories based on design
-    final List<Map<String, dynamic>> categories = [
+  State<CategoriesScreen> createState() => _CategoriesScreenState();
+}
+
+class _CategoriesScreenState extends State<CategoriesScreen> {
+  // State variables for header texts and category list[cite: 20]
+  final String pageTitle = 'Categories';
+  final String pageSubtitle = 'Fabric & occasion wise';
+  late final List<Map<String, dynamic>> categories;
+
+  @override
+  void initState() {
+    super.initState();
+    // 8 Categories initialized as state data[cite: 20]
+    categories = [
       {'title': 'Silk Saree', 'items': '248 items', 'image': image1},
       {'title': 'Banarasi', 'items': '182 items', 'image': image2},
       {'title': 'Cotton Saree', 'items': '320 items', 'image': image3},
@@ -22,13 +33,32 @@ class CategoriesScreen extends StatelessWidget {
       {'title': 'Bridal Wear', 'items': '68 items', 'image': image7},
       {'title': 'Daily Wear', 'items': '412 items', 'image': image8},
     ];
+  }
 
+  void _handleBackNavigation() {
+    final tabController = DefaultTabController.maybeOf(context);
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else if (tabController != null) {
+      tabController.animateTo(0);
+    }
+  }
+
+  void _navigateToProductList() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProductListScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER =================
+            // ================= HEADER =================[cite: 20]
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
               child: SizedBox(
@@ -36,17 +66,17 @@ class CategoriesScreen extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Centered Titles
+                    // Centered Titles[cite: 20]
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Categories',
+                          pageTitle,
                           style: AppTextStyles.pageTitle.copyWith(fontSize: 18),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Fabric & occasion wise',
+                          pageSubtitle,
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.muted,
                             fontSize: 11,
@@ -55,21 +85,10 @@ class CategoriesScreen extends StatelessWidget {
                       ],
                     ),
 
-                    // Back Button on the left
+                    // Back Button on the left[cite: 20]
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: AppBackButton(
-                        onTap: () {
-                          final tabController = DefaultTabController.maybeOf(
-                            context,
-                          );
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          } else if (tabController != null) {
-                            tabController.animateTo(0);
-                          }
-                        },
-                      ),
+                      child: AppBackButton(onTap: _handleBackNavigation),
                     ),
                   ],
                 ),
@@ -78,7 +97,7 @@ class CategoriesScreen extends StatelessWidget {
 
             const SizedBox(height: 10),
 
-            // ================= CATEGORIES GRID =================
+            // ================= CATEGORIES GRID =================[cite: 20]
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(
@@ -98,14 +117,7 @@ class CategoriesScreen extends StatelessWidget {
                     title: cat['title'] as String,
                     items: cat['items'] as String,
                     imagePath: cat['image'] as String,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProductListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: _navigateToProductList,
                   );
                 },
               ),
@@ -116,7 +128,7 @@ class CategoriesScreen extends StatelessWidget {
     );
   }
 
-  // ================= IMAGE + DETAILS CARD WIDGET =================
+  // ================= IMAGE + DETAILS CARD WIDGET =================[cite: 20]
   Widget _buildCategoryCard({
     required String title,
     required String items,
@@ -138,7 +150,7 @@ class CategoriesScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Column(
             children: [
-              // Top section with image
+              // Top section with image[cite: 20]
               Expanded(
                 flex: 6,
                 child: SizedBox(
@@ -158,7 +170,7 @@ class CategoriesScreen extends StatelessWidget {
                 ),
               ),
 
-              // Bottom white section with details
+              // Bottom white section with details[cite: 20]
               Expanded(
                 flex: 4,
                 child: Container(

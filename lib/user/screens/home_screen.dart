@@ -8,13 +8,58 @@ import 'product_detail_screen.dart';
 import 'product_list_screen.dart';
 import 'search_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // State variables for user, content, and dynamic lists[cite: 19]
+  String userName = 'Vivek';
+  final String greetingPrefix = 'Namaste';
+  final String heroTitle = 'Find saree that suits you';
+
+  late final List<Map<String, dynamic>> categoryList;
+  late final List<Map<String, dynamic>> trendingProducts;
+
+  @override
+  void initState() {
+    super.initState();
+    // Dynamic Category Items[cite: 19]
+    categoryList = [
+      {'label': 'Silk', 'imagePath': image1},
+      {'label': 'Banarasi', 'imagePath': image2},
+      {'label': 'Cotton', 'imagePath': image3},
+      {'label': 'Designer', 'imagePath': image4},
+    ];
+
+    // Dynamic Trending Products[cite: 19]
+    trendingProducts = [
+      {
+        'title': 'Banarasi Silk Saree',
+        'price': '₹2,499',
+        'originalPrice': '₹4,999',
+        'discount': '-50%',
+        'imagePath': image7,
+      },
+      {
+        'title': 'Kanjivaram Pure Silk',
+        'price': '₹3,299',
+        'originalPrice': '₹5,499',
+        'discount': '-45%',
+        'imagePath': image8,
+      },
+    ];
+  }
 
   void _navigateToCategoryTab(BuildContext context) {
     final tabController = DefaultTabController.maybeOf(context);
     if (tabController != null) {
-      tabController.animateTo(1); // Switches smoothly to Category Tab (Tab 1)
+      tabController.animateTo(
+        1,
+      ); // Switches smoothly to Category Tab (Tab 1)[cite: 19]
     } else {
       Navigator.push(
         context,
@@ -31,7 +76,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ================= FULL-WIDTH MAROON HEADER =================
+            // ================= FULL-WIDTH MAROON HEADER =================[cite: 19]
             Container(
               width: double.infinity,
               color: AppColors.primary,
@@ -43,7 +88,7 @@ class HomeScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Namaste, Vivek',
+                        '$greetingPrefix, $userName',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.white.withOpacity(0.9),
                           fontSize: 13,
@@ -51,7 +96,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Find saree that suits you',
+                        heroTitle,
                         style: AppTextStyles.pageTitle.copyWith(
                           color: AppColors.white,
                           fontSize: 22,
@@ -60,7 +105,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 18),
 
-                      // Search bar
+                      // Search bar[cite: 19]
                       Container(
                         height: 48,
                         decoration: BoxDecoration(
@@ -102,7 +147,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // ================= SHOP BY CATEGORY =================
+            // ================= SHOP BY CATEGORY =================[cite: 19]
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -133,33 +178,19 @@ class HomeScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCategoryCircle(
-                    label: 'Silk',
-                    imagePath: image1,
-                    onTap: () => _navigateToCategoryTab(context),
-                  ),
-                  _buildCategoryCircle(
-                    label: 'Banarasi',
-                    imagePath: image2,
-                    onTap: () => _navigateToCategoryTab(context),
-                  ),
-                  _buildCategoryCircle(
-                    label: 'Cotton',
-                    imagePath: image3,
-                    onTap: () => _navigateToCategoryTab(context),
-                  ),
-                  _buildCategoryCircle(
-                    label: 'Designer',
-                    imagePath: image4,
-                    onTap: () => _navigateToCategoryTab(context),
-                  ),
+                  for (final cat in categoryList)
+                    _buildCategoryCircle(
+                      label: cat['label'] as String,
+                      imagePath: cat['imagePath'] as String,
+                      onTap: () => _navigateToCategoryTab(context),
+                    ),
                 ],
               ),
             ),
 
             const SizedBox(height: 22),
 
-            // ================= PROMO BANNER =================
+            // ================= PROMO BANNER =================[cite: 19]
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
@@ -231,7 +262,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 22),
 
-            // ================= TRENDING NOW =================
+            // ================= TRENDING NOW =================[cite: 19]
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -268,41 +299,28 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(
-                    child: _buildProductCard(
-                      discount: '-50%',
-                      imagePath: image7,
-                      title: 'Banarasi Silk Saree',
-                      price: '₹2,499',
-                      originalPrice: '₹4,999',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ProductDetailScreen(),
-                          ),
-                        );
-                      },
+                  for (int i = 0; i < trendingProducts.length; i++) ...[
+                    Expanded(
+                      child: _buildProductCard(
+                        discount: trendingProducts[i]['discount'] as String,
+                        imagePath: trendingProducts[i]['imagePath'] as String,
+                        title: trendingProducts[i]['title'] as String,
+                        price: trendingProducts[i]['price'] as String,
+                        originalPrice:
+                            trendingProducts[i]['originalPrice'] as String,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProductDetailScreen(),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: _buildProductCard(
-                      discount: '-45%',
-                      imagePath: image8,
-                      title: 'Kanjivaram Pure Silk',
-                      price: '₹3,299',
-                      originalPrice: '₹5,499',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ProductDetailScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                    if (i != trendingProducts.length - 1)
+                      const SizedBox(width: 14),
+                  ],
                 ],
               ),
             ),
@@ -314,7 +332,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // ================= HELPER WIDGETS =================
+  // ================= HELPER WIDGETS =================[cite: 19]
   Widget _buildCategoryCircle({
     required String label,
     required String imagePath,

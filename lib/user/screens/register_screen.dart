@@ -21,7 +21,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _isPasswordObscured = true;
   bool _isConfirmPasswordObscured = true;
-  bool _agreeToTerms = true;
+
+  // Validation error state variables
+  String? _nameError;
+  String? _emailError;
+  String? _mobileError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+
+  // Password Regex: >= 1 uppercase, >= 1 lowercase, >= 1 digit, >= 1 special char, min 6 characters
+  final RegExp _passwordRegex = RegExp(
+    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+={}\[\]:;"<>,./~`|\\])[A-Za-z\d@$!%*?&#^()_\-+={}\[\]:;"<>,./~`|\\]{6,}$',
+  );
+
+  // Exactly 10 digits
+  final RegExp _mobileRegex = RegExp(r'^\d{10}$');
 
   @override
   void dispose() {
@@ -31,6 +45,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _handleRegister() {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
+    final mobile = _mobileController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    setState(() {
+      _nameError = null;
+      _emailError = null;
+      _mobileError = null;
+      _passwordError = null;
+      _confirmPasswordError = null;
+
+      if (name.isEmpty) {
+        _nameError = 'Please enter your full name';
+      }
+
+      if (email.isEmpty) {
+        _emailError = 'Please enter your email';
+      } else if (!email.contains('@') || !email.contains('.')) {
+        _emailError = 'Enter a valid email address';
+      }
+
+      if (mobile.isEmpty) {
+        _mobileError = 'Please enter your mobile number';
+      } else if (!_mobileRegex.hasMatch(mobile)) {
+        _mobileError = 'Mobile number must be exactly 10 digits';
+      }
+
+      if (password.isEmpty) {
+        _passwordError = 'Please enter your password';
+      } else if (!_passwordRegex.hasMatch(password)) {
+        _passwordError =
+            'Must have 1 uppercase, 1 lowercase, 1 number, 1 special char & min 6 chars';
+      }
+
+      if (confirmPassword.isEmpty) {
+        _confirmPasswordError = 'Please re-enter your password';
+      } else if (password != confirmPassword) {
+        _confirmPasswordError = 'Passwords do not match';
+      }
+    });
+
+    if (_nameError == null &&
+        _emailError == null &&
+        _mobileError == null &&
+        _passwordError == null &&
+        _confirmPasswordError == null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
   }
 
   @override
@@ -114,6 +184,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       hint: 'Enter Your Full Name',
                       icon: Icons.person_outline,
                       controller: _nameController,
+                      errorText: _nameError,
+                      onChanged: (_) {
+                        if (_nameError != null) {
+                          setState(() => _nameError = null);
+                        }
+                      },
                     ),
 
                     const SizedBox(height: 14),
@@ -125,6 +201,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       icon: Icons.mail_outline,
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
+                      errorText: _emailError,
+                      onChanged: (_) {
+                        if (_emailError != null) {
+                          setState(() => _emailError = null);
+                        }
+                      },
                     ),
 
                     const SizedBox(height: 14),
@@ -132,10 +214,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     // Mobile Number
                     _buildInputField(
                       label: 'Mobile Number',
-                      hint: '+91 12345 67890',
+                      hint: '10-digit mobile number',
                       icon: Icons.phone_outlined,
                       controller: _mobileController,
                       keyboardType: TextInputType.phone,
+                      errorText: _mobileError,
+                      onChanged: (_) {
+                        if (_mobileError != null) {
+                          setState(() => _mobileError = null);
+                        }
+                      },
                     ),
 
                     const SizedBox(height: 14),
@@ -146,6 +234,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       hint: 'Create password',
                       controller: _passwordController,
                       isObscured: _isPasswordObscured,
+                      errorText: _passwordError,
+                      onChanged: (_) {
+                        if (_passwordError != null) {
+                          setState(() => _passwordError = null);
+                        }
+                      },
                       onToggle: () {
                         setState(() {
                           _isPasswordObscured = !_isPasswordObscured;
@@ -161,6 +255,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       hint: 'Re-enter password',
                       controller: _confirmPasswordController,
                       isObscured: _isConfirmPasswordObscured,
+                      errorText: _confirmPasswordError,
+                      onChanged: (_) {
+                        if (_confirmPasswordError != null) {
+                          setState(() => _confirmPasswordError = null);
+                        }
+                      },
                       onToggle: () {
                         setState(() {
                           _isConfirmPasswordObscured =
@@ -169,70 +269,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       },
                     ),
 
-                    const SizedBox(height: 18),
-
-                    // Terms Checkbox Row
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _agreeToTerms = !_agreeToTerms;
-                        });
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: _agreeToTerms
-                                  ? AppColors.primary
-                                  : AppColors.white,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: _agreeToTerms
-                                    ? AppColors.primary
-                                    : AppColors.muted,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: _agreeToTerms
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 14,
-                                    color: AppColors.white,
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'I agree to Terms & Privacy Policy',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.muted,
-                                fontSize: 11.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
 
                     // Sign Up Button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Navigates to Login on submit
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginScreen(),
-                            ),
-                          );
-                        },
+                        onPressed: _handleRegister,
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor: AppColors.primary,
@@ -300,6 +344,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData icon,
     required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
+    String? errorText,
+    ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,7 +364,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             color: AppColors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: AppColors.black.withOpacity(0.6),
+              color: errorText != null
+                  ? AppColors.primary
+                  : AppColors.black.withOpacity(0.6),
               width: 1,
             ),
           ),
@@ -326,6 +374,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: controller,
             keyboardType: keyboardType,
             style: AppTextStyles.body,
+            onChanged: onChanged,
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: AppTextStyles.bodySmall.copyWith(
@@ -337,6 +386,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
+        if (errorText != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            errorText,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.primary,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -347,6 +406,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required TextEditingController controller,
     required bool isObscured,
     required VoidCallback onToggle,
+    String? errorText,
+    ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,7 +426,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             color: AppColors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: AppColors.black.withOpacity(0.6),
+              color: errorText != null
+                  ? AppColors.primary
+                  : AppColors.black.withOpacity(0.6),
               width: 1,
             ),
           ),
@@ -373,6 +436,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             controller: controller,
             obscureText: isObscured,
             style: AppTextStyles.body,
+            onChanged: onChanged,
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: AppTextStyles.bodySmall.copyWith(
@@ -398,6 +462,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ),
+        if (errorText != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            errorText,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.primary,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ],
     );
   }

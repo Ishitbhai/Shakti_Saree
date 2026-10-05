@@ -14,39 +14,61 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
+  // State variables for header title, count, filters, and products[cite: 21]
+  String categoryTitle = 'Silk Sarees';
+  int totalProductsCount = 128;
   int _selectedFilterIndex = 0;
-  final List<String> _filters = ['All', 'Under ₹2000', 'Banarasi', 'New'];
 
-  final List<Map<String, dynamic>> _products = [
-    {
-      'title': 'Banarasi Silk Saree',
-      'price': '₹2,499',
-      'originalPrice': '₹4,999',
-      'discount': '-50%',
-      'imagePath': image1,
-    },
-    {
-      'title': 'Kanjivaram Pure Silk',
-      'price': '₹3,299',
-      'originalPrice': '₹5,499',
-      'discount': '-45%',
-      'imagePath': image2,
-    },
-    {
-      'title': 'Mysore Silk Saree',
-      'price': '₹1,899',
-      'originalPrice': '₹3,299',
-      'discount': '-42%',
-      'imagePath': image3,
-    },
-    {
-      'title': 'Paithani Silk Saree',
-      'price': '₹4,150',
-      'originalPrice': '₹6,999',
-      'discount': '-41%',
-      'imagePath': image4,
-    },
-  ];
+  late final List<String> _filters;
+  late List<Map<String, dynamic>> _products;
+
+  @override
+  void initState() {
+    super.initState();
+    _filters = ['All', 'Under ₹2000', 'Banarasi', 'New'];
+
+    _products = [
+      {
+        'title': 'Banarasi Silk Saree',
+        'price': '₹2,499',
+        'originalPrice': '₹4,999',
+        'discount': '-50%',
+        'imagePath': image1,
+      },
+      {
+        'title': 'Kanjivaram Pure Silk',
+        'price': '₹3,299',
+        'originalPrice': '₹5,499',
+        'discount': '-45%',
+        'imagePath': image2,
+      },
+      {
+        'title': 'Mysore Silk Saree',
+        'price': '₹1,899',
+        'originalPrice': '₹3,299',
+        'discount': '-42%',
+        'imagePath': image3,
+      },
+      {
+        'title': 'Paithani Silk Saree',
+        'price': '₹4,150',
+        'originalPrice': '₹6,999',
+        'discount': '-41%',
+        'imagePath': image4,
+      },
+    ];
+  }
+
+  void _handleBackNavigation() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      final tabController = DefaultTabController.maybeOf(context);
+      if (tabController != null) {
+        tabController.animateTo(0);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +77,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER =================
+            // ================= HEADER =================[cite: 21]
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
               child: SizedBox(
@@ -67,12 +89,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Silk Sarees',
+                          categoryTitle,
                           style: AppTextStyles.pageTitle.copyWith(fontSize: 18),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '128 products',
+                          '$totalProductsCount products',
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.muted,
                             fontSize: 11,
@@ -82,27 +104,14 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     ),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: AppBackButton(
-                        onTap: () {
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          } else {
-                            final tabController = DefaultTabController.maybeOf(
-                              context,
-                            );
-                            if (tabController != null) {
-                              tabController.animateTo(0);
-                            }
-                          }
-                        },
-                      ),
+                      child: AppBackButton(onTap: _handleBackNavigation),
                     ),
                   ],
                 ),
               ),
             ),
 
-            // ================= FILTER CHIPS ROW =================
+            // ================= FILTER CHIPS ROW =================[cite: 21]
             SizedBox(
               height: 38,
               child: ListView.separated(
@@ -152,7 +161,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
             const SizedBox(height: 14),
 
-            // ================= SORT & FILTER BUTTONS =================
+            // ================= SORT & FILTER BUTTONS =================[cite: 21]
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -178,7 +187,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
             const SizedBox(height: 14),
 
-            // ================= PRODUCT GRID =================
+            // ================= PRODUCT GRID =================[cite: 21]
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(
@@ -218,7 +227,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  // ================= HELPER WIDGETS =================
+  // ================= HELPER WIDGETS =================[cite: 21]
   Widget _buildActionCapsule({
     required IconData icon,
     required String label,
@@ -274,7 +283,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Preview Container with Discount Tag
+            // Image Preview Container with Discount Tag[cite: 21]
             Expanded(
               child: Container(
                 width: double.infinity,
