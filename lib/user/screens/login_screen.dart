@@ -4,7 +4,6 @@ import 'MainNavigationScreen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'register_screen.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
