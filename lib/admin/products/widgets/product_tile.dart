@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/local_asset_image.dart';
 import '../product.dart';
 import 'stock_pill.dart';
 
@@ -20,7 +21,8 @@ class ProductTile extends StatelessWidget {
 
   final Product product;
 
-  /// Stands in for the product photo until images are wired up.
+  /// Filled in behind the frame where the listing has no picture, or where
+  /// the one it names is missing from the bundle.
   final Color swatch;
 
   final VoidCallback? onTap;
@@ -56,15 +58,10 @@ class ProductTile extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ExcludeSemantics(
-                  child: Container(
-                    height: _thumb,
-                    width: _thumb,
-                    decoration: BoxDecoration(
-                      color: swatch,
-                      borderRadius: AppRadii.cardRadius,
-                    ),
-                  ),
+                LocalAssetImage(
+                  assetPath: product.image,
+                  size: _thumb,
+                  tint: swatch,
                 ),
                 const SizedBox(width: AppSpacing.x3),
                 Expanded(

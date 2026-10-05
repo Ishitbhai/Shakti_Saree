@@ -187,6 +187,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     stock: _digits(_stock) ?? 0,
     swatchIndex: _swatchIndex,
     category: _category,
+    // Carried through rather than edited: the form picks photos from the
+    // gallery and the catalogue has nowhere to keep those, so an edit must
+    // not quietly drop the bundled picture the listing already has.
+    image: _editing?.image,
   );
 
   // -------------------------------------------------------- unsaved changes

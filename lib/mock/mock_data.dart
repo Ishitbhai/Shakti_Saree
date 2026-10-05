@@ -5,6 +5,7 @@ import '../admin/products/product.dart';
 import '../admin/shared/models/order.dart';
 import '../admin/shared/models/order_status.dart';
 import '../admin/support/faq.dart';
+import '../core/constants/app_assets.dart';
 
 /// Sample orders for running the admin app without a backend.
 ///
@@ -395,8 +396,10 @@ class MockData {
 
   /// The sample product catalogue.
   ///
-  /// Each carries its own placeholder tint, so a product keeps its colour
-  /// wherever it appears and whatever order the list is in.
+  /// Each carries a bundled picture and its own tint. The tint is not
+  /// redundant: it is what the frame falls back to if the file is missing,
+  /// and what a listing created in the app wears until it has a picture of
+  /// its own.
   static List<Product> products() => const [
     Product(
       name: 'Banarasi Silk Saree',
@@ -405,6 +408,7 @@ class MockData {
       stock: 24,
       swatchIndex: 0,
       category: 'Banarasi',
+      image: AppAssets.banarasiSilkSaree,
     ),
     Product(
       name: 'Kanjivaram Pure Silk',
@@ -413,6 +417,7 @@ class MockData {
       stock: 12,
       swatchIndex: 1,
       category: 'Kanjivaram',
+      image: AppAssets.kanjivaramPureSilk,
     ),
     Product(
       name: 'Cotton Daily Saree',
@@ -421,6 +426,7 @@ class MockData {
       stock: 4,
       swatchIndex: 2,
       category: 'Cotton Saree',
+      image: AppAssets.cottonDailySaree,
     ),
     Product(
       name: 'Georgette Party Wear',
@@ -429,6 +435,7 @@ class MockData {
       stock: 0,
       swatchIndex: 3,
       category: 'Georgette',
+      image: AppAssets.georgettePartyWear,
     ),
     Product(
       name: 'Paithani Silk Saree',
@@ -437,6 +444,7 @@ class MockData {
       stock: 8,
       swatchIndex: 4,
       category: 'Paithani',
+      image: AppAssets.paithaniSilkSaree,
     ),
   ];
 
@@ -446,18 +454,64 @@ class MockData {
   /// seeded products sit across five of them; the rest are empty, which is
   /// what a category looks like before anything is filed under it.
   static List<Category> categories() => const [
-    Category(name: 'Silk Saree', swatchIndex: 0),
-    Category(name: 'Banarasi', swatchIndex: 1),
-    Category(name: 'Cotton Saree', swatchIndex: 2),
-    Category(name: 'Georgette', swatchIndex: 3),
-    Category(name: 'Kanjivaram', swatchIndex: 4, isHidden: true),
-    Category(name: 'Bridal Wear', swatchIndex: 0),
-    Category(name: 'Designer', swatchIndex: 1),
-    Category(name: 'Daily Wear', swatchIndex: 2),
-    Category(name: 'Chanderi', swatchIndex: 3),
-    Category(name: 'Patola', swatchIndex: 4),
-    Category(name: 'Paithani', swatchIndex: 0),
-    Category(name: 'Organza', swatchIndex: 1, isHidden: true),
+    Category(
+      name: 'Silk Saree',
+      swatchIndex: 0,
+      image: AppAssets.silkSareeCategory,
+    ),
+    Category(
+      name: 'Banarasi',
+      swatchIndex: 1,
+      image: AppAssets.banarasiCategory,
+    ),
+    Category(
+      name: 'Cotton Saree',
+      swatchIndex: 2,
+      image: AppAssets.cottonSareeCategory,
+    ),
+    Category(
+      name: 'Georgette',
+      swatchIndex: 3,
+      image: AppAssets.georgetteCategory,
+    ),
+    Category(
+      name: 'Kanjivaram',
+      swatchIndex: 4,
+      isHidden: true,
+      image: AppAssets.kanjivaramCategory,
+    ),
+    Category(
+      name: 'Bridal Wear',
+      swatchIndex: 0,
+      image: AppAssets.bridalWearCategory,
+    ),
+    Category(
+      name: 'Designer',
+      swatchIndex: 1,
+      image: AppAssets.designerCategory,
+    ),
+    Category(
+      name: 'Daily Wear',
+      swatchIndex: 2,
+      image: AppAssets.dailyWearCategory,
+    ),
+    Category(
+      name: 'Chanderi',
+      swatchIndex: 3,
+      image: AppAssets.chanderiCategory,
+    ),
+    Category(name: 'Patola', swatchIndex: 4, image: AppAssets.patolaCategory),
+    Category(
+      name: 'Paithani',
+      swatchIndex: 0,
+      image: AppAssets.paithaniCategory,
+    ),
+    Category(
+      name: 'Organza',
+      swatchIndex: 1,
+      isHidden: true,
+      image: AppAssets.organzaCategory,
+    ),
   ];
 
   /// The sample help questions, in the order the support screen lists them.

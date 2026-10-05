@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/local_asset_image.dart';
 import '../shared/widgets/admin_page_header.dart';
 import '../shared/widgets/async_content.dart';
 import '../shared/widgets/busy_label.dart';
@@ -360,15 +361,10 @@ class _InventoryRow extends StatelessWidget {
         padding: const EdgeInsets.all(_padding),
         child: Row(
           children: [
-            ExcludeSemantics(
-              child: Container(
-                height: _swatch,
-                width: _swatch,
-                decoration: BoxDecoration(
-                  color: Swatches.at(product.swatchIndex),
-                  borderRadius: AppRadii.cardRadius,
-                ),
-              ),
+            LocalAssetImage(
+              assetPath: product.image,
+              size: _swatch,
+              tint: Swatches.at(product.swatchIndex),
             ),
             const SizedBox(width: AppSpacing.x3),
             Expanded(

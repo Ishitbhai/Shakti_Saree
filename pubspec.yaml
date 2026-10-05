@@ -72,6 +72,11 @@ flutter:
   assets:
     - assets/fonts/OFL-Inter.txt
     - assets/fonts/OFL-PlayfairDisplay.txt
+    # Each folder listed in its own right: a directory entry covers the files
+    # directly inside it and nothing deeper, so `assets/images/` alone would
+    # bundle none of these.
+    - assets/images/products/
+    - assets/images/categories/
 
   # Bundled rather than fetched: google_fonts downloaded these at runtime, so
   # a first run without a network connection fell back to the platform font.
