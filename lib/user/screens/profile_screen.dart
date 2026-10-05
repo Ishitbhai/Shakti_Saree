@@ -3,13 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
-// import '../widgets/app_bottom_nav_bar.dart';
 import 'my_orders_screen.dart';
 import 'edit_profile_screen.dart';
 import 'help_and_support_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Profile state variables
+  String initials = 'IV';
+  String username = 'iv';
+  String email = 'ishit@gmail.com';
+  String phone = '+91 12345 67890';
+  int ordersCount = 12;
+  int wishlistCount = 8;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +60,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            'IV',
+                            initials,
                             style: AppTextStyles.pageTitle.copyWith(
                               color: AppColors.primary,
                               fontSize: 28,
@@ -62,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
 
                       // Username
                       Text(
-                        'iv',
+                        username,
                         style: AppTextStyles.pageTitle.copyWith(
                           color: AppColors.white,
                           fontSize: 20,
@@ -74,7 +86,7 @@ class ProfileScreen extends StatelessWidget {
 
                       // Contact row
                       Text(
-                        'ishit@gmail.com • +91 12345 67890',
+                        '$email • $phone',
                         style: AppTextStyles.caption.copyWith(
                           color: AppColors.white.withOpacity(0.8),
                           fontSize: 11,
@@ -97,7 +109,7 @@ class ProfileScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          '12',
+                          ordersCount.toString().padLeft(2, '0'),
                           style: GoogleFonts.lora(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -127,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          '08',
+                          wishlistCount.toString().padLeft(2, '0'),
                           style: GoogleFonts.lora(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,

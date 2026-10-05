@@ -12,8 +12,15 @@ class HelpAndSupportScreen extends StatefulWidget {
 }
 
 class _HelpAndSupportScreenState extends State<HelpAndSupportScreen> {
-  // Index of currently expanded item (0 is expanded initially as per design)
+  // 1. Text Controllers
+  final TextEditingController _queryController = TextEditingController();
+
+  // 2. Form & UI State Variables
   int? _expandedIndex = 0;
+
+  // 3. Error / Status Strings
+  String errQuery = '';
+  String successMessage = '';
 
   final List<Map<String, String>> _faqList = [
     {
@@ -47,6 +54,31 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen> {
           'Yes, Cash On Delivery (COD) is available on all eligible postal pin codes across India.',
     },
   ];
+
+  @override
+  void dispose() {
+    _queryController.dispose();
+    super.dispose();
+  }
+
+  // Submit and Validation
+  void validateAndSubmitQuery() {
+    setState(() {
+      final queryText = _queryController.text.trim();
+
+      if (queryText.isEmpty) {
+        errQuery = 'Please enter your message';
+        successMessage = '';
+      } else if (queryText.length < 5) {
+        errQuery = 'Query must be at least 5 characters';
+        successMessage = '';
+      } else {
+        errQuery = '';
+        successMessage = 'Your query has been submitted successfully!';
+        _queryController.clear();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

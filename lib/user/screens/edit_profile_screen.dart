@@ -11,6 +11,7 @@ class EditProfileScreen extends StatefulWidget {
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
+  // 1. Text Controllers
   final TextEditingController _nameController = TextEditingController(
     text: 'Ishit Vadhavana',
   );
@@ -24,8 +25,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     text: '22 Mar 2007',
   );
 
+  // 2. Form Variables
   DateTime _selectedDate = DateTime(2007, 3, 22);
   String _selectedGender = 'Male';
+
+  // 3. Error Strings
+  String errName = '';
+  String errEmail = '';
+  String errPhone = '';
+  String errDob = '';
+  String errGender = '';
 
   final List<String> _months = [
     'Jan',
@@ -79,8 +88,71 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _selectedDate = picked;
         _dobController.text =
             '${picked.day.toString().padLeft(2, '0')} ${_months[picked.month - 1]} ${picked.year}';
+        errDob = '';
       });
     }
+  }
+
+  // Submit and Validation
+  void validateAndSubmit() {
+    setState(() {
+      bool isValid = true;
+
+      // Name Validation
+      if (_nameController.text.trim().isEmpty) {
+        errName = 'Name is required';
+        isValid = false;
+      } else {
+        errName = '';
+      }
+
+      // Email Validation
+      String email = _emailController.text.trim();
+      final emailRegex = RegExp(
+        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+      );
+      if (email.isEmpty) {
+        errEmail = 'Email is required';
+        isValid = false;
+      } else if (!emailRegex.hasMatch(email)) {
+        errEmail = 'Enter a valid email';
+        isValid = false;
+      } else {
+        errEmail = '';
+      }
+
+      // Phone Validation
+      String phone = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      if (phone.isEmpty) {
+        errPhone = 'Phone number is required';
+        isValid = false;
+      } else if (phone.length < 10) {
+        errPhone = 'Enter a valid 10-digit number';
+        isValid = false;
+      } else {
+        errPhone = '';
+      }
+
+      // Date of Birth Validation
+      if (_dobController.text.trim().isEmpty) {
+        errDob = 'Please select Date of Birth';
+        isValid = false;
+      } else {
+        errDob = '';
+      }
+
+      // Gender Validation
+      if (_selectedGender.isEmpty) {
+        errGender = 'Please select gender';
+        isValid = false;
+      } else {
+        errGender = '';
+      }
+
+      if (isValid) {
+        Navigator.pop(context);
+      }
+    });
   }
 
   @override
@@ -207,7 +279,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   _buildTextField(
                     controller: _nameController,
                     icon: Icons.person_outline,
+                    hasError: errName.isNotEmpty,
                   ),
+                  if (errName.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      errName,
+                      style: const TextStyle(color: Colors.red, fontSize: 11),
+                    ),
+                  ],
 
                   const SizedBox(height: 16),
 
@@ -217,7 +297,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _emailController,
                     icon: Icons.mail_outline,
                     keyboardType: TextInputType.emailAddress,
+                    hasError: errEmail.isNotEmpty,
                   ),
+                  if (errEmail.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      errEmail,
+                      style: const TextStyle(color: Colors.red, fontSize: 11),
+                    ),
+                  ],
 
                   const SizedBox(height: 16),
 
@@ -227,7 +315,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     controller: _phoneController,
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
+                    hasError: errPhone.isNotEmpty,
                   ),
+                  if (errPhone.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      errPhone,
+                      style: const TextStyle(color: Colors.red, fontSize: 11),
+                    ),
+                  ],
 
                   const SizedBox(height: 16),
 
@@ -243,7 +339,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: AppColors.black.withOpacity(0.6),
+                          color: errDob.isNotEmpty
+                              ? Colors.red
+                              : AppColors.black.withOpacity(0.6),
                           width: 1,
                         ),
                       ),
@@ -273,6 +371,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                     ),
                   ),
+                  if (errDob.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      errDob,
+                      style: const TextStyle(color: Colors.red, fontSize: 11),
+                    ),
+                  ],
 
                   const SizedBox(height: 16),
 
@@ -288,6 +393,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Expanded(child: _buildGenderOption('Other')),
                     ],
                   ),
+                  if (errGender.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      errGender,
+                      style: const TextStyle(color: Colors.red, fontSize: 11),
+                    ),
+                  ],
 
                   const SizedBox(height: 28),
 
@@ -296,9 +408,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                      onPressed: validateAndSubmit,
                       style: ElevatedButton.styleFrom(
                         elevation: 0,
                         backgroundColor: AppColors.primary,
@@ -360,13 +470,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required TextEditingController controller,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool hasError = false,
   }) {
     return Container(
       height: 50,
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.black.withOpacity(0.6), width: 1),
+        border: Border.all(
+          color: hasError ? Colors.red : AppColors.black.withOpacity(0.6),
+          width: 1,
+        ),
       ),
       child: TextField(
         controller: controller,
@@ -390,6 +504,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       onTap: () {
         setState(() {
           _selectedGender = gender;
+          errGender = '';
         });
       },
       child: Container(

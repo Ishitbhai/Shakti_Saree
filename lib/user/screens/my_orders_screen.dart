@@ -5,8 +5,59 @@ import '../resources/imagestrings.dart'; // Import your image strings file
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
-class MyOrdersScreen extends StatelessWidget {
+class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key});
+
+  @override
+  State<MyOrdersScreen> createState() => _MyOrdersScreenState();
+}
+
+class _MyOrdersScreenState extends State<MyOrdersScreen> {
+  // State variables for orders list
+  late final List<Map<String, dynamic>> orders;
+
+  @override
+  void initState() {
+    super.initState();
+    orders = [
+      {
+        'orderId': '#ORD-89421',
+        'title': 'Banarasi Silk Saree',
+        'date': '12 Oct 2026',
+        'price': '₹2,499',
+        'status': 'Delivered',
+        'statusColor': AppColors.success,
+        'imagePath': image2,
+      },
+      {
+        'orderId': '#ORD-89310',
+        'title': 'Kanjivaram Saree',
+        'date': '28 Sep 2026',
+        'price': '₹3,299',
+        'status': 'In Transit',
+        'statusColor': const Color(0xFFD49657),
+        'imagePath': image3,
+      },
+      {
+        'orderId': '#ORD-88902',
+        'title': 'Cotton Daily Saree',
+        'date': '15 Sep 2026',
+        'price': '₹1,699',
+        'status': 'Delivered',
+        'statusColor': AppColors.success,
+        'imagePath': image4,
+      },
+      {
+        'orderId': '#ORD-87114',
+        'title': 'Banarasi Zari Border',
+        'date': '02 Aug 2026',
+        'price': '₹3,150',
+        'status': 'Cancelled',
+        'statusColor': const Color(0xFFDC2626),
+        'imagePath': image5,
+      },
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,45 +104,18 @@ class MyOrdersScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _buildOrderItem(
-                      orderId: '#ORD-89421',
-                      title: 'Banarasi Silk Saree',
-                      date: '12 Oct 2026',
-                      price: '₹2,499',
-                      status: 'Delivered',
-                      statusColor: AppColors.success,
-                      imagePath: image2, // Using your asset constant
-                    ),
-                    const SizedBox(height: 14),
-                    _buildOrderItem(
-                      orderId: '#ORD-89310',
-                      title: 'Kanjivaram Saree',
-                      date: '28 Sep 2026',
-                      price: '₹3,299',
-                      status: 'In Transit',
-                      statusColor: const Color(0xFFD49657),
-                      imagePath: image3, // Using your asset constant
-                    ),
-                    const SizedBox(height: 14),
-                    _buildOrderItem(
-                      orderId: '#ORD-88902',
-                      title: 'Cotton Daily Saree',
-                      date: '15 Sep 2026',
-                      price: '₹1,699',
-                      status: 'Delivered',
-                      statusColor: AppColors.success,
-                      imagePath: image4, // Using your asset constant
-                    ),
-                    const SizedBox(height: 14),
-                    _buildOrderItem(
-                      orderId: '#ORD-87114',
-                      title: 'Banarasi Zari Border',
-                      date: '02 Aug 2026',
-                      price: '₹3,150',
-                      status: 'Cancelled',
-                      statusColor: const Color(0xFFDC2626),
-                      imagePath: image5, // Using your asset constant
-                    ),
+                    for (int i = 0; i < orders.length; i++) ...[
+                      _buildOrderItem(
+                        orderId: orders[i]['orderId'],
+                        title: orders[i]['title'],
+                        date: orders[i]['date'],
+                        price: orders[i]['price'],
+                        status: orders[i]['status'],
+                        statusColor: orders[i]['statusColor'],
+                        imagePath: orders[i]['imagePath'],
+                      ),
+                      if (i != orders.length - 1) const SizedBox(height: 14),
+                    ],
                   ],
                 ),
               ),

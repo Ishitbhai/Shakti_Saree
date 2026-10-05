@@ -12,16 +12,29 @@ class AddEditAddressScreen extends StatefulWidget {
 }
 
 class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
-  final TextEditingController _nameController =
-      TextEditingController(text: 'Ishit Vadhavana');
-  final TextEditingController _addressController =
-      TextEditingController(text: 'Samras Hostel, Rajkot');
-  final TextEditingController _phoneController =
-      TextEditingController(text: '+91 12345 67890');
-  final TextEditingController _pincodeController =
-      TextEditingController(text: '360002');
-  final TextEditingController _saveAsController =
-      TextEditingController(text: 'Home');
+  // 1. Text Controllers
+  final TextEditingController _nameController = TextEditingController(
+    text: 'Ishit Vadhavana',
+  );
+  final TextEditingController _addressController = TextEditingController(
+    text: 'Samras Hostel, Rajkot',
+  );
+  final TextEditingController _phoneController = TextEditingController(
+    text: '+91 12345 67890',
+  );
+  final TextEditingController _pincodeController = TextEditingController(
+    text: '360002',
+  );
+  final TextEditingController _saveAsController = TextEditingController(
+    text: 'Home',
+  );
+
+  // 2. Error Strings
+  String errName = '';
+  String errAddress = '';
+  String errPhone = '';
+  String errPincode = '';
+  String errSaveAs = '';
 
   @override
   void dispose() {
@@ -31,6 +44,69 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     _pincodeController.dispose();
     _saveAsController.dispose();
     super.dispose();
+  }
+
+  // Submit and Validation
+  void validateAndSubmit() {
+    setState(() {
+      bool isValid = true;
+
+      // Name Validation
+      if (_nameController.text.trim().isEmpty) {
+        errName = 'Your name is required';
+        isValid = false;
+      } else {
+        errName = '';
+      }
+
+      // Address Validation
+      if (_addressController.text.trim().isEmpty) {
+        errAddress = 'Address is required';
+        isValid = false;
+      } else if (_addressController.text.trim().length < 8) {
+        errAddress = 'Please enter a complete street address';
+        isValid = false;
+      } else {
+        errAddress = '';
+      }
+
+      // Phone Validation
+      String phone = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
+      if (phone.isEmpty) {
+        errPhone = 'Mobile number is required';
+        isValid = false;
+      } else if (phone.length < 10) {
+        errPhone = 'Enter a valid 10-digit mobile number';
+        isValid = false;
+      } else {
+        errPhone = '';
+      }
+
+      // Pincode Validation
+      String pin = _pincodeController.text.trim();
+      final pinRegex = RegExp(r'^[1-9][0-9]{5}$');
+      if (pin.isEmpty) {
+        errPincode = 'Pincode is required';
+        isValid = false;
+      } else if (!pinRegex.hasMatch(pin)) {
+        errPincode = 'Enter a valid 6-digit Indian pincode';
+        isValid = false;
+      } else {
+        errPincode = '';
+      }
+
+      // Save as Validation
+      if (_saveAsController.text.trim().isEmpty) {
+        errSaveAs = 'Label is required (e.g. Home, Office)';
+        isValid = false;
+      } else {
+        errSaveAs = '';
+      }
+
+      if (isValid) {
+        Navigator.pop(context);
+      }
+    });
   }
 
   @override
@@ -64,7 +140,10 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
             // ================= FORM BODY =================
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -74,7 +153,15 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                     _buildInputField(
                       controller: _nameController,
                       icon: Icons.person_outline,
+                      hasError: errName.isNotEmpty,
                     ),
+                    if (errName.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        errName,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
 
@@ -84,7 +171,15 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                     _buildInputField(
                       controller: _addressController,
                       icon: Icons.home_outlined,
+                      hasError: errAddress.isNotEmpty,
                     ),
+                    if (errAddress.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        errAddress,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
 
@@ -95,7 +190,15 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                       controller: _phoneController,
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
+                      hasError: errPhone.isNotEmpty,
                     ),
+                    if (errPhone.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        errPhone,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
 
@@ -106,7 +209,15 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                       controller: _pincodeController,
                       icon: Icons.location_on_outlined,
                       keyboardType: TextInputType.number,
+                      hasError: errPincode.isNotEmpty,
                     ),
+                    if (errPincode.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        errPincode,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
 
                     const SizedBox(height: 16),
 
@@ -116,7 +227,15 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                     _buildInputField(
                       controller: _saveAsController,
                       icon: Icons.save_outlined,
+                      hasError: errSaveAs.isNotEmpty,
                     ),
+                    if (errSaveAs.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        errSaveAs,
+                        style: const TextStyle(color: Colors.red, fontSize: 11),
+                      ),
+                    ],
 
                     const SizedBox(height: 36),
                   ],
@@ -131,9 +250,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: validateAndSubmit,
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
                     backgroundColor: AppColors.primary,
@@ -174,6 +291,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     required TextEditingController controller,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    bool hasError = false,
   }) {
     return Container(
       height: 50,
@@ -181,8 +299,8 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.black.withOpacity(0.6),
-          width: 1,
+          color: hasError ? Colors.red : AppColors.black.withOpacity(0.6),
+          width: hasError ? 1.2 : 1,
         ),
       ),
       child: TextField(

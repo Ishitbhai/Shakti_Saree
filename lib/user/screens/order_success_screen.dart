@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/screens/MainNavigationScreen.dart';
-// import 'package:shakti_saree/user/screens/my_orders_screen.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import '../widgets/app_back_button.dart';
 
-class OrderSuccessScreen extends StatelessWidget {
+class OrderSuccessScreen extends StatefulWidget {
   const OrderSuccessScreen({super.key});
+
+  @override
+  State<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
+}
+
+class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
+  // State variables for order details
+  String orderId = '#SS20260726';
+  String amount = '₹6,297';
+  String deliveryDate = 'Tue, 29 Jul 2026';
 
   @override
   Widget build(BuildContext context) {
@@ -18,11 +27,15 @@ class OrderSuccessScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18),
           child: Column(
             children: [
-              const Align(
+              Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
-                  padding: EdgeInsets.only(top: 18),
-                  child: AppBackButton(),
+                  padding: const EdgeInsets.only(top: 18),
+                  child: AppBackButton(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                  ),
                 ),
               ),
 
@@ -96,7 +109,7 @@ class OrderSuccessScreen extends StatelessWidget {
                     _buildOrderDetailRow(
                       icon: Icons.view_in_ar,
                       title: 'Order ID',
-                      value: '#SS20260726',
+                      value: orderId,
                     ),
 
                     const Divider(color: AppColors.muted, height: 14),
@@ -104,7 +117,7 @@ class OrderSuccessScreen extends StatelessWidget {
                     _buildOrderDetailRow(
                       icon: Icons.currency_rupee,
                       title: 'Amount',
-                      value: '₹6,297',
+                      value: amount,
                     ),
 
                     const Divider(color: AppColors.muted, height: 14),
@@ -112,7 +125,7 @@ class OrderSuccessScreen extends StatelessWidget {
                     _buildOrderDetailRow(
                       icon: Icons.local_shipping_outlined,
                       title: 'Delivery',
-                      value: 'Tue, 29 Jul 2026',
+                      value: deliveryDate,
                     ),
                   ],
                 ),
@@ -157,7 +170,16 @@ class OrderSuccessScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 48,
                 child: OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const MainNavigationScreen(initialIndex: 0),
+                      ),
+                      (route) => false,
+                    );
+                  },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: AppColors.primary, width: 1),
                     shape: RoundedRectangleBorder(
