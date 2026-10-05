@@ -3,18 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/categories/category.dart';
-import 'package:shakti_saree/admin/categories/widgets/category_tile.dart';
-import 'package:shakti_saree/admin/orders/order_detail.dart';
-import 'package:shakti_saree/admin/orders/order_detail_screen.dart';
-import 'package:shakti_saree/admin/products/product.dart';
-import 'package:shakti_saree/admin/products/widgets/product_tile.dart';
-import 'package:shakti_saree/admin/shared/widgets/swatches.dart';
-import 'package:shakti_saree/core/constants/app_assets.dart';
-import 'package:shakti_saree/core/theme/app_colors.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
-import 'package:shakti_saree/core/widgets/local_asset_image.dart';
-import 'package:shakti_saree/mock/mock_data.dart';
+import 'package:shakti_saree/admin/models/category.dart';
+import 'package:shakti_saree/admin/widgets/categories/category_tile.dart';
+import 'package:shakti_saree/admin/models/order_detail.dart';
+import 'package:shakti_saree/admin/screens/order_detail_screen.dart';
+import 'package:shakti_saree/admin/models/product.dart';
+import 'package:shakti_saree/admin/widgets/products/product_tile.dart';
+import 'package:shakti_saree/admin/styles/swatches.dart';
+import 'package:shakti_saree/admin/resources/app_assets.dart';
+import 'package:shakti_saree/admin/styles/app_colors.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
+import 'package:shakti_saree/admin/widgets/common/local_asset_image.dart';
+import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
 /// Pictures come from the bundle and nowhere else, and a frame without one is
 /// a frame with a tint in it rather than a crash.

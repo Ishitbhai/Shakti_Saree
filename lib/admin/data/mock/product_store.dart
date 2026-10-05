@@ -1,0 +1,136 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../models/product.dart';
+import '../api_exception.dart';
+import 'mock_data.dart';
+
+/// The app's one copy of the catalogue, standing in for the backend's table.
+///
+/// The same arrangement as the order store: writing replaces the whole list,
+/// so the catalogue screen and the dashboard's product count both recompute
+/// without anyone telling them to.
+///
+/// State lives only as long as the process; a restart re-seeds from
+/// [MockData].
+///
+/// A SKU is the identity here, since the sample records have no id of their
+/// own. Whether a given edit is allowed is the repository's business, not
+/// this one's.
+class ProductStore extends Notifier<List<Product>> {
+  @override
+  List<Product> build() => MockData.products();
+
+  /// Everything the store holds.
+  List<Product> get products => List.unmodifiable(state);
+
+  /// The stored product, or a [NotFound] if no such SKU.
+  Product find(String sku) => state[_indexOf(sku)];
+
+  /// Whether [sku] is already taken by something other than [exceptSku].
+  ///
+  /// The exception is what lets an edit keep its own SKU without colliding
+  /// with itself.
+  bool isSkuTaken(String sku, {String? exceptSku}) =>
+      state.any((product) => product.sku == sku && product.sku != exceptSku);
+
+  /// Replaces the product stored under [originalSku].
+  ///
+  /// The replacement may carry a different SKU — renaming is an edit like any
+  /// other — so the row is found by where it came from, not by where it is
+  /// going.
+  Product replace(String originalSku, Product updated) {
+    final index = _indexOf(originalSku);
+    state = [...state]..[index] = updated;
+    return updated;
+  }
+
+  /// How many listings sit in a given grouping.
+  int countInCategory(String category) =>
+      state.where((product) => product.category == category).length;
+
+  /// Moves every listing from one grouping to another, answering with how
+  /// many moved.
+  ///
+  /// A product stores its category by name, so renaming a category without
+  /// this would leave its products pointing at one that no longer exists.
+  int moveCategory(String from, String to) {
+    var moved = 0;
+    state = [
+      for (final product in state)
+        if (product.category == from)
+          () {
+            moved++;
+            return product.copyWith(category: to);
+          }()
+        else
+          product,
+    ];
+    return moved;
+  }
+
+  /// Sets the stock of several listings at once.
+  ///
+  /// One write rather than one per product: the inventory screen saves a
+  /// whole screenful at a time, and stepping the list through a dozen
+  /// intermediate states would have every watcher rebuild a dozen times.
+  /// Unknown SKUs are ignored — a listing deleted while the screen was open
+  /// is not a reason to lose the rest of the edit.
+  int setStock(Map<String, int> bySku) {
+    if (bySku.isEmpty) return 0;
+
+    var changed = 0;
+    state = [
+      for (final product in state)
+        if (bySku.containsKey(product.sku) &&
+            bySku[product.sku] != product.stock)
+          () {
+            changed++;
+            return product.copyWith(stock: bySku[product.sku]);
+          }()
+        else
+          product,
+    ];
+    return changed;
+  }
+
+  /// Puts a new listing at the end of the catalogue.
+  ///
+  /// The end, because the list reads newest last — a new listing appearing at
+  /// the top would push everything the admin was looking at down a row.
+  Product add(Product product) {
+    state = [...state, product];
+    return product;
+  }
+
+  /// Takes a product out, answering with where it was.
+  ///
+  /// The position comes back because undo has to put it where it came from
+  /// rather than on the end — a list that reshuffles itself on undo has not
+  /// really undone anything.
+  ({Product product, int index}) remove(String sku) {
+    final index = _indexOf(sku);
+    final removed = state[index];
+    state = [...state]..removeAt(index);
+    return (product: removed, index: index);
+  }
+
+  /// Puts a removed product back where it was.
+  ///
+  /// The index is clamped: the list may have been edited in the meantime, and
+  /// landing at the end is better than throwing.
+  void insert(int index, Product product) {
+    final at = index.clamp(0, state.length);
+    state = [...state]..insert(at, product);
+  }
+
+  int _indexOf(String sku) {
+    final index = state.indexWhere((candidate) => candidate.sku == sku);
+    if (index == -1) throw const NotFound();
+    return index;
+  }
+}
+
+/// The single catalogue, alive for as long as the app is.
+final productStoreProvider = NotifierProvider<ProductStore, List<Product>>(
+  ProductStore.new,
+);

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/customers/customer.dart';
-import 'package:shakti_saree/admin/customers/customers_providers.dart';
-import 'package:shakti_saree/admin/customers/customers_screen.dart';
-import 'package:shakti_saree/admin/customers/widgets/customer_tile.dart';
-import 'package:shakti_saree/admin/orders/orders_providers.dart';
-import 'package:shakti_saree/admin/shared/widgets/order_tile.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
-import 'package:shakti_saree/mock/mock_data.dart';
+import 'package:shakti_saree/admin/models/customer.dart';
+import 'package:shakti_saree/admin/data/providers/customers_providers.dart';
+import 'package:shakti_saree/admin/screens/customers_screen.dart';
+import 'package:shakti_saree/admin/widgets/customers/customer_tile.dart';
+import 'package:shakti_saree/admin/data/providers/orders_providers.dart';
+import 'package:shakti_saree/admin/widgets/common/order_tile.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
+import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
 Widget _host() => ProviderScope(
   child: MaterialApp(

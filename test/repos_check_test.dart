@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/dashboard/dashboard_providers.dart';
-import 'package:shakti_saree/admin/dashboard/dashboard_repository.dart';
-import 'package:shakti_saree/admin/dashboard/dashboard_screen.dart';
-import 'package:shakti_saree/admin/dashboard/dashboard_stats.dart';
-import 'package:shakti_saree/admin/orders/order_detail.dart';
-import 'package:shakti_saree/admin/orders/orders_providers.dart';
-import 'package:shakti_saree/admin/orders/orders_repository.dart';
-import 'package:shakti_saree/admin/orders/orders_screen.dart';
-import 'package:shakti_saree/admin/orders/widgets/order_card.dart';
-import 'package:shakti_saree/admin/shared/models/order.dart';
-import 'package:shakti_saree/admin/shared/models/order_status.dart';
-import 'package:shakti_saree/core/errors/api_exception.dart';
-import 'package:shakti_saree/mock/mock_data.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
+import 'package:shakti_saree/admin/data/providers/dashboard_providers.dart';
+import 'package:shakti_saree/admin/data/repositories/dashboard_repository.dart';
+import 'package:shakti_saree/admin/screens/dashboard_screen.dart';
+import 'package:shakti_saree/admin/models/dashboard_stats.dart';
+import 'package:shakti_saree/admin/models/order_detail.dart';
+import 'package:shakti_saree/admin/data/providers/orders_providers.dart';
+import 'package:shakti_saree/admin/data/repositories/orders_repository.dart';
+import 'package:shakti_saree/admin/screens/orders_screen.dart';
+import 'package:shakti_saree/admin/widgets/orders/order_card.dart';
+import 'package:shakti_saree/admin/models/order.dart';
+import 'package:shakti_saree/admin/models/order_status.dart';
+import 'package:shakti_saree/admin/data/api_exception.dart';
+import 'package:shakti_saree/admin/data/mock/mock_data.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
 
 /// Every read and every transition fails the same way.
 class _FailingOrders implements OrdersRepository {

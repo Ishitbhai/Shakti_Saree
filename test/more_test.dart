@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/categories/categories_screen.dart';
-import 'package:shakti_saree/admin/more/more_screen.dart';
-import 'package:shakti_saree/admin/products/products_providers.dart';
-import 'package:shakti_saree/admin/shared/admin_tab.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
-import 'package:shakti_saree/mock/mock_data.dart';
+import 'package:shakti_saree/admin/screens/categories_screen.dart';
+import 'package:shakti_saree/admin/screens/more_screen.dart';
+import 'package:shakti_saree/admin/data/providers/products_providers.dart';
+import 'package:shakti_saree/admin/data/admin_tab.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
+import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
 Widget _host() => ProviderScope(
   child: MaterialApp(

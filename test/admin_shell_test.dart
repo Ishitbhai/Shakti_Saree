@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shakti_saree/admin/categories/categories_screen.dart';
-import 'package:shakti_saree/admin/more/more_screen.dart';
-import 'package:shakti_saree/admin/shared/admin_tab.dart';
-import 'package:shakti_saree/admin/shell/admin_shell.dart';
-import 'package:shakti_saree/admin/shell/widgets/admin_bottom_nav.dart';
-import 'package:shakti_saree/core/theme/app_theme.dart';
-import 'package:shakti_saree/mock/mock_data.dart';
+import 'package:shakti_saree/admin/screens/categories_screen.dart';
+import 'package:shakti_saree/admin/screens/more_screen.dart';
+import 'package:shakti_saree/admin/data/admin_tab.dart';
+import 'package:shakti_saree/admin/screens/admin_shell.dart';
+import 'package:shakti_saree/admin/widgets/navigation/admin_bottom_nav.dart';
+import 'package:shakti_saree/admin/styles/app_theme.dart';
+import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
 /// Drives the real shell, so the bottom bar and the headers' back arrows are
 /// exercised against the same tab state the app runs on.

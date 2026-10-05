@@ -81,7 +81,7 @@ flutter:
   # Bundled rather than fetched: google_fonts downloaded these at runtime, so
   # a first run without a network connection fell back to the platform font.
   # Only the weights the type scale actually uses are here — see
-  # `lib/core/theme/app_typography.dart`.
+  # `lib/admin/styles/app_typography.dart`.
   fonts:
     - family: Playfair Display
       fonts:

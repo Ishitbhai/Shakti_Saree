@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../core/theme/app_colors.dart';
-import '../core/theme/app_spacing.dart';
-import '../core/theme/app_typography.dart';
-import '../core/utils/formatters.dart';
-import '../admin/dashboard/dashboard_screen.dart';
-import '../admin/dashboard/widgets/dashboard_header.dart';
+import '../admin/styles/app_colors.dart';
+import '../admin/styles/app_spacing.dart';
+import '../admin/styles/app_typography.dart';
+import '../admin/utils/formatters.dart';
+import '../admin/screens/dashboard_screen.dart';
+import '../admin/widgets/dashboard/dashboard_header.dart';
 
 /// Throwaway screen that renders every design token so they can be eyeballed
 /// against the design. Delete once the real screens exist — nothing should

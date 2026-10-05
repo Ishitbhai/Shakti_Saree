@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'admin/shell/admin_shell.dart';
-import 'core/theme/app_colors.dart';
-import 'core/theme/app_theme.dart';
+import 'admin/screens/admin_shell.dart';
+import 'admin/styles/app_colors.dart';
+import 'admin/styles/app_theme.dart';
 
 /// The bundled fonts and the licence each ships under.
 ///
