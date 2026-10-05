@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../resources/imagestrings.dart'; // Import your image strings file
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
@@ -59,7 +60,7 @@ class MyOrdersScreen extends StatelessWidget {
                       price: '₹2,499',
                       status: 'Delivered',
                       statusColor: AppColors.success,
-                      swatchColor: AppColors.primary,
+                      imagePath: image2, // Using your asset constant
                     ),
                     const SizedBox(height: 14),
                     _buildOrderItem(
@@ -69,7 +70,7 @@ class MyOrdersScreen extends StatelessWidget {
                       price: '₹3,299',
                       status: 'In Transit',
                       statusColor: const Color(0xFFD49657),
-                      swatchColor: const Color(0xFF008F11),
+                      imagePath: image3, // Using your asset constant
                     ),
                     const SizedBox(height: 14),
                     _buildOrderItem(
@@ -79,7 +80,7 @@ class MyOrdersScreen extends StatelessWidget {
                       price: '₹1,699',
                       status: 'Delivered',
                       statusColor: AppColors.success,
-                      swatchColor: const Color(0xFF7A007A),
+                      imagePath: image4, // Using your asset constant
                     ),
                     const SizedBox(height: 14),
                     _buildOrderItem(
@@ -89,7 +90,7 @@ class MyOrdersScreen extends StatelessWidget {
                       price: '₹3,150',
                       status: 'Cancelled',
                       statusColor: const Color(0xFFDC2626),
-                      swatchColor: const Color(0xFF9A2046),
+                      imagePath: image5, // Using your asset constant
                     ),
                   ],
                 ),
@@ -108,7 +109,7 @@ class MyOrdersScreen extends StatelessWidget {
     required String price,
     required String status,
     required Color statusColor,
-    required Color swatchColor,
+    required String imagePath,
   }) {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -154,12 +155,26 @@ class MyOrdersScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Container(
-                width: 62,
-                height: 62,
-                decoration: BoxDecoration(
-                  color: swatchColor,
-                  borderRadius: BorderRadius.circular(12),
+              // Product Image Preview
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  imagePath,
+                  width: 62,
+                  height: 62,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 62,
+                      height: 62,
+                      color: AppColors.muted.withOpacity(0.2),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: AppColors.muted,
+                        size: 24,
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 14),
