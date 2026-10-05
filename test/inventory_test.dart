@@ -17,7 +17,9 @@ Widget _host(Widget child) => ProviderScope(
 );
 
 void _tallPhone(WidgetTester tester) {
-  tester.view.physicalSize = const Size(390, 2200);
+  // Tall enough for all twenty-five rows to build: the list is lazy, and a
+  // row that was never built cannot be found or stepped.
+  tester.view.physicalSize = const Size(390, 4200);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.reset);
 }
@@ -59,17 +61,18 @@ void main() {
       expect(find.text('SKU: SS-1024'), findsOneWidget);
       expect(find.text('Stock 24 pcs'), findsOneWidget);
       expect(find.text('Stock 04 pcs'), findsOneWidget);
-      expect(find.text('Stock 00 pcs'), findsOneWidget);
+      // Three listings sit at zero.
+      expect(find.text('Stock 00 pcs'), findsNWidgets(3));
     });
 
     testWidgets('tallies the three stock levels', (tester) async {
       await openInventory(tester);
 
-      // Of the five sample listings: 24, 12 and 8 are healthy, 4 is low and
-      // 0 is out.
-      expect(find.bySemanticsLabel('In Stock, 3'), findsOneWidget);
-      expect(find.bySemanticsLabel('Low Stock, 1'), findsOneWidget);
-      expect(find.bySemanticsLabel('Out of Stock, 1'), findsOneWidget);
+      // Of the twenty-five sample listings, five sit at or under the
+      // low-stock threshold and three are out.
+      expect(find.bySemanticsLabel('In Stock, 17'), findsOneWidget);
+      expect(find.bySemanticsLabel('Low Stock, 5'), findsOneWidget);
+      expect(find.bySemanticsLabel('Out of Stock, 3'), findsOneWidget);
     });
   });
 
@@ -112,8 +115,8 @@ void main() {
       await tester.pump();
 
       expect(find.text('Stock 06 pcs'), findsOneWidget);
-      expect(find.bySemanticsLabel('In Stock, 4'), findsOneWidget);
-      expect(find.bySemanticsLabel('Low Stock, 0'), findsOneWidget);
+      expect(find.bySemanticsLabel('In Stock, 18'), findsOneWidget);
+      expect(find.bySemanticsLabel('Low Stock, 4'), findsOneWidget);
 
       // Nothing has reached the catalogue yet.
       final products = await _containerOf(

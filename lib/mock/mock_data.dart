@@ -396,10 +396,18 @@ class MockData {
 
   /// The sample product catalogue.
   ///
+  /// Twenty-five listings, covering every SKU the sample orders mention, so
+  /// no order line points at a product that is not in the catalogue and the
+  /// price on a line always matches the price on its listing.
+  ///
   /// Each carries a bundled picture and its own tint. The tint is not
   /// redundant: it is what the frame falls back to if the file is missing,
   /// and what a listing created in the app wears until it has a picture of
   /// its own.
+  ///
+  /// Stock is spread on purpose — three listings sit at zero and five more
+  /// sit at or under the low-stock threshold — so the inventory screen has
+  /// something in every state.
   static List<Product> products() => const [
     Product(
       name: 'Banarasi Silk Saree',
@@ -437,22 +445,208 @@ class MockData {
       category: 'Georgette',
       image: AppAssets.georgettePartyWear,
     ),
+    // Named for its border rather than just "Paithani Silk Saree": SS-1063
+    // further down already carries that name, and two listings answering to
+    // one name is a trap for anyone reading an order.
     Product(
-      name: 'Paithani Silk Saree',
+      name: 'Paithani Muniya Border Silk',
       sku: 'SS-1028',
       pricePaise: 415000,
       stock: 8,
       swatchIndex: 4,
       category: 'Paithani',
+      image: AppAssets.paithaniMuniyaBorder,
+    ),
+    Product(
+      name: 'Mysore Crepe Silk',
+      sku: 'SS-1029',
+      pricePaise: 279900,
+      stock: 15,
+      swatchIndex: 0,
+      category: 'Silk Saree',
+      image: AppAssets.mysoreCrepeSilk,
+    ),
+    Product(
+      name: 'Bridal Kanjivaram Red',
+      sku: 'SS-1030',
+      pricePaise: 1249900,
+      stock: 3,
+      swatchIndex: 1,
+      category: 'Bridal Wear',
+      image: AppAssets.bridalKanjivaramRed,
+    ),
+    Product(
+      name: 'Patola Handloom Saree',
+      sku: 'SS-1031',
+      pricePaise: 899900,
+      stock: 2,
+      swatchIndex: 2,
+      category: 'Patola',
+      image: AppAssets.patolaHandloomSaree,
+    ),
+    Product(
+      name: 'Bandhani Georgette Saree',
+      sku: 'SS-1042',
+      pricePaise: 189900,
+      stock: 18,
+      swatchIndex: 3,
+      category: 'Georgette',
+      image: AppAssets.bandhaniGeorgetteSaree,
+    ),
+    Product(
+      name: 'Designer Net Saree',
+      sku: 'SS-1045',
+      pricePaise: 549900,
+      stock: 26,
+      swatchIndex: 4,
+      category: 'Designer',
+      image: AppAssets.designerNetSaree,
+    ),
+    Product(
+      name: 'Chanderi Cotton Silk',
+      sku: 'SS-1050',
+      pricePaise: 215000,
+      stock: 20,
+      swatchIndex: 0,
+      category: 'Chanderi',
+      image: AppAssets.chanderiCottonSilk,
+    ),
+    Product(
+      name: 'Linen Daily Saree',
+      sku: 'SS-1055',
+      pricePaise: 149900,
+      stock: 32,
+      swatchIndex: 1,
+      category: 'Daily Wear',
+      image: AppAssets.linenDailySaree,
+    ),
+    Product(
+      name: 'Paithani Silk Saree',
+      sku: 'SS-1063',
+      pricePaise: 649900,
+      stock: 5,
+      swatchIndex: 2,
+      category: 'Paithani',
       image: AppAssets.paithaniSilkSaree,
+    ),
+    Product(
+      name: 'Tussar Silk Saree',
+      sku: 'SS-1071',
+      pricePaise: 375000,
+      stock: 9,
+      swatchIndex: 3,
+      category: 'Silk Saree',
+      image: AppAssets.tussarSilkSaree,
+    ),
+    Product(
+      name: 'Banarasi Katan Silk',
+      sku: 'SS-1078',
+      pricePaise: 459900,
+      stock: 7,
+      swatchIndex: 4,
+      category: 'Banarasi',
+      image: AppAssets.banarasiKatanSilk,
+    ),
+    // Out of stock, which is why order #SS20260902 was cancelled against it.
+    Product(
+      name: 'Organza Embroidered Saree',
+      sku: 'SS-1084',
+      pricePaise: 289900,
+      stock: 0,
+      swatchIndex: 0,
+      category: 'Organza',
+      image: AppAssets.organzaEmbroideredSaree,
+    ),
+    Product(
+      name: 'Ajrakh Print Modal Silk',
+      sku: 'SS-1090',
+      pricePaise: 229900,
+      stock: 14,
+      swatchIndex: 1,
+      category: 'Designer',
+      image: AppAssets.ajrakhPrintModalSilk,
+    ),
+    Product(
+      name: 'Tissue Silk Saree',
+      sku: 'SS-1096',
+      pricePaise: 339900,
+      stock: 11,
+      swatchIndex: 2,
+      category: 'Silk Saree',
+      image: AppAssets.tissueSilkSaree,
+    ),
+    Product(
+      name: 'Gadwal Cotton Silk',
+      sku: 'SS-1102',
+      pricePaise: 275000,
+      stock: 16,
+      swatchIndex: 3,
+      category: 'Cotton Saree',
+      image: AppAssets.gadwalCottonSilk,
+    ),
+    Product(
+      name: 'Narayanpet Cotton',
+      sku: 'SS-1108',
+      pricePaise: 139900,
+      stock: 28,
+      swatchIndex: 4,
+      category: 'Cotton Saree',
+      image: AppAssets.narayanpetCotton,
+    ),
+    Product(
+      name: 'Maheshwari Handloom',
+      sku: 'SS-1115',
+      pricePaise: 199900,
+      stock: 22,
+      swatchIndex: 0,
+      category: 'Cotton Saree',
+      image: AppAssets.maheshwariHandloom,
+    ),
+    Product(
+      name: 'Kota Doria Cotton',
+      sku: 'SS-1120',
+      pricePaise: 129900,
+      stock: 3,
+      swatchIndex: 1,
+      category: 'Cotton Saree',
+      image: AppAssets.kotaDoriaCotton,
+    ),
+    Product(
+      name: 'Velvet Bridal Saree',
+      sku: 'SS-1127',
+      pricePaise: 1549900,
+      stock: 0,
+      swatchIndex: 2,
+      category: 'Bridal Wear',
+      image: AppAssets.velvetBridalSaree,
+    ),
+    Product(
+      name: 'Bhagalpuri Silk Saree',
+      sku: 'SS-1133',
+      pricePaise: 175000,
+      stock: 19,
+      swatchIndex: 3,
+      category: 'Silk Saree',
+      image: AppAssets.bhagalpuriSilkSaree,
+    ),
+    Product(
+      name: 'Chiffon Sequin Saree',
+      sku: 'SS-1141',
+      pricePaise: 205000,
+      stock: 13,
+      swatchIndex: 4,
+      category: 'Designer',
+      image: AppAssets.chiffonSequinSaree,
     ),
   ];
 
+
   /// The sample categories, in the order the admin list shows them.
   ///
-  /// Twelve, so the grouping screen has a real list to work with. The five
-  /// seeded products sit across five of them; the rest are empty, which is
-  /// what a category looks like before anything is filed under it.
+  /// Twelve, so the grouping screen has a real list to work with. The
+  /// twenty-five seeded products are spread across all of them, from one
+  /// listing in the quietest to five in Cotton Saree, so the counts the
+  /// screen works out are worth reading. Two are seeded hidden.
   static List<Category> categories() => const [
     Category(
       name: 'Silk Saree',

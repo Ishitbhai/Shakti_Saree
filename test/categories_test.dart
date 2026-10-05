@@ -46,19 +46,19 @@ void main() {
       expect(find.text('Manage Categories'), findsOneWidget);
       expect(find.text('12 categories'), findsOneWidget);
 
-      // Counted off the catalogue, not stored on the category: one sample
-      // product sits in Banarasi, and none in Bridal Wear.
+      // Counted off the catalogue, not stored on the category: two of the
+      // sample listings sit in Banarasi and five in Cotton Saree.
       expect(
         find.descendant(
           of: _tileFor('Banarasi'),
-          matching: find.text('1 product'),
+          matching: find.text('2 products'),
         ),
         findsOneWidget,
       );
       expect(
         find.descendant(
-          of: _tileFor('Bridal Wear'),
-          matching: find.text('0 products'),
+          of: _tileFor('Cotton Saree'),
+          matching: find.text('5 products'),
         ),
         findsOneWidget,
       );
@@ -90,14 +90,14 @@ void main() {
       await tester.pumpWidget(_host());
       await tester.pumpAndSettle();
 
-      // Delete the one Banarasi listing from the products side.
+      // Delete the one Chanderi listing from the products side.
       final container = _containerOf(tester);
-      await container.read(productsRepositoryProvider).deleteProduct('SS-1024');
+      await container.read(productsRepositoryProvider).deleteProduct('SS-1050');
       await tester.pumpAndSettle();
 
       expect(
         find.descendant(
-          of: _tileFor('Banarasi'),
+          of: _tileFor('Chanderi'),
           matching: find.text('0 products'),
         ),
         findsOneWidget,
@@ -176,12 +176,12 @@ void main() {
       await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();
 
-      // The listing came with it, rather than being left pointing at a
+      // Both listings came with it, rather than being left pointing at a
       // category that no longer exists.
       expect(
         find.descendant(
           of: _tileFor('Banarasi Silk'),
-          matching: find.text('1 product'),
+          matching: find.text('2 products'),
         ),
         findsOneWidget,
       );
@@ -228,8 +228,14 @@ void main() {
       await tester.pumpWidget(_host());
       await tester.pumpAndSettle();
 
-      // Bridal Wear holds nothing, so it may go.
-      await tester.tap(_action('Bridal Wear', Icons.delete_outline));
+      // Every seeded grouping holds something, so empty one first: Chanderi
+      // carries a single listing.
+      await _containerOf(
+        tester,
+      ).read(productsRepositoryProvider).deleteProduct('SS-1050');
+      await tester.pumpAndSettle();
+
+      await tester.tap(_action('Chanderi', Icons.delete_outline));
       await tester.pumpAndSettle();
       expect(find.text('Delete this category?'), findsOneWidget);
 
@@ -237,18 +243,18 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('11 categories'), findsOneWidget);
-      expect(find.text('Bridal Wear deleted'), findsOneWidget);
+      expect(find.text('Chanderi deleted'), findsOneWidget);
 
       await tester.tap(find.text('Undo'));
       await tester.pumpAndSettle();
 
       expect(find.text('12 categories'), findsOneWidget);
-      // Back in its old place, sixth in the list.
+      // Back in its old place, ninth in the list.
       final names = tester
           .widgetList<CategoryTile>(find.byType(CategoryTile))
           .map((tile) => tile.listing.name)
           .toList();
-      expect(names[5], 'Bridal Wear');
+      expect(names[8], 'Chanderi');
     });
 
     testWidgets('one that still holds listings is refused', (tester) async {
@@ -264,7 +270,7 @@ void main() {
       // Still there, and the reason is on screen.
       expect(
         find.text(
-          'Banarasi still holds 1 product. Move or delete those first.',
+          'Banarasi still holds 2 products. Move or delete those first.',
         ),
         findsOneWidget,
       );

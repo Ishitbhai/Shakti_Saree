@@ -314,10 +314,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Fourteen sample orders from fourteen distinct customers, against a
-      // five-line catalogue. Nothing here is written down in the widget.
+      // twenty-five-line catalogue. Nothing here is written down in the
+      // widget.
       expect(find.bySemanticsLabel('Total Orders, 14'), findsOneWidget);
       expect(find.bySemanticsLabel('Customers, 14'), findsOneWidget);
-      expect(find.bySemanticsLabel('Products, 5'), findsOneWidget);
+      expect(find.bySemanticsLabel('Products, 25'), findsOneWidget);
     });
 
     testWidgets('stat grid keeps rendering while orders fail', (tester) async {

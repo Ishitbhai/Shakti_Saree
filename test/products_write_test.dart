@@ -104,7 +104,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Back on the list, already showing the new values.
-      expect(find.byType(ProductTile), findsNWidgets(5));
+      expect(find.byType(ProductTile), findsAtLeastNWidgets(5));
       expect(find.text('Cotton Everyday Saree'), findsOneWidget);
       expect(find.text('Cotton Daily Saree'), findsNothing);
       // Another listing is priced the same, so scope it to the row.
@@ -277,8 +277,8 @@ void main() {
     testWidgets('a filled form lands on the list', (tester) async {
       await openForm(tester);
 
-      await tester.enterText(_field('Product Name'), 'Chanderi Cotton Silk');
-      await tester.enterText(_field('SKU Code'), 'SS-1029');
+      await tester.enterText(_field('Product Name'), 'Jamdani Cotton Saree');
+      await tester.enterText(_field('SKU Code'), 'SS-1300');
       await tester.enterText(_field('Price (₹)'), '2150');
       await tester.enterText(_field('Stock Qty'), '2');
       await tester.pumpAndSettle();
@@ -289,12 +289,22 @@ void main() {
       await tester.tap(find.text('Publish'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ProductTile), findsNWidgets(6));
-      expect(find.text('6 total'), findsOneWidget);
-      expect(find.text('Chanderi Cotton Silk'), findsOneWidget);
+      expect(find.byType(ProductTile), findsAtLeastNWidgets(6));
+      expect(find.text('26 total'), findsOneWidget);
+
+      // It lands at the end of a twenty-six-line catalogue, past what the
+      // lazy list has built, so scroll to it the way a shopkeeper would.
+      await tester.scrollUntilVisible(
+        find.text('Jamdani Cotton Saree'),
+        300,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Jamdani Cotton Saree'), findsOneWidget);
       expect(
         find.descendant(
-          of: _tileFor('Chanderi Cotton Silk'),
+          of: _tileFor('Jamdani Cotton Saree'),
           matching: find.text('Low Stock'),
         ),
         findsOneWidget,
@@ -406,7 +416,7 @@ void main() {
       );
 
       // One tap has removed nothing.
-      expect(find.text('5 total'), findsOneWidget);
+      expect(find.text('25 total'), findsOneWidget);
     });
 
     testWidgets('backing out of the dialog changes nothing', (tester) async {
@@ -419,8 +429,8 @@ void main() {
       await tester.tap(find.text('Keep it'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ProductTile), findsNWidgets(5));
-      expect(find.text('5 total'), findsOneWidget);
+      expect(find.byType(ProductTile), findsAtLeastNWidgets(5));
+      expect(find.text('25 total'), findsOneWidget);
     });
 
     testWidgets('confirming removes it and moves the count', (tester) async {
@@ -434,8 +444,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Cotton Daily Saree'), findsNothing);
-      expect(find.byType(ProductTile), findsNWidgets(4));
-      expect(find.text('4 total'), findsOneWidget);
+      expect(find.byType(ProductTile), findsAtLeastNWidgets(4));
+      expect(find.text('24 total'), findsOneWidget);
     });
 
     testWidgets('undo puts it back where it was', (tester) async {
@@ -454,8 +464,8 @@ void main() {
       await tester.tap(find.text('Undo'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ProductTile), findsNWidgets(5));
-      expect(find.text('5 total'), findsOneWidget);
+      expect(find.byType(ProductTile), findsAtLeastNWidgets(5));
+      expect(find.text('25 total'), findsOneWidget);
 
       // Third again, not shuffled to the end.
       final names = tester
