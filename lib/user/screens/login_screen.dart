@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'MainNavigationScreen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'register_screen.dart';
@@ -331,11 +332,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.pushReplacement(
+                          Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const HomeScreen(),
+                              builder: (context) =>
+                                  const MainNavigationScreen(initialIndex: 0),
                             ),
+                            (route) => false,
                           );
                         },
                         style: ElevatedButton.styleFrom(

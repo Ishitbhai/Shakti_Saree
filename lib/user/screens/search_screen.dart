@@ -3,6 +3,7 @@ import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
+import 'MainNavigationScreen.dart';
 import 'product_detail_screen.dart';
 import 'product_list_screen.dart';
 
@@ -22,6 +23,20 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _handleBackNavigation() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MainNavigationScreen(initialIndex: 0),
+        ),
+        (route) => false,
+      );
+    }
   }
 
   void _navigateToProductList() {
@@ -44,7 +59,7 @@ class _SearchScreenState extends State<SearchScreen> {
               // ================= TOP SEARCH BAR =================
               Row(
                 children: [
-                  const AppBackButton(),
+                  AppBackButton(onTap: _handleBackNavigation),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Container(
@@ -92,7 +107,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                   const SizedBox(width: 12),
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: _handleBackNavigation,
                     child: Text(
                       'Cancel',
                       style: AppTextStyles.bodySmall.copyWith(

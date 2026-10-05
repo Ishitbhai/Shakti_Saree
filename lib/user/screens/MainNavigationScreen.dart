@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../styles/app_colors.dart';
-// import '../styles/app_text_styles.dart';
+import 'home_screen.dart';
+import 'categories_screen.dart';
+import 'cart_screen.dart';
 import 'my_orders_screen.dart';
 import 'profile_screen.dart';
 
@@ -10,7 +12,7 @@ class MainNavigationScreen extends StatelessWidget {
 
   const MainNavigationScreen({
     super.key,
-    this.initialIndex = 4, // Opens on Profile tab initially
+    this.initialIndex = 0, // Starts on Home (Tab 0)
   });
 
   @override
@@ -23,14 +25,13 @@ class MainNavigationScreen extends StatelessWidget {
 
         // ================= TAB BAR VIEW (SWIPEABLE PAGES) =================
         body: const TabBarView(
-          // Uses standard scroll physics so swiping left/right works like WhatsApp
           physics: BouncingScrollPhysics(),
           children: [
-            Center(child: Text('Home (Vivek Scope)')),
-            Center(child: Text('Category (Vivek Scope)')),
-            Center(child: Text('Cart (Vivek Scope)')),
-            MyOrdersScreen(), // Your Tab 3
-            ProfileScreen(), // Your Tab 4
+            HomeScreen(), // Tab 0
+            CategoriesScreen(), // Tab 1
+            CartScreen(), // Tab 2
+            MyOrdersScreen(), // Tab 3
+            ProfileScreen(), // Tab 4
           ],
         ),
 
@@ -49,8 +50,7 @@ class MainNavigationScreen extends StatelessWidget {
             child: const SafeArea(
               top: false,
               child: TabBar(
-                indicatorColor:
-                    Colors.transparent, // Keeps icons clean without underline
+                indicatorColor: Colors.transparent,
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.muted,
                 labelStyle: TextStyle(

@@ -3,7 +3,6 @@ import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
-import '../widgets/app_bottom_nav_bar.dart';
 import 'product_list_screen.dart';
 
 class CategoriesScreen extends StatelessWidget {
@@ -96,9 +95,20 @@ class CategoriesScreen extends StatelessWidget {
                     ),
 
                     // Back Button on the left
-                    const Align(
+                    Align(
                       alignment: Alignment.centerLeft,
-                      child: AppBackButton(),
+                      child: AppBackButton(
+                        onTap: () {
+                          final tabController = DefaultTabController.maybeOf(
+                            context,
+                          );
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else if (tabController != null) {
+                            tabController.animateTo(0);
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -143,9 +153,6 @@ class CategoriesScreen extends StatelessWidget {
           ],
         ),
       ),
-
-      // ================= BOTTOM NAVIGATION BAR =================
-      bottomNavigationBar: const AppBottomNavBar(selectedIndex: 1),
     );
   }
 

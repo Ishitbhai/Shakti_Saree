@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
-import 'cart_screen.dart';
+import 'MainNavigationScreen.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   const ProductDetailScreen({super.key});
@@ -226,17 +226,21 @@ class ProductDetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 12),
 
-                      // Buy Now Button (Redirects to Cart)
+                      // Buy Now Button (Redirects to Cart inside MainNavigationScreen)
                       Expanded(
                         child: SizedBox(
                           height: 48,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.push(
+                              Navigator.pushAndRemoveUntil(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const CartScreen(),
+                                  builder: (context) =>
+                                      const MainNavigationScreen(
+                                        initialIndex: 2,
+                                      ),
                                 ),
+                                (route) => false,
                               );
                             },
                             style: ElevatedButton.styleFrom(

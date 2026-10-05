@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
-import '../widgets/app_bottom_nav_bar.dart';
 import 'categories_screen.dart';
 import 'product_detail_screen.dart';
 import 'product_list_screen.dart';
@@ -10,6 +9,18 @@ import 'search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _navigateToCategoryTab(BuildContext context) {
+    final tabController = DefaultTabController.maybeOf(context);
+    if (tabController != null) {
+      tabController.animateTo(1); // Switches smoothly to Category Tab (Tab 1)
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CategoriesScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,14 +112,7 @@ class HomeScreen extends StatelessWidget {
                     style: AppTextStyles.sectionTitle.copyWith(fontSize: 15),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CategoriesScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigateToCategoryTab(context),
                     child: Text(
                       'See all',
                       style: AppTextStyles.caption.copyWith(
@@ -131,50 +135,22 @@ class HomeScreen extends StatelessWidget {
                   _buildCategoryCircle(
                     label: 'Silk',
                     color: const Color(0xFF9A2046),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProductListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigateToCategoryTab(context),
                   ),
                   _buildCategoryCircle(
                     label: 'Banarasi',
                     color: const Color(0xFFD49657),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProductListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigateToCategoryTab(context),
                   ),
                   _buildCategoryCircle(
                     label: 'Cotton',
                     color: const Color(0xFF3F9B73),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProductListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigateToCategoryTab(context),
                   ),
                   _buildCategoryCircle(
                     label: 'Designer',
                     color: const Color(0xFF65458A),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProductListScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () => _navigateToCategoryTab(context),
                   ),
                 ],
               ),
@@ -201,15 +177,7 @@ class HomeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const CategoriesScreen(),
-                                ),
-                              );
-                            },
+                            onTap: () => _navigateToCategoryTab(context),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 18,
@@ -327,7 +295,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNavBar(selectedIndex: 0),
     );
   }
 
