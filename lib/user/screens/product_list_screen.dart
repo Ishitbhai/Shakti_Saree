@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../resources/imagestrings.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'product_detail_screen.dart';
@@ -22,28 +23,28 @@ class _ProductListScreenState extends State<ProductListScreen> {
       'price': '₹2,499',
       'originalPrice': '₹4,999',
       'discount': '-50%',
-      'swatchColor': const Color(0xFF9A2046),
+      'imagePath': image1,
     },
     {
       'title': 'Kanjivaram Pure Silk',
       'price': '₹3,299',
       'originalPrice': '₹5,499',
       'discount': '-45%',
-      'swatchColor': const Color(0xFFFFA500),
+      'imagePath': image2,
     },
     {
       'title': 'Mysore Silk Saree',
       'price': '₹1,899',
       'originalPrice': '₹3,299',
       'discount': '-42%',
-      'swatchColor': const Color(0xFF008F11),
+      'imagePath': image3,
     },
     {
       'title': 'Paithani Silk Saree',
       'price': '₹4,150',
       'originalPrice': '₹6,999',
       'discount': '-41%',
-      'swatchColor': const Color(0xFF7A007A),
+      'imagePath': image4,
     },
   ];
 
@@ -195,7 +196,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   final item = _products[index];
                   return _buildProductCard(
                     discount: item['discount'] as String,
-                    swatchColor: item['swatchColor'] as Color,
+                    imagePath: item['imagePath'] as String,
                     title: item['title'] as String,
                     price: item['price'] as String,
                     originalPrice: item['originalPrice'] as String,
@@ -255,7 +256,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   Widget _buildProductCard({
     required String discount,
-    required Color swatchColor,
+    required String imagePath,
     required String title,
     required String price,
     required String originalPrice,
@@ -278,11 +279,25 @@ class _ProductListScreenState extends State<ProductListScreen> {
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: swatchColor,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Stack(
+                  fit: StackFit.expand,
                   children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.asset(
+                        imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: AppColors.muted.withOpacity(0.2),
+                          child: const Icon(
+                            Icons.image_not_supported_outlined,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ),
+                    ),
                     Positioned(
                       top: 8,
                       left: 8,

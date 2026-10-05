@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../resources/imagestrings.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'categories_screen.dart';
@@ -134,22 +135,22 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   _buildCategoryCircle(
                     label: 'Silk',
-                    color: const Color(0xFF9A2046),
+                    imagePath: image1,
                     onTap: () => _navigateToCategoryTab(context),
                   ),
                   _buildCategoryCircle(
                     label: 'Banarasi',
-                    color: const Color(0xFFD49657),
+                    imagePath: image2,
                     onTap: () => _navigateToCategoryTab(context),
                   ),
                   _buildCategoryCircle(
                     label: 'Cotton',
-                    color: const Color(0xFF3F9B73),
+                    imagePath: image3,
                     onTap: () => _navigateToCategoryTab(context),
                   ),
                   _buildCategoryCircle(
                     label: 'Designer',
-                    color: const Color(0xFF65458A),
+                    imagePath: image4,
                     onTap: () => _navigateToCategoryTab(context),
                   ),
                 ],
@@ -164,11 +165,20 @@ class HomeScreen extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 height: 140,
-                padding: const EdgeInsets.all(16),
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(20),
+                  image: DecorationImage(
+                    image: AssetImage(image5),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      AppColors.primary.withOpacity(0.7),
+                      BlendMode.srcATop,
+                    ),
+                  ),
                 ),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Expanded(
@@ -200,12 +210,18 @@ class HomeScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    Container(
-                      width: 110,
-                      height: double.infinity,
-                      decoration: BoxDecoration(
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        width: 110,
+                        height: double.infinity,
                         color: AppColors.yellowStatus,
-                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          image6,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const SizedBox.shrink(),
+                        ),
                       ),
                     ),
                   ],
@@ -255,7 +271,7 @@ class HomeScreen extends StatelessWidget {
                   Expanded(
                     child: _buildProductCard(
                       discount: '-50%',
-                      swatchColor: AppColors.primary,
+                      imagePath: image7,
                       title: 'Banarasi Silk Saree',
                       price: '₹2,499',
                       originalPrice: '₹4,999',
@@ -273,7 +289,7 @@ class HomeScreen extends StatelessWidget {
                   Expanded(
                     child: _buildProductCard(
                       discount: '-45%',
-                      swatchColor: Colors.orange,
+                      imagePath: image8,
                       title: 'Kanjivaram Pure Silk',
                       price: '₹3,299',
                       originalPrice: '₹5,499',
@@ -301,7 +317,7 @@ class HomeScreen extends StatelessWidget {
   // ================= HELPER WIDGETS =================
   Widget _buildCategoryCircle({
     required String label,
-    required Color color,
+    required String imagePath,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -311,7 +327,27 @@ class HomeScreen extends StatelessWidget {
           Container(
             width: 66,
             height: 66,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.muted.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: ClipOval(
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: AppColors.muted.withOpacity(0.2),
+                  child: const Icon(
+                    Icons.image_outlined,
+                    color: AppColors.muted,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -329,7 +365,7 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildProductCard({
     required String discount,
-    required Color swatchColor,
+    required String imagePath,
     required String title,
     required String price,
     required String originalPrice,
@@ -354,11 +390,25 @@ class HomeScreen extends StatelessWidget {
               width: double.infinity,
               height: 130,
               decoration: BoxDecoration(
-                color: swatchColor,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Stack(
+                fit: StackFit.expand,
                 children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: AppColors.muted.withOpacity(0.2),
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: AppColors.muted,
+                        ),
+                      ),
+                    ),
+                  ),
                   Positioned(
                     top: 8,
                     left: 8,

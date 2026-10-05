@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../resources/imagestrings.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'checkout_screen.dart';
@@ -25,21 +26,21 @@ class _CartScreenState extends State<CartScreen> {
         'variant': 'Maroon | Free Size',
         'price': 2499,
         'quantity': 1,
-        'swatchColor': AppColors.primary,
+        'imagePath': image1,
       },
       {
         'title': 'Kanjivaram Saree',
         'variant': 'Green | Free Size',
         'price': 3299,
         'quantity': 1,
-        'swatchColor': const Color(0xFF008F11),
+        'imagePath': image2,
       },
       {
         'title': 'Cotton Daily Saree',
         'variant': 'Blue | Free Size',
         'price': 1699,
         'quantity': 1,
-        'swatchColor': const Color(0xFF7A007A),
+        'imagePath': image3,
       },
     ];
   }
@@ -156,7 +157,7 @@ class _CartScreenState extends State<CartScreen> {
                         variant: cartItems[i]['variant'] as String,
                         price: '₹${cartItems[i]['price']}',
                         quantity: cartItems[i]['quantity'] as int,
-                        swatchColor: cartItems[i]['swatchColor'] as Color,
+                        imagePath: cartItems[i]['imagePath'] as String,
                       ),
                       if (i != cartItems.length - 1) const SizedBox(height: 14),
                     ],
@@ -316,7 +317,7 @@ class _CartScreenState extends State<CartScreen> {
     required String variant,
     required String price,
     required int quantity,
-    required Color swatchColor,
+    required String imagePath,
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -328,12 +329,22 @@ class _CartScreenState extends State<CartScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 74,
-            height: 74,
-            decoration: BoxDecoration(
-              color: swatchColor,
-              borderRadius: BorderRadius.circular(14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(
+              width: 74,
+              height: 74,
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: AppColors.muted.withOpacity(0.2),
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    color: AppColors.muted,
+                  ),
+                ),
+              ),
             ),
           ),
           const SizedBox(width: 14),

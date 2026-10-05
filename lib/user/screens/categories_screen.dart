@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../resources/imagestrings.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'product_list_screen.dart';
@@ -12,54 +13,14 @@ class CategoriesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // 8 Categories based on design
     final List<Map<String, dynamic>> categories = [
-      {
-        'title': 'Silk Saree',
-        'items': '248 items',
-        'topColor': const Color(0xFF9A2046),
-        'bottomColor': const Color(0xFF5E1229),
-      },
-      {
-        'title': 'Banarasi',
-        'items': '182 items',
-        'topColor': const Color(0xFFFFA500),
-        'bottomColor': const Color(0xFFA56600),
-      },
-      {
-        'title': 'Cotton Saree',
-        'items': '320 items',
-        'topColor': const Color(0xFF86E38A),
-        'bottomColor': const Color(0xFF4C8C50),
-      },
-      {
-        'title': 'Georgette',
-        'items': '156 items',
-        'topColor': const Color(0xFF0084FF),
-        'bottomColor': const Color(0xFF004D99),
-      },
-      {
-        'title': 'Kanjivaram',
-        'items': '94 items',
-        'topColor': const Color(0xFFD86546),
-        'bottomColor': const Color(0xFF803320),
-      },
-      {
-        'title': 'Designer',
-        'items': '210 items',
-        'topColor': const Color(0xFF800080),
-        'bottomColor': const Color(0xFF4A004A),
-      },
-      {
-        'title': 'Bridal Wear',
-        'items': '68 items',
-        'topColor': const Color(0xFF9A2046),
-        'bottomColor': const Color(0xFF5E1229),
-      },
-      {
-        'title': 'Daily Wear',
-        'items': '412 items',
-        'topColor': const Color(0xFF008F11),
-        'bottomColor': const Color(0xFF00520A),
-      },
+      {'title': 'Silk Saree', 'items': '248 items', 'image': image1},
+      {'title': 'Banarasi', 'items': '182 items', 'image': image2},
+      {'title': 'Cotton Saree', 'items': '320 items', 'image': image3},
+      {'title': 'Georgette', 'items': '156 items', 'image': image4},
+      {'title': 'Kanjivaram', 'items': '94 items', 'image': image5},
+      {'title': 'Designer', 'items': '210 items', 'image': image6},
+      {'title': 'Bridal Wear', 'items': '68 items', 'image': image7},
+      {'title': 'Daily Wear', 'items': '412 items', 'image': image8},
     ];
 
     return Scaffold(
@@ -136,8 +97,7 @@ class CategoriesScreen extends StatelessWidget {
                   return _buildCategoryCard(
                     title: cat['title'] as String,
                     items: cat['items'] as String,
-                    topColor: cat['topColor'] as Color,
-                    bottomColor: cat['bottomColor'] as Color,
+                    imagePath: cat['image'] as String,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -156,63 +116,86 @@ class CategoriesScreen extends StatelessWidget {
     );
   }
 
-  // ================= DUAL-TONE CARD WIDGET =================
+  // ================= IMAGE + DETAILS CARD WIDGET =================
   Widget _buildCategoryCard({
     required String title,
     required String items,
-    required Color topColor,
-    required Color bottomColor,
+    required String imagePath,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          children: [
-            // Top colored section
-            Expanded(
-              flex: 6,
-              child: Container(width: double.infinity, color: topColor),
-            ),
-
-            // Bottom dark section with details
-            Expanded(
-              flex: 4,
-              child: Container(
-                width: double.infinity,
-                color: bottomColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: AppColors.black.withOpacity(0.12),
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            children: [
+              // Top section with image
+              Expanded(
+                flex: 6,
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: AppColors.muted.withOpacity(0.2),
+                      child: const Icon(
+                        Icons.image_outlined,
+                        color: AppColors.muted,
+                        size: 28,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      items,
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.white.withOpacity(0.8),
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+
+              // Bottom white section with details
+              Expanded(
+                flex: 4,
+                child: Container(
+                  width: double.infinity,
+                  color: AppColors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        items,
+                        style: AppTextStyles.caption.copyWith(
+                          color: AppColors.muted,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

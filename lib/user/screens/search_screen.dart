@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../resources/imagestrings.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'MainNavigationScreen.dart';
@@ -195,7 +196,7 @@ class _SearchScreenState extends State<SearchScreen> {
               _buildSuggestedCard(
                 title: 'Banarasi Silk Saree',
                 price: '₹2,499',
-                swatchColor: const Color(0xFF9A2046),
+                imagePath: image1,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -209,7 +210,7 @@ class _SearchScreenState extends State<SearchScreen> {
               _buildSuggestedCard(
                 title: 'Banarasi Zari Border',
                 price: '₹3,150',
-                swatchColor: const Color(0xFFD49657),
+                imagePath: image2,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -223,7 +224,7 @@ class _SearchScreenState extends State<SearchScreen> {
               _buildSuggestedCard(
                 title: 'Banarasi Cotton Silk',
                 price: '₹1,899',
-                swatchColor: const Color(0xFF3F9B73),
+                imagePath: image3,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -316,7 +317,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildSuggestedCard({
     required String title,
     required String price,
-    required Color swatchColor,
+    required String imagePath,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -330,12 +331,23 @@ class _SearchScreenState extends State<SearchScreen> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: swatchColor,
-                borderRadius: BorderRadius.circular(12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 54,
+                height: 54,
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: AppColors.muted.withOpacity(0.2),
+                    child: const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.muted,
+                      size: 20,
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 14),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../resources/imagestrings.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'MainNavigationScreen.dart';
@@ -25,17 +26,29 @@ class ProductDetailScreen extends StatelessWidget {
                     Container(
                       width: double.infinity,
                       height: 380,
-                      color: AppColors.primary,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        image: DecorationImage(
+                          image: AssetImage(image1),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                       child: Align(
                         alignment: Alignment.topLeft,
                         child: Padding(
                           padding: const EdgeInsets.only(left: 16, top: 12),
-                          child: IconButton(
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(
-                              Icons.arrow_back,
-                              color: AppColors.white,
-                              size: 24,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.black.withOpacity(0.3),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: AppColors.white,
+                                size: 24,
+                              ),
                             ),
                           ),
                         ),
