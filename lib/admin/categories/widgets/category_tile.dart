@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/widgets/local_asset_image.dart';
 import '../../../core/widgets/tinted_pill.dart';
 import '../../shared/widgets/swatches.dart';
 import '../category.dart';
@@ -51,15 +52,10 @@ class CategoryTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ExcludeSemantics(
-              child: Container(
-                height: _swatch,
-                width: _swatch,
-                decoration: BoxDecoration(
-                  color: Swatches.at(listing.swatchIndex),
-                  borderRadius: AppRadii.cardRadius,
-                ),
-              ),
+            LocalAssetImage(
+              assetPath: listing.image,
+              size: _swatch,
+              tint: Swatches.at(listing.swatchIndex),
             ),
             const SizedBox(width: AppSpacing.x3),
             Expanded(

@@ -88,6 +88,9 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
     name: _nameValue,
     swatchIndex: _swatchIndex,
     isHidden: _isHidden,
+    // Carried through: the sheet has no picture control, and rebuilding the
+    // category without this would drop the artwork on every rename.
+    image: _editing?.image,
   );
 
   Future<void> _submit() async {
