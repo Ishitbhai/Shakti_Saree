@@ -107,7 +107,7 @@ void main() {
       final products = await container
           .read(productsRepositoryProvider)
           .fetchProducts();
-      expect(products, hasLength(4));
+      expect(products, hasLength(24));
     });
 
     testWidgets('confirming puts the sample data back', (tester) async {
@@ -129,7 +129,7 @@ void main() {
       final products = await container
           .read(productsRepositoryProvider)
           .fetchProducts();
-      expect(products, hasLength(5));
+      expect(products, hasLength(25));
       expect(container.read(adminTabProvider), AdminTab.home);
       expect(find.text('Back to the sample data'), findsOneWidget);
     });

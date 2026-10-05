@@ -81,13 +81,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Products'), findsOneWidget);
-    expect(find.text('5 total'), findsOneWidget);
-    expect(find.byType(ProductTile), findsNWidgets(5));
+    expect(find.text('25 total'), findsOneWidget);
+    // A lower bound rather than the full count: the list is lazy, so only
+    // the screenful builds, and how many that is depends on the viewport.
+    expect(find.byType(ProductTile), findsAtLeastNWidgets(5));
     expect(find.text('Banarasi Silk Saree'), findsOneWidget);
     expect(find.text('₹2,499'), findsOneWidget);
     expect(find.text('In Stock 24'), findsOneWidget);
-    expect(find.text('Low Stock'), findsOneWidget);
-    expect(find.text('Out of Stock'), findsOneWidget);
+    expect(find.text('Low Stock'), findsWidgets);
+    expect(find.text('Out of Stock'), findsWidgets);
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
