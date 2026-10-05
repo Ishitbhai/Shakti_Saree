@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:shakti_saree/user/screens/splash_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // 1. Add this import
+
+import 'user/screens/splash_screen.dart';
 
 void main() {
-  runApp(const ShaktiSaree());
+  // 2. Wrap your root widget with ProviderScope
+  runApp(const ProviderScope(child: ShaktiSaree()));
 }
 
 class ShaktiSaree extends StatelessWidget {

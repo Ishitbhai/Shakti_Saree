@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../admin/screens/dashboard_scrren.dart';
+// Import AdminShell instead of DashboardScreen
+import '../../admin/screens/admin_shell.dart';
 import 'MainNavigationScreen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
@@ -70,10 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
       } else {
-        // Admin Navigation
+        // Admin Navigation: Navigate to AdminShell to display the bottom nav bar
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(builder: (context) => const AdminShell()),
           (route) => false,
         );
       }
