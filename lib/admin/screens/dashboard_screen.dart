@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_spacing.dart';
+import '../data/admin_tab.dart';
 import '../data/mock/profile_store.dart';
 import '../models/order.dart';
 import '../widgets/common/async_content.dart';
@@ -82,8 +83,15 @@ class DashboardScreen extends ConsumerWidget {
                     onRetry: () => ref.invalidate(recentOrdersProvider),
                     isEmpty: (loaded) => loaded.isEmpty,
                     emptyMessage: 'No recent orders.',
-                    builder: (context, loaded) =>
-                        RecentOrdersSection(orders: loaded),
+                    builder: (context, loaded) => RecentOrdersSection(
+                      orders: loaded,
+                      // The strip is a preview of the Orders tab, so 'View
+                      // all' goes to the tab rather than pushing a route —
+                      // the bar stays in step with what is on screen.
+                      onViewAll: () => ref
+                          .read(adminTabProvider.notifier)
+                          .select(AdminTab.orders),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.x6),
                 ],
