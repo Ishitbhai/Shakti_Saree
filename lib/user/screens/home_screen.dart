@@ -37,20 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Dynamic Trending Products[cite: 19]
     trendingProducts = [
-      {
-        'title': 'Banarasi Silk Saree',
-        'price': '₹2,499',
-        'originalPrice': '₹4,999',
-        'discount': '-50%',
-        'imagePath': image7,
-      },
-      {
-        'title': 'Kanjivaram Pure Silk',
-        'price': '₹3,299',
-        'originalPrice': '₹5,499',
-        'discount': '-45%',
-        'imagePath': image8,
-      },
+      {'title': 'Banarasi Silk Saree', 'price': '₹2,499', 'imagePath': image7},
+      {'title': 'Kanjivaram Pure Silk', 'price': '₹3,299', 'imagePath': image8},
     ];
   }
 
@@ -302,12 +290,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   for (int i = 0; i < trendingProducts.length; i++) ...[
                     Expanded(
                       child: _buildProductCard(
-                        discount: trendingProducts[i]['discount'] as String,
                         imagePath: trendingProducts[i]['imagePath'] as String,
                         title: trendingProducts[i]['title'] as String,
                         price: trendingProducts[i]['price'] as String,
-                        originalPrice:
-                            trendingProducts[i]['originalPrice'] as String,
                         onTap: () {
                           Navigator.push(
                             context,
@@ -382,11 +367,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductCard({
-    required String discount,
     required String imagePath,
     required String title,
     required String price,
-    required String originalPrice,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -410,46 +393,19 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: AppColors.muted.withOpacity(0.2),
-                        child: const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: AppColors.muted,
-                        ),
-                      ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: AppColors.muted.withOpacity(0.2),
+                    child: const Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.muted,
                     ),
                   ),
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        discount,
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 9,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -463,25 +419,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  price,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  originalPrice,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.muted,
-                    decoration: TextDecoration.lineThrough,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
+            Text(
+              price,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
             const SizedBox(height: 4),
             Text(

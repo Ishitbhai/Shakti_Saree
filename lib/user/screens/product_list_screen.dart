@@ -14,7 +14,7 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
-  // State variables for header title, count, filters, and products[cite: 21]
+  // State variables for header title, count, filters, and products[cite: 19]
   String categoryTitle = 'Silk Sarees';
   int totalProductsCount = 128;
   int _selectedFilterIndex = 0;
@@ -28,34 +28,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
     _filters = ['All', 'Under ₹2000', 'Banarasi', 'New'];
 
     _products = [
-      {
-        'title': 'Banarasi Silk Saree',
-        'price': '₹2,499',
-        'originalPrice': '₹4,999',
-        'discount': '-50%',
-        'imagePath': image1,
-      },
-      {
-        'title': 'Kanjivaram Pure Silk',
-        'price': '₹3,299',
-        'originalPrice': '₹5,499',
-        'discount': '-45%',
-        'imagePath': image2,
-      },
-      {
-        'title': 'Mysore Silk Saree',
-        'price': '₹1,899',
-        'originalPrice': '₹3,299',
-        'discount': '-42%',
-        'imagePath': image3,
-      },
-      {
-        'title': 'Paithani Silk Saree',
-        'price': '₹4,150',
-        'originalPrice': '₹6,999',
-        'discount': '-41%',
-        'imagePath': image4,
-      },
+      {'title': 'Banarasi Silk Saree', 'price': '₹2,499', 'imagePath': image1},
+      {'title': 'Kanjivaram Pure Silk', 'price': '₹3,299', 'imagePath': image2},
+      {'title': 'Mysore Silk Saree', 'price': '₹1,899', 'imagePath': image3},
+      {'title': 'Paithani Silk Saree', 'price': '₹4,150', 'imagePath': image4},
     ];
   }
 
@@ -77,7 +53,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER =================[cite: 21]
+            // ================= HEADER =================[cite: 19]
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
               child: SizedBox(
@@ -111,7 +87,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               ),
             ),
 
-            // ================= FILTER CHIPS ROW =================[cite: 21]
+            // ================= FILTER CHIPS ROW =================[cite: 19]
             SizedBox(
               height: 38,
               child: ListView.separated(
@@ -161,33 +137,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
             const SizedBox(height: 14),
 
-            // ================= SORT & FILTER BUTTONS =================[cite: 21]
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildActionCapsule(
-                      icon: Icons.tune,
-                      label: 'Sort by',
-                      onTap: () {},
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: _buildActionCapsule(
-                      icon: Icons.filter_list,
-                      label: 'Filter',
-                      onTap: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            // ================= PRODUCT GRID =================[cite: 21]
+            // ================= PRODUCT GRID =================[cite: 19]
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(
@@ -204,11 +154,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
                 itemBuilder: (context, index) {
                   final item = _products[index];
                   return _buildProductCard(
-                    discount: item['discount'] as String,
                     imagePath: item['imagePath'] as String,
                     title: item['title'] as String,
                     price: item['price'] as String,
-                    originalPrice: item['originalPrice'] as String,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -227,48 +175,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
     );
   }
 
-  // ================= HELPER WIDGETS =================[cite: 21]
-  Widget _buildActionCapsule({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppColors.black.withOpacity(0.65),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: AppColors.black),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTextStyles.bodySmall.copyWith(
-                fontWeight: FontWeight.w600,
-                fontSize: 12.5,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // ================= HELPER WIDGETS =================[cite: 19]
   Widget _buildProductCard({
-    required String discount,
     required String imagePath,
     required String title,
     required String price,
-    required String originalPrice,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -283,53 +194,25 @@ class _ProductListScreenState extends State<ProductListScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Preview Container with Discount Tag[cite: 21]
             Expanded(
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: Image.asset(
-                        imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: AppColors.muted.withOpacity(0.2),
-                          child: const Icon(
-                            Icons.image_not_supported_outlined,
-                            color: AppColors.muted,
-                          ),
-                        ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.asset(
+                    imagePath,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: AppColors.muted.withOpacity(0.2),
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        color: AppColors.muted,
                       ),
                     ),
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          discount,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 9,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -348,25 +231,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
             const SizedBox(height: 4),
 
-            Row(
-              children: [
-                Text(
-                  price,
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  originalPrice,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.muted,
-                    decoration: TextDecoration.lineThrough,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
+            Text(
+              price,
+              style: AppTextStyles.body.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
 
             const SizedBox(height: 4),

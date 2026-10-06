@@ -13,7 +13,7 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  // State variables for product details, pricing, delivery, and cart state[cite: 22]
+  // State variables for product details, pricing, delivery, and cart state
   final String productImage = image1;
   final String title = 'Banarasi Silk Saree\nwithGolden Zari Border';
   final String stockStatus = 'In Stock';
@@ -21,8 +21,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final String description =
       'A Banarasi Silk Saree with a Golden Zari Border is a masterpiece of Indian textile heritage.';
   final String price = '₹2,499';
-  final String originalPrice = '₹4,999';
-  final String discountPercentage = '50% OFF';
   final String deliveryDateText = 'Free delivery by Tue, 29 Jul';
   final String deliverySubtext = 'You will get free delivery for this order';
 
@@ -63,13 +61,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         bottom: true,
         child: Column(
           children: [
-            // ================= SCROLLABLE CONTENT (IMAGE + DETAILS) =================[cite: 22]
+            // ================= SCROLLABLE CONTENT (IMAGE + DETAILS) =================
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Product Image Preview[cite: 22]
+                    // Top Product Image Preview
                     Container(
                       width: double.infinity,
                       height: 380,
@@ -102,13 +100,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
 
-                    // Details Section[cite: 22]
+                    // Details Section
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Title & In Stock[cite: 22]
+                          // Title & In Stock
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -138,7 +136,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                           const SizedBox(height: 10),
 
-                          // Description[cite: 22]
+                          // Description
                           Text(
                             description,
                             style: AppTextStyles.bodySmall.copyWith(
@@ -151,46 +149,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                           const SizedBox(height: 14),
 
-                          // Price & Discount Pill[cite: 22]
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                price,
-                                style: AppTextStyles.pageTitle.copyWith(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                originalPrice,
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.muted,
-                                  decoration: TextDecoration.lineThrough,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.peachStatus,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  discountPercentage,
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          // Price
+                          Text(
+                            price,
+                            style: AppTextStyles.pageTitle.copyWith(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ],
                       ),
@@ -200,14 +165,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
 
-            // ================= PINNED BOTTOM SECTION =================[cite: 22]
+            // ================= PINNED BOTTOM SECTION =================
             Container(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 12),
               decoration: const BoxDecoration(color: AppColors.white),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Free Delivery Card[cite: 22]
+                  // Free Delivery Card
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(
@@ -258,10 +223,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
                   const SizedBox(height: 14),
 
-                  // Bottom Action Buttons[cite: 22]
+                  // Bottom Action Buttons
                   Row(
                     children: [
-                      // Add to Cart Button[cite: 22]
+                      // Add to Cart Button
                       Expanded(
                         child: SizedBox(
                           height: 48,
@@ -288,7 +253,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                       const SizedBox(width: 12),
 
-                      // Buy Now Button (Redirects to Cart inside MainNavigationScreen)[cite: 22]
+                      // Buy Now Button (Redirects to Cart inside MainNavigationScreen)
                       Expanded(
                         child: SizedBox(
                           height: 48,
