@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
@@ -28,6 +31,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   // 2. Form Variables
   DateTime _selectedDate = DateTime(2007, 3, 22);
   String _selectedGender = 'Male';
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
 
   // 3. Error Strings
   String errName = '';
@@ -58,6 +63,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _phoneController.dispose();
     _dobController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -209,48 +225,60 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 // Avatar
                 Positioned(
                   bottom: -46,
-                  child: Stack(
-                    children: [
-                      Container(
-                        width: 92,
-                        height: 92,
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary,
-                            width: 1.5,
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 92,
+                          height: 92,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.primary,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: ClipOval(
+                            child: _profileImage != null
+                                ? Image.file(
+                                    _profileImage!,
+                                    fit: BoxFit.cover,
+                                    width: 92,
+                                    height: 92,
+                                  )
+                                : Center(
+                                    child: Text(
+                                      'IV',
+                                      style: AppTextStyles.pageTitle.copyWith(
+                                        color: AppColors.black,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                           ),
                         ),
-                        child: Center(
-                          child: Text(
-                            'IV',
-                            style: AppTextStyles.pageTitle.copyWith(
-                              color: AppColors.black,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
+                        Positioned(
+                          bottom: 2,
+                          right: 2,
+                          child: Container(
+                            width: 30,
+                            height: 30,
+                            decoration: const BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 16,
+                              color: AppColors.white,
                             ),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        bottom: 2,
-                        right: 2,
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            size: 16,
-                            color: AppColors.white,
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -258,11 +286,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             const SizedBox(height: 56),
 
-            Text(
-              'Change Photo',
-              style: AppTextStyles.body.copyWith(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
+            GestureDetector(
+              onTap: _pickImage,
+              child: Text(
+                'Change Photo',
+                style: AppTextStyles.body.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
               ),
             ),
 
