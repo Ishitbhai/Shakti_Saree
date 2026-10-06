@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../user/screens/login_screen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_spacing.dart';
 import '../styles/app_typography.dart';
@@ -35,37 +36,8 @@ class MoreScreen extends ConsumerWidget {
     ref.read(adminTabProvider.notifier).back();
   }
 
-  /// Signs out by throwing away the session.
-  ///
-  /// There is no sign-in to return to, and nothing is stored anywhere but in
-  /// memory — so the session *is* the stores, and discarding them is
-  /// the honest meaning of logging out here. Everything returns to the seed
-  /// data, exactly as a restart would leave it.
-  Future<void> _logout(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Log out?'),
-        content: Text(
-          'There is no sign-in yet, so this clears everything back to the '
-          'sample data — the same as restarting the app.',
-          style: AppTypography.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Stay'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Log out'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !context.mounted) return;
-
+  /// Invalidates stores and redirects immediately to LoginScreen without a confirmation dialog.
+  void _logout(BuildContext context, WidgetRef ref) {
     ref
       ..invalidate(orderStoreProvider)
       ..invalidate(productStoreProvider)
@@ -74,9 +46,10 @@ class MoreScreen extends ConsumerWidget {
       ..invalidate(faqStoreProvider)
       ..read(adminTabProvider.notifier).select(AdminTab.home);
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Back to the sample data')));
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 
   @override
@@ -110,9 +83,6 @@ class MoreScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      // Not on the settings mock, but the categories screen
-                      // is reached from this tab and would otherwise have no
-                      // way in at all.
                       MenuEntry(
                         icon: Icons.category_outlined,
                         title: 'Manage Categories',
