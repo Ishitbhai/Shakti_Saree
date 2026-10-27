@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "227885563893",
+    "project_id": "shakti-saree",
+    "storage_bucket": "shakti-saree.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:227885563893:android:21081936411f5078ef6abc",
+        "android_client_info": {
+          "package_name": "com.example.shakti_saree"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiGKTWMfcXreqJGeqcY8Uj_i9ZgbJCqio"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
