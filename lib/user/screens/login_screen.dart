@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Import AdminShell instead of DashboardScreen
+import '../../admin/data/api_exception.dart';
+import '../../admin/data/providers/session_providers.dart';
 import '../../admin/screens/admin_shell.dart';
 import 'MainNavigationScreen.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
@@ -71,14 +74,42 @@ class _LoginScreenState extends State<LoginScreen> {
           (route) => false,
         );
       } else {
-        // Admin Navigation: Navigate to AdminShell to display the bottom nav bar
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const AdminShell()),
-          (route) => false,
-        );
+        _signInAdmin(email, password);
       }
     }
+  }
+
+  // True while an admin sign-in is in flight, to disable the button
+  bool _signingIn = false;
+
+  // Admin Navigation: signs in with Firebase Authentication and checks the
+  // account is an admin before showing AdminShell. Without Firebase (the
+  // tests) there is no sign-in to do, so it goes straight in.
+  Future<void> _signInAdmin(String email, String password) async {
+    final auth = ref.read(adminAuthRepositoryProvider);
+    if (auth != null) {
+      setState(() => _signingIn = true);
+      try {
+        final session = await auth.signIn(email: email, password: password);
+        ref.read(adminSessionProvider.notifier).start(session);
+      } on ApiException catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+        return;
+      } finally {
+        if (mounted) setState(() => _signingIn = false);
+      }
+    }
+    if (!mounted) return;
+
+    // Navigate to AdminShell to display the bottom nav bar
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const AdminShell()),
+      (route) => false,
+    );
   }
 
   @override
@@ -420,7 +451,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: _handleLogin,
+                        onPressed: _signingIn ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor: AppColors.primary,
@@ -429,13 +460,21 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: Text(
-                          'Login',
-                          style: AppTextStyles.button.copyWith(
-                            color: AppColors.white,
-                            fontSize: 16,
-                          ),
-                        ),
+                        child: _signingIn
+                            ? const SizedBox.square(
+                                dimension: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : Text(
+                                'Login',
+                                style: AppTextStyles.button.copyWith(
+                                  color: AppColors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
                     ),
                   ],

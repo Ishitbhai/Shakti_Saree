@@ -5,7 +5,9 @@ import '../styles/app_colors.dart';
 import '../styles/app_spacing.dart';
 import '../utils/formatters.dart';
 import '../models/order.dart';
+import '../models/order_detail.dart';
 import '../models/order_status.dart';
+import '../widgets/orders/ship_order_sheet.dart';
 import '../widgets/common/admin_page_header.dart';
 import '../widgets/common/async_content.dart';
 import 'order_detail_screen.dart';
@@ -41,21 +43,36 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   /// actually works, not because the other tabs matter less.
   OrderStatus? _filter = OrderStatus.isNew;
 
+  /// The order whose detail is being fetched, so a second tap does not open
+  /// it twice and the list can show that something is happening.
+  String? _opening;
+
   Future<void> _openDetail(Order order) async {
-    // The in-memory source answers immediately. Once this is a network call,
-    // the tap needs feedback — either a spinner on the button or a detail
-    // screen that loads itself.
-    final detail = await ref
-        .read(ordersRepositoryProvider)
-        .fetchOrderDetail(order.id);
+    if (_opening != null) return;
+    // The in-memory source answers immediately; Firestore takes a moment, and
+    // the bar under the header says so.
+    setState(() => _opening = order.id);
+    final OrderDetail detail;
+    try {
+      detail = await ref
+          .read(ordersRepositoryProvider)
+          .fetchOrderDetail(order.id);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AsyncContent.messageFor(error))));
+      return;
+    } finally {
+      if (mounted) setState(() => _opening = null);
+    }
     if (!mounted) return;
 
     await Navigator.of(context).push(
       AdminRoute<void>(
-        // The status action is the screen's own business now; Call and
-        // Invoice are still inert, styled from the design.
-        builder: (_) =>
-            OrderDetailScreen(detail: detail, onCall: () {}, onInvoice: () {}),
+        // The status action is the screen's own business now; Call is still
+        // inert, styled from the design.
+        builder: (_) => OrderDetailScreen(detail: detail, onCall: () {}),
       ),
     );
   }
@@ -90,6 +107,13 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               onSelect: (status) => setState(() => _filter = status),
             ),
             const SizedBox(height: AppSpacing.x4),
+            // Same height whether showing or not, so the list does not jump.
+            SizedBox(
+              height: 2,
+              child: _opening != null || _advancing != null
+                  ? const LinearProgressIndicator()
+                  : null,
+            ),
             Expanded(
               child: AsyncContent<List<Order>>(
                 state: orders,
@@ -131,11 +155,53 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x4),
       itemBuilder: (context, index) => OrderCard(
         order: visible[index],
-        // Inert until the repository can write; the button is styled from
-        // the design either way.
-        onPrimaryAction: () {},
+        // Disabled while any order is moving, so a double tap cannot try
+        // the same step twice.
+        onPrimaryAction: _advancing == null
+            ? () => _advance(visible[index])
+            : null,
         onViewDetails: () => _openDetail(visible[index]),
       ),
     );
+  }
+
+  /// The order whose next step is in flight from the list.
+  String? _advancing;
+
+  /// Takes the order one step along, as the detail screen's main button
+  /// does. Shipping opens the courier sheet first, because it cannot be done
+  /// without the courier details.
+  Future<void> _advance(Order order) async {
+    final repository = ref.read(ordersRepositoryProvider);
+    final id = order.id;
+
+    setState(() => _advancing = id);
+    try {
+      switch (order.status) {
+        case OrderStatus.isNew:
+          await repository.acceptOrder(id);
+        case OrderStatus.accepted:
+          await repository.markPacked(id);
+        case OrderStatus.shipped:
+          await repository.markDelivered(id);
+        case OrderStatus.packed:
+          final shipped = await ShipOrderSheet.show(
+            context,
+            onSubmit: ({required courier, required awbNumber}) => repository
+                .markShipped(id, courier: courier, awbNumber: awbNumber),
+          );
+          if (shipped == null) return;
+        case OrderStatus.delivered || OrderStatus.cancelled:
+          return;
+      }
+      ref.invalidate(ordersProvider);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AsyncContent.messageFor(error))));
+    } finally {
+      if (mounted) setState(() => _advancing = null);
+    }
   }
 }

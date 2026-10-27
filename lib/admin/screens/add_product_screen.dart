@@ -6,7 +6,6 @@ import '../styles/app_colors.dart';
 import '../styles/app_spacing.dart';
 import '../styles/app_typography.dart';
 import '../utils/formatters.dart';
-import '../data/mock/product_store.dart';
 import '../widgets/common/admin_page_header.dart';
 import '../widgets/common/async_content.dart';
 import '../widgets/common/busy_label.dart';
@@ -26,9 +25,10 @@ import '../widgets/products/stock_pill.dart';
 /// leave it null to create.
 ///
 /// Only what the catalogue stores is saved — name, SKU, price, stock, the
-/// category and the placeholder tint. Sale price, description and the
-/// featured flag are in the design but have nowhere on [Product] to go yet,
-/// so they are decoration until the model grows.
+/// category, the description and the placeholder tint. Sale price and the
+/// featured flag are in the design but have nowhere in the database to go
+/// yet, so they are decoration until the schema grows; so are the picked
+/// photos, since the project has no file storage set up.
 class AddProductScreen extends ConsumerStatefulWidget {
   const AddProductScreen({super.key, this.product});
 
@@ -62,10 +62,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   );
   late final _sku = TextEditingController(text: _editing?.sku ?? '');
 
-  /// Nothing on the product to load these from, so they open empty whichever
+  /// Nothing on the product to load this from, so it opens empty whichever
   /// mode this is.
   late final _salePrice = TextEditingController();
-  late final _description = TextEditingController();
+  late final _description = TextEditingController(
+    text: _editing?.description ?? '',
+  );
 
   late String _category = _editing?.category ?? '';
   late bool _featured = !_isEditing;
@@ -134,9 +136,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     if (_skuValue.isEmpty) return 'A SKU is required.';
     // Its own SKU does not count against it, or an edit that changed nothing
     // else would be blocked by itself.
-    final taken = ref
-        .read(productStoreProvider.notifier)
-        .isSkuTaken(_skuValue, exceptSku: _editing?.sku);
+    final catalogue = ref.read(productsProvider).value ?? const <Product>[];
+    final taken = catalogue.any(
+      (product) => product.sku == _skuValue && product.sku != _editing?.sku,
+    );
     return taken ? 'SKU $_skuValue is already in use.' : null;
   }
 
@@ -187,6 +190,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     stock: _digits(_stock) ?? 0,
     swatchIndex: _swatchIndex,
     category: _category,
+    description: _description.text.trim(),
     // Carried through rather than edited: the form picks photos from the
     // gallery and the catalogue has nowhere to keep those, so an edit must
     // not quietly drop the bundled picture the listing already has.

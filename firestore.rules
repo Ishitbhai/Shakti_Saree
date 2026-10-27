@@ -1,0 +1,98 @@
+rules_version = '2';
+
+// Security rules for the shakti-saree database.
+//
+// An admin is a signed-in user whose users/{uid} document has
+// user_type == 'admin' — the same check the admin panel makes at login.
+// Customers can read the catalogue signed out, and read and create their own
+// records (matched on the user_id field) once signed in. Nothing is writable
+// by someone who is not signed in.
+//
+// Deploy with:  firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      let profile = /databases/$(database)/documents/users/$(request.auth.uid);
+      return signedIn()
+        && exists(profile)
+        && get(profile).data.user_type == 'admin';
+    }
+
+    function ownsExisting() {
+      return signedIn() && resource.data.user_id == request.auth.uid;
+    }
+
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.user_id == request.auth.uid;
+    }
+
+    // The catalogue: anyone may browse it, only an admin may change it.
+    match /products/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Accounts. A user reads and edits their own, and can never make
+    // themselves an admin; admins are made in the console or by an admin.
+    match /users/{uid} {
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.uid == uid)
+        || ownsExisting();
+      allow create: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && request.resource.data.user_type == 'customer');
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && request.resource.data.user_type == resource.data.user_type);
+      allow delete: if isAdmin();
+    }
+
+    // A customer's own orders, payments, carts and support queries. Only an
+    // admin moves an order through fulfilment or changes a payment.
+    match /orders/{id} {
+      allow read: if isAdmin() || ownsExisting();
+      allow create: if isAdmin() || ownsIncoming();
+      allow update, delete: if isAdmin();
+    }
+
+    match /payments/{id} {
+      allow read: if isAdmin() || ownsExisting();
+      allow create: if isAdmin() || ownsIncoming();
+      allow update, delete: if isAdmin();
+    }
+
+    match /support/{id} {
+      allow read: if isAdmin() || ownsExisting();
+      allow create: if isAdmin() || ownsIncoming();
+      allow update, delete: if isAdmin();
+    }
+
+    match /carts/{id} {
+      allow read, update, delete: if isAdmin() || ownsExisting();
+      allow create: if isAdmin() || ownsIncoming();
+    }
+
+    // Line items carry only the order_id / cart_id they belong to, and a
+    // rule cannot look a document up by a field, so ownership cannot be
+    // checked here. Signed-in users may read and add them; only an admin may
+    // change or remove an order's lines.
+    match /order_items/{id} {
+      allow read, create: if signedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    match /cart_items/{id} {
+      allow read, write: if signedIn();
+    }
+  }
+}

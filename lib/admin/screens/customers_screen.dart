@@ -47,7 +47,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   ///
   /// Name or number, because those are the two things anyone knows about a
   /// customer when they go looking. The number is compared digits-only, so
-  /// '98250' finds '+91 98250 41267' however it was spaced.
+  /// '98250' finds '+91 98250 41267' however it was spaced. An account with
+  /// no number shows its email instead, and that is searched as typed.
   List<Customer> _matching(List<Customer> customers) {
     if (_query.isEmpty) return customers;
 
@@ -56,6 +57,10 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
     return customers.where((customer) {
       if (customer.name.toLowerCase().contains(name)) return true;
+      if (customer.phone.contains('@') &&
+          customer.phone.toLowerCase().contains(name)) {
+        return true;
+      }
       return digits.isNotEmpty && _digitsOf(customer.phone).contains(digits);
     }).toList();
   }

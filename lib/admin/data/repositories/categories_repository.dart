@@ -2,6 +2,7 @@ import '../api_exception.dart';
 import '../mock/category_store.dart';
 import '../mock/product_store.dart';
 import '../../models/category.dart';
+import 'products_repository.dart' show StoredDocument;
 
 /// Reads and writes the catalogue's groupings.
 abstract interface class CategoriesRepository {
@@ -34,10 +35,18 @@ abstract interface class CategoriesRepository {
 
 /// A category that has been deleted, and the position it held.
 class RemovedCategory {
-  const RemovedCategory({required this.category, required this.index});
+  const RemovedCategory({
+    required this.category,
+    required this.index,
+    this.stored,
+  });
 
   final Category category;
   final int index;
+
+  /// The document exactly as it was, for a source that can put it back
+  /// field for field — its id and creation date included.
+  final StoredDocument? stored;
 }
 
 /// Serves the groupings from the shared in-memory stores.

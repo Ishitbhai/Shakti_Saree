@@ -10,6 +10,7 @@ import '../data/mock/faq_store.dart';
 import '../data/mock/order_store.dart';
 import '../data/mock/product_store.dart';
 import '../data/mock/profile_store.dart';
+import '../data/providers/session_providers.dart';
 import 'categories_screen.dart';
 import '../data/admin_tab.dart';
 import '../widgets/common/brand_monogram.dart';
@@ -37,8 +38,14 @@ class MoreScreen extends ConsumerWidget {
     ref.read(adminTabProvider.notifier).back();
   }
 
-  /// Invalidates stores and redirects immediately to LoginScreen without a confirmation dialog.
+  /// Signs out of Firebase, invalidates stores and redirects immediately to
+  /// LoginScreen without a confirmation dialog.
+  ///
+  /// The Firebase sign-out is not awaited: the session is ended here and
+  /// now, so nothing in the panel can act as this admin while it completes.
   void _logout(BuildContext context, WidgetRef ref) {
+    ref.read(adminAuthRepositoryProvider)?.signOut().ignore();
+    ref.read(adminSessionProvider.notifier).end();
     ref
       ..invalidate(orderStoreProvider)
       ..invalidate(productStoreProvider)

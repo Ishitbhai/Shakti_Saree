@@ -27,18 +27,12 @@ import '../widgets/orders/ship_order_sheet.dart';
 /// record, so the screen holds a mutable copy of [detail] rather than
 /// redrawing from the value it was constructed with.
 class OrderDetailScreen extends ConsumerStatefulWidget {
-  const OrderDetailScreen({
-    super.key,
-    required this.detail,
-    this.onCall,
-    this.onInvoice,
-  });
+  const OrderDetailScreen({super.key, required this.detail, this.onCall});
 
   /// The record as it stood when the screen opened.
   final OrderDetail detail;
 
   final VoidCallback? onCall;
-  final VoidCallback? onInvoice;
 
   /// What a line's frame falls back to when the catalogue has no photograph
   /// for its SKU, cycled by position. Every entry is a token.
@@ -221,7 +215,6 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             _ActionBar(
               status: detail.status,
               advancing: _advancing,
-              onInvoice: widget.onInvoice,
               onAdvance: _onAdvance,
               onCancel: _cancel,
             ),
@@ -383,12 +376,13 @@ class _LineTile extends StatelessWidget {
   }
 }
 
-/// Invoice, the status action, and cancellation — pinned below the scrolling
-/// detail and driven entirely by the order's current status.
+/// The status action and cancellation — pinned below the scrolling detail and
+/// driven entirely by the order's current status.
 ///
 /// Which controls exist is [OrderStatus]'s decision: the advance button
 /// appears wherever there is a next status, and cancelling appears while the
-/// parcel is still in hand. A terminal order is left with Invoice alone.
+/// parcel is still in hand. A terminal order has nothing left to do, so the
+/// bar is left out altogether rather than drawn empty.
 ///
 /// While an advance is in flight everything disables and that button swaps
 /// its label for a spinner, so it is clear the app is working. Ship and
@@ -397,20 +391,19 @@ class _ActionBar extends StatelessWidget {
   const _ActionBar({
     required this.status,
     required this.advancing,
-    this.onInvoice,
     this.onAdvance,
     this.onCancel,
   });
 
   final OrderStatus status;
   final bool advancing;
-  final VoidCallback? onInvoice;
   final VoidCallback? onAdvance;
   final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
     final label = status.nextActionLabelLong;
+    if (label == null && !status.canCancel) return const SizedBox.shrink();
 
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -422,32 +415,20 @@ class _ActionBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                // No fixed height: the theme sets a minimum and the buttons
-                // grow with the platform text scale.
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: advancing ? null : onInvoice,
-                    child: const Text('Invoice'),
-                  ),
+            if (label != null)
+              // Full width, and no fixed height: the theme sets a minimum and
+              // the button grows with the platform text scale.
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: advancing ? null : onAdvance,
+                  child: BusyLabel(label: label, busy: advancing),
                 ),
-                if (label != null) ...[
-                  const SizedBox(width: AppSpacing.x3),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: advancing ? null : onAdvance,
-                      child: BusyLabel(label: label, busy: advancing),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            // Destructive, so it sits on its own line below the row rather
-            // than competing with the action an admin usually wants — and
-            // three buttons abreast do not fit a narrow phone.
+              ),
+            // Destructive, so it sits on its own line below the main action
+            // rather than competing with the one an admin usually wants.
             if (status.canCancel) ...[
-              const SizedBox(height: AppSpacing.x2),
+              if (label != null) const SizedBox(height: AppSpacing.x2),
               TextButton(
                 onPressed: advancing ? null : onCancel,
                 style: TextButton.styleFrom(

@@ -13,6 +13,7 @@ class Product {
     this.swatchIndex = 0,
     this.category = '',
     this.image,
+    this.description = '',
   });
 
   final String name;
@@ -41,6 +42,9 @@ class Product {
   /// [swatchIndex] and carries on.
   final String? image;
 
+  /// The shopper-facing write-up. Empty for a listing that has none.
+  final String description;
+
   Product copyWith({
     String? name,
     String? sku,
@@ -49,6 +53,7 @@ class Product {
     String? category,
     int? swatchIndex,
     String? image,
+    String? description,
   }) => Product(
     name: name ?? this.name,
     sku: sku ?? this.sku,
@@ -57,6 +62,7 @@ class Product {
     category: category ?? this.category,
     swatchIndex: swatchIndex ?? this.swatchIndex,
     image: image ?? this.image,
+    description: description ?? this.description,
   );
 
   /// At or below this, a product is flagged as running low.

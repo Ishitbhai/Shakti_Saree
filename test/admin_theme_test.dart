@@ -190,17 +190,6 @@ void main() {
         AppColors.primary,
         reason: 'Accept Order should be filled in the admin maroon',
       );
-      final invoice = find.widgetWithText(OutlinedButton, 'Invoice');
-      expect(
-        _labelOf(tester, invoice),
-        AppColors.primary,
-        reason: 'Invoice should be lettered in the admin maroon',
-      );
-      expect(
-        _outlineOf(tester, invoice),
-        AppColors.primary,
-        reason: 'Invoice should be outlined in the admin maroon',
-      );
 
       // A button that names its own colour keeps it: cancelling is
       // destructive, and says so in red rather than in the brand.

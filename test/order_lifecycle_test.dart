@@ -229,10 +229,11 @@ void main() {
 
       expect(find.text('Accept Order'), findsOneWidget);
       expect(find.text('Cancel Order'), findsOneWidget);
-      expect(find.text('Invoice'), findsOneWidget);
+      // Taken out: it was never wired to anything.
+      expect(find.text('Invoice'), findsNothing);
     });
 
-    testWidgets('a delivered order offers only the invoice', (tester) async {
+    testWidgets('a delivered order offers nothing further', (tester) async {
       _phone(tester);
 
       await tester.pumpWidget(
@@ -243,7 +244,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Invoice'), findsOneWidget);
+      expect(find.text('Invoice'), findsNothing);
       expect(find.byType(FilledButton), findsNothing);
       expect(find.text('Cancel Order'), findsNothing);
     });
@@ -307,7 +308,7 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('Accept Order'), findsNothing);
       expect(
-        tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
         isNull,
       );
       expect(

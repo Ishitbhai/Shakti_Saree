@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/admin_profile.dart';
+import '../providers/backend_providers.dart';
+import '../providers/session_providers.dart';
 import 'mock_data.dart';
 
 /// The app's one copy of who is signed in, on the same footing as the order,
@@ -11,11 +13,21 @@ import 'mock_data.dart';
 /// the monogram and anything else reading the profile recompute without
 /// being told to.
 ///
-/// State lives only as long as the process; a restart — or a logout, which
-/// throws the stores away — re-seeds from [MockData].
+/// On Firestore it opens on the profile of whoever signed in, read from
+/// their `users` document at login; the in-memory stores seed it from
+/// [MockData] instead, and a restart — or a logout, which throws the stores
+/// away — re-seeds it.
 class ProfileStore extends Notifier<AdminProfile> {
   @override
-  AdminProfile build() => MockData.admin();
+  AdminProfile build() {
+    final session = ref.watch(adminSessionProvider);
+    if (session != null) return session.profile;
+    // Never the sample admin against the real database: a blank profile is
+    // honest about there being nobody signed in.
+    return ref.watch(firestoreProvider) == null
+        ? MockData.admin()
+        : const AdminProfile(name: '', email: '', role: '', mobile: '');
+  }
 
   /// Who is signed in.
   AdminProfile get profile => state;

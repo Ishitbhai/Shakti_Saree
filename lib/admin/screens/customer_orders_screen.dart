@@ -26,7 +26,7 @@ class CustomerOrdersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final orders = ref.watch(customerOrdersProvider(customer.phone));
+    final orders = ref.watch(customerOrdersProvider(customer.id));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -38,7 +38,7 @@ class CustomerOrdersScreen extends ConsumerWidget {
               child: AsyncContent<List<Order>>(
                 state: orders,
                 onRetry: () =>
-                    ref.invalidate(customerOrdersProvider(customer.phone)),
+                    ref.invalidate(customerOrdersProvider(customer.id)),
                 isEmpty: (loaded) => loaded.isEmpty,
                 emptyMessage: 'No orders from this customer.',
                 builder: (context, loaded) => ListView(

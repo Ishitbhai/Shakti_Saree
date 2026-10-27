@@ -17,7 +17,7 @@ import '../widgets/products/product_tile.dart';
 import '../widgets/navigation/admin_route.dart';
 
 /// Admin product catalogue: search, then a scrolling list of products.
-class ProductsScreen extends ConsumerWidget {
+class ProductsScreen extends ConsumerStatefulWidget {
   const ProductsScreen({super.key});
 
   static const double _screenPadding = AppSpacing.x5;
@@ -25,12 +25,46 @@ class ProductsScreen extends ConsumerWidget {
   /// How long undo stays on offer after a deletion.
   static const Duration undoWindow = Duration(seconds: 6);
 
+  @override
+  ConsumerState<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends ConsumerState<ProductsScreen> {
+  static const double _screenPadding = ProductsScreen._screenPadding;
+
+  final _search = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  String get _query => _search.text.trim().toLowerCase();
+
+  /// Everything whose name, SKU or category holds what has been typed.
+  List<Product> _matching(List<Product> products) {
+    if (_query.isEmpty) return products;
+    return products
+        .where(
+          (product) =>
+              product.name.toLowerCase().contains(_query) ||
+              product.sku.toLowerCase().contains(_query) ||
+              product.category.toLowerCase().contains(_query),
+        )
+        .toList();
+  }
+
   /// Opens the form on an existing listing.
   Future<void> _edit(BuildContext context, Product product) {
     return Navigator.of(context).push(
-      AdminRoute<void>(
-        builder: (_) => AddProductScreen(product: product),
-      ),
+      AdminRoute<void>(builder: (_) => AddProductScreen(product: product)),
     );
   }
 
@@ -57,7 +91,7 @@ class ProductsScreen extends ConsumerWidget {
         ..showSnackBar(
           SnackBar(
             content: Text('${product.name} deleted'),
-            duration: undoWindow,
+            duration: ProductsScreen.undoWindow,
             action: SnackBarAction(
               label: 'Undo',
               onPressed: () async {
@@ -80,7 +114,7 @@ class ProductsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final products = ref.watch(productsProvider);
 
     return Scaffold(
@@ -100,29 +134,25 @@ class ProductsScreen extends ConsumerWidget {
                 icon: Icons.inventory_2_outlined,
                 label: 'Inventory',
                 onTap: () => Navigator.of(context).push(
-                  AdminRoute<void>(
-                    builder: (_) => const InventoryScreen(),
-                  ),
+                  AdminRoute<void>(builder: (_) => const InventoryScreen()),
                 ),
               ),
               action: AdminHeaderAction(
                 icon: Icons.add,
                 label: 'Add product',
                 onTap: () => Navigator.of(context).push(
-                  AdminRoute<void>(
-                    builder: (_) => const AddProductScreen(),
-                  ),
+                  AdminRoute<void>(builder: (_) => const AddProductScreen()),
                 ),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
                 _screenPadding,
                 AppSpacing.x2,
                 _screenPadding,
                 AppSpacing.x4,
               ),
-              child: _SearchField(),
+              child: _SearchField(controller: _search),
             ),
             Expanded(
               child: AsyncContent<List<Product>>(
@@ -130,28 +160,7 @@ class ProductsScreen extends ConsumerWidget {
                 onRetry: () => ref.invalidate(productsProvider),
                 isEmpty: (loaded) => loaded.isEmpty,
                 emptyMessage: 'No products yet.',
-                builder: (context, loaded) => ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(
-                    _screenPadding,
-                    0,
-                    _screenPadding,
-                    AppSpacing.x6,
-                  ),
-                  itemCount: loaded.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.x3),
-                  itemBuilder: (context, index) {
-                    final product = loaded[index];
-                    return ProductTile(
-                      product: product,
-                      // The product's own tint, so it keeps its colour
-                      // wherever it ends up in the list.
-                      swatch: Swatches.at(product.swatchIndex),
-                      onEdit: () => _edit(context, product),
-                      onDelete: () => _delete(context, ref, product),
-                    );
-                  },
-                ),
+                builder: (context, all) => _buildList(context, _matching(all)),
               ),
             ),
           ],
@@ -159,18 +168,60 @@ class ProductsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildList(BuildContext context, List<Product> loaded) {
+    if (loaded.isEmpty) {
+      return AsyncMessage(text: 'Nothing matches "${_search.text.trim()}"');
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(
+        _screenPadding,
+        0,
+        _screenPadding,
+        AppSpacing.x6,
+      ),
+      itemCount: loaded.length,
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x3),
+      itemBuilder: (context, index) {
+        final product = loaded[index];
+        return ProductTile(
+          product: product,
+          // The product's own tint, so it keeps its colour
+          // wherever it ends up in the list.
+          swatch: Swatches.at(product.swatchIndex),
+          onEdit: () => _edit(context, product),
+          onDelete: () => _delete(context, ref, product),
+        );
+      },
+    );
+  }
 }
 
+/// Filters by name, SKU or category as the admin types.
 class _SearchField extends StatelessWidget {
-  const _SearchField();
+  const _SearchField({required this.controller});
+
+  final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
-      // Filtering arrives with the repository.
-      decoration: const InputDecoration(
+      controller: controller,
+      decoration: InputDecoration(
         hintText: 'Search product or SKU',
-        prefixIcon: Icon(Icons.search, size: 20, color: AppColors.textGrey),
+        prefixIcon: const Icon(
+          Icons.search,
+          size: 20,
+          color: AppColors.textGrey,
+        ),
+        suffixIcon: controller.text.isEmpty
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                color: AppColors.textGrey,
+                tooltip: 'Clear search',
+                onPressed: controller.clear,
+              ),
       ),
       style: AppTypography.bodyMedium,
     );

@@ -9,6 +9,9 @@ import '../styles/app_spacing.dart';
 import '../styles/app_typography.dart';
 import '../utils/formatters.dart';
 import '../data/mock/profile_store.dart';
+import '../data/providers/session_providers.dart';
+import '../widgets/common/async_content.dart';
+import '../widgets/common/busy_label.dart';
 import '../widgets/common/labelled_field.dart';
 import '../models/admin_profile.dart';
 import '../widgets/more/gender_selector.dart';
@@ -54,8 +57,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final _email = TextEditingController(text: _opened.email);
   late final _mobile = TextEditingController(text: _opened.mobile);
 
-  late DateTime _dateOfBirth = _opened.dateOfBirth;
-  late Gender _gender = _opened.gender;
+  late DateTime? _dateOfBirth = _opened.dateOfBirth;
+  late Gender? _gender = _opened.gender;
   late Uint8List? _photo = _opened.photo;
 
   final _picker = ImagePicker();
@@ -63,6 +66,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   /// Set once Save has been pressed, so the form does not open already
   /// complaining about fields nobody has touched.
   bool _submitted = false;
+  bool _saving = false;
 
   List<TextEditingController> get _fields => [_name, _email, _mobile];
 
@@ -137,9 +141,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   /// The picker cannot offer a future date, but a stored profile can still
   /// be carrying one, and saving over it should not launder it.
-  String? get _dateOfBirthError => _dateOfBirth.isBefore(DateTime.now())
-      ? null
-      : 'Date of birth has to be in the past.';
+  /// None at all is allowed, as a blank mobile is.
+  String? get _dateOfBirthError =>
+      _dateOfBirth?.isAfter(DateTime.now()) ?? false
+      ? 'Date of birth has to be in the past.'
+      : null;
 
   bool get _isValid =>
       _nameError == null &&
@@ -153,9 +159,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   // --------------------------------------------------------------- actions
   Future<void> _pickDateOfBirth() async {
     final now = DateTime.now();
+    final current = _dateOfBirth;
     final picked = await showDatePicker(
       context: context,
-      initialDate: _dateOfBirth.isAfter(now) ? now : _dateOfBirth,
+      initialDate: current == null || current.isAfter(now) ? now : current,
       firstDate: EditProfileScreen.earliestBirthDate,
       lastDate: now,
       helpText: 'Date of Birth',
@@ -164,18 +171,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     setState(() => _dateOfBirth = picked);
   }
 
-  void _save() {
+  Future<void> _save() async {
     setState(() => _submitted = true);
-    if (!_isValid || !_isDirty) return;
+    if (!_isValid || !_isDirty || _saving) return;
 
     // Taken before the pop, because the messenger is found by walking up from
     // this context and this screen is about to leave the tree.
     final messenger = ScaffoldMessenger.of(context);
-    ref.read(profileStoreProvider.notifier).save(_draft);
-    // Saved, so there is nothing left to warn about — and an outright pop
-    // goes through the guard rather than around it.
-    Navigator.of(context).pop();
-    messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
+    setState(() => _saving = true);
+    try {
+      await ref.read(profileRepositoryProvider).saveProfile(_draft);
+      if (!mounted) return;
+      // Saved, so there is nothing left to warn about — and an outright pop
+      // goes through the guard rather than around it.
+      Navigator.of(context).pop();
+      messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(AsyncContent.messageFor(error))),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   /// Opens the gallery and takes the picture that comes back into the draft.
@@ -243,7 +260,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   /// The one way out of this screen, whichever gesture asked for it.
   Future<void> _leave(bool didPop) async {
-    if (didPop) return;
+    if (didPop || _saving) return;
     final mayLeave = !_isDirty || await _confirmDiscard();
     if (mayLeave && mounted) Navigator.of(context).pop();
   }
@@ -348,12 +365,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     // Nothing to save until something differs from what is
                     // stored, and saying so beats a button that quietly does
                     // nothing.
-                    onPressed: _isDirty ? _save : null,
-                    child: const Text('Save Changes'),
+                    onPressed: _isDirty && !_saving ? _save : null,
+                    child: BusyLabel(label: 'Save Changes', busy: _saving),
                   ),
                   const SizedBox(height: AppSpacing.x2),
                   TextButton(
-                    onPressed: () => _leave(false),
+                    onPressed: _saving ? null : () => _leave(false),
                     child: const Text('Cancel'),
                   ),
                 ],
@@ -603,13 +620,15 @@ class _FieldCard extends StatelessWidget {
 class _DateField extends StatelessWidget {
   const _DateField({required this.date, required this.onTap, this.errorText});
 
-  final DateTime date;
+  /// Null until one is chosen.
+  final DateTime? date;
   final VoidCallback onTap;
   final String? errorText;
 
   @override
   Widget build(BuildContext context) {
-    final formatted = Formatters.date(date);
+    final chosen = date;
+    final formatted = chosen == null ? 'Not set' : Formatters.date(chosen);
     // InputDecorator, unlike a TextField, is not given the theme's field
     // styling for free.
     final decoration = InputDecoration(

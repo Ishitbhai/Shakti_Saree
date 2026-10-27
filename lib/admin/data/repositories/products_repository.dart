@@ -2,6 +2,9 @@ import '../api_exception.dart';
 import '../mock/product_store.dart';
 import '../../models/product.dart';
 
+/// A deleted document's id and fields, kept so undo restores it exactly.
+typedef StoredDocument = ({String id, Map<String, dynamic> data});
+
 /// Reads and writes the product catalogue.
 ///
 /// Screens depend on this, never on a data source, so the in-memory sample
@@ -46,10 +49,18 @@ abstract interface class ProductsRepository {
 /// Carrying the position is what makes undo an undo: the row returns to where
 /// it was rather than to the end of the list.
 class RemovedProduct {
-  const RemovedProduct({required this.product, required this.index});
+  const RemovedProduct({
+    required this.product,
+    required this.index,
+    this.stored,
+  });
 
   final Product product;
   final int index;
+
+  /// The document exactly as it was, for a source that can put it back
+  /// field for field — including fields [Product] has no place for.
+  final StoredDocument? stored;
 }
 
 /// Serves the catalogue from the shared in-memory store.
