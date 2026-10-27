@@ -11,6 +11,7 @@ import '../models/customer.dart';
 import 'customer_orders_screen.dart';
 import '../data/providers/customers_providers.dart';
 import '../widgets/customers/customer_tile.dart';
+import '../widgets/navigation/admin_route.dart';
 
 /// Everyone who has ordered: search, then a scrolling list.
 ///
@@ -64,7 +65,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
   Future<void> _openOrders(Customer customer) {
     return Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      AdminRoute<void>(
         builder: (_) => CustomerOrdersScreen(customer: customer),
       ),
     );

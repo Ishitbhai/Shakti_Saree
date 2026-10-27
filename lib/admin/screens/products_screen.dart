@@ -14,6 +14,7 @@ import '../styles/swatches.dart';
 import '../data/providers/products_providers.dart';
 import '../widgets/products/confirm_delete_dialog.dart';
 import '../widgets/products/product_tile.dart';
+import '../widgets/navigation/admin_route.dart';
 
 /// Admin product catalogue: search, then a scrolling list of products.
 class ProductsScreen extends ConsumerWidget {
@@ -27,7 +28,7 @@ class ProductsScreen extends ConsumerWidget {
   /// Opens the form on an existing listing.
   Future<void> _edit(BuildContext context, Product product) {
     return Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      AdminRoute<void>(
         builder: (_) => AddProductScreen(product: product),
       ),
     );
@@ -99,7 +100,7 @@ class ProductsScreen extends ConsumerWidget {
                 icon: Icons.inventory_2_outlined,
                 label: 'Inventory',
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
+                  AdminRoute<void>(
                     builder: (_) => const InventoryScreen(),
                   ),
                 ),
@@ -108,7 +109,7 @@ class ProductsScreen extends ConsumerWidget {
                 icon: Icons.add,
                 label: 'Add product',
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
+                  AdminRoute<void>(
                     builder: (_) => const AddProductScreen(),
                   ),
                 ),

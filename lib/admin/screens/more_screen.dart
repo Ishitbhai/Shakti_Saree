@@ -17,6 +17,7 @@ import 'help_support_screen.dart';
 import 'edit_profile_screen.dart';
 import '../widgets/more/menu_section.dart';
 import '../widgets/more/more_header.dart';
+import '../widgets/navigation/admin_route.dart';
 
 /// The More tab: who is signed in, where the rest of the admin lives, and the
 /// way out.
@@ -78,7 +79,7 @@ class MoreScreen extends ConsumerWidget {
                         icon: Icons.settings_outlined,
                         title: 'Admin Edit Profile',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
+                          AdminRoute<void>(
                             builder: (_) => const EditProfileScreen(),
                           ),
                         ),
@@ -88,7 +89,7 @@ class MoreScreen extends ConsumerWidget {
                         title: 'Manage Categories',
                         subtitle: 'Groupings in the catalogue',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
+                          AdminRoute<void>(
                             builder: (_) => const CategoriesScreen(),
                           ),
                         ),
@@ -104,7 +105,7 @@ class MoreScreen extends ConsumerWidget {
                         title: 'Help & Support',
                         subtitle: 'Guides for managing your panel',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
+                          AdminRoute<void>(
                             builder: (_) => const HelpSupportScreen(),
                           ),
                         ),

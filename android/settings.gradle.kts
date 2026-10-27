@@ -20,7 +20,8 @@ pluginManagement {
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "8.11.1" apply false
-    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    // 2.3 or newer: the Firebase Android SDKs carry Kotlin 2.4 metadata, which 2.2 cannot read.
+    id("org.jetbrains.kotlin.android") version "2.3.20" apply false
 }
 
 include(":app")

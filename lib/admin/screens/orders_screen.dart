@@ -12,6 +12,7 @@ import 'order_detail_screen.dart';
 import '../data/providers/orders_providers.dart';
 import '../widgets/orders/order_card.dart';
 import '../widgets/orders/status_filter_chips.dart';
+import '../widgets/navigation/admin_route.dart';
 
 /// Admin orders list, filtered by fulfilment status.
 class OrdersScreen extends ConsumerStatefulWidget {
@@ -50,7 +51,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     if (!mounted) return;
 
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      AdminRoute<void>(
         // The status action is the screen's own business now; Call and
         // Invoice are still inert, styled from the design.
         builder: (_) =>

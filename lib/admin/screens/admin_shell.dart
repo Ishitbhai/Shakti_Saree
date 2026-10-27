@@ -8,6 +8,7 @@ import 'dashboard_screen.dart';
 import 'orders_screen.dart';
 import 'products_screen.dart';
 import '../data/admin_tab.dart';
+import '../widgets/common/admin_theme.dart';
 import '../widgets/navigation/admin_bottom_nav.dart';
 
 /// Holds the admin tabs, the bar that switches between them, and the swipe
@@ -23,6 +24,9 @@ import '../widgets/navigation/admin_bottom_nav.dart';
 /// the screens inside a tab can move between them: the header's back arrow,
 /// the dashboard's 'View all' and the logout all drive it, and the pages
 /// follow. Replaced by go_router once real navigation lands.
+///
+/// It wears [AdminTheme] itself rather than relying on how it was pushed: the
+/// customer login pushes it as a plain route, on the app's default theme.
 class AdminShell extends StatelessWidget {
   const AdminShell({super.key});
 
@@ -43,10 +47,12 @@ class AdminShell extends StatelessWidget {
       '${AdminBottomNav.items.length} slots, ${tabs.length} pages.',
     );
 
-    return DefaultTabController(
-      length: tabs.length,
-      initialIndex: AdminTab.home,
-      child: const _AdminTabs(),
+    return AdminTheme(
+      child: DefaultTabController(
+        length: tabs.length,
+        initialIndex: AdminTab.home,
+        child: const _AdminTabs(),
+      ),
     );
   }
 }
