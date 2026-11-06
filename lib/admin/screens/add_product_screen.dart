@@ -11,6 +11,7 @@ import '../widgets/common/async_content.dart';
 import '../widgets/common/busy_label.dart';
 import '../widgets/common/labelled_field.dart';
 import '../models/product.dart';
+import '../utils/embedded_photo.dart';
 import '../widgets/common/swatch_picker.dart';
 import '../data/providers/categories_providers.dart';
 import '../data/providers/products_providers.dart';
@@ -25,18 +26,20 @@ import '../widgets/products/stock_pill.dart';
 /// leave it null to create.
 ///
 /// Only what the catalogue stores is saved — name, SKU, price, stock, the
-/// category, the description and the placeholder tint. Sale price and the
-/// featured flag are in the design but have nowhere in the database to go
-/// yet, so they are decoration until the schema grows; so are the picked
-/// photos, since the project has no file storage set up.
+/// category, the description, the placeholder tint and the photo. Sale price
+/// and the featured flag are in the design but have nowhere in the database
+/// to go yet, so they are decoration until the schema grows. The photo is
+/// kept in the listing itself (see [EmbeddedPhoto]), because the project has
+/// no file storage set up.
 class AddProductScreen extends ConsumerStatefulWidget {
   const AddProductScreen({super.key, this.product});
 
   /// The listing being edited, or null when creating a new one.
   final Product? product;
 
-  /// Cap on how many photos a listing can carry.
-  static const int maxImages = 5;
+  /// Cap on how many photos a listing can carry: one, because its `image`
+  /// field holds a single picture.
+  static const int maxImages = 1;
 
   @override
   ConsumerState<AddProductScreen> createState() => _AddProductScreenState();
@@ -87,6 +90,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
   final _picker = ImagePicker();
   final List<PickedImage> _images = [];
+
+  /// The picked photo as it will be stored, worked out once when it is
+  /// picked rather than on every keystroke's rebuild.
+  String? _photo;
 
   List<TextEditingController> get _fields => [
     _name,
@@ -191,10 +198,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     swatchIndex: _swatchIndex,
     category: _category,
     description: _description.text.trim(),
-    // Carried through rather than edited: the form picks photos from the
-    // gallery and the catalogue has nowhere to keep those, so an edit must
-    // not quietly drop the bundled picture the listing already has.
-    image: _editing?.image,
+    // A newly picked photo replaces the listing's picture. Otherwise the one
+    // it has is carried through, so an edit that leaves the photo alone does
+    // not quietly drop it.
+    image: _photo ?? _editing?.image,
   );
 
   // -------------------------------------------------------- unsaved changes
@@ -275,24 +282,42 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     }
   }
 
-  /// Opens the gallery and appends what comes back, up to the cap.
+  /// Opens the gallery for the listing's photo.
   ///
-  /// Bytes are read here so the thumbnails render the same way on mobile and
-  /// on web, where a file path is a blob URL rather than something on disk.
-  Future<void> _pickImages() async {
-    final remaining = AddProductScreen.maxImages - _images.length;
-    if (remaining <= 0) return;
+  /// The picker shrinks it on the way in, because it is stored in the listing
+  /// itself and Firestore caps a document at 1 MiB; one still too heavy is
+  /// redrawn smaller, and only refused, here rather than failing at Publish,
+  /// if even that will not do. Bytes are read here so the thumbnail renders
+  /// the same way on mobile and on web, where a file path is a blob URL rather
+  /// than something on disk.
+  Future<void> _pickImage() async {
+    if (_images.length >= AddProductScreen.maxImages) return;
 
     try {
-      final picked = await _picker.pickMultiImage(limit: remaining);
-      if (picked.isEmpty) return;
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: EmbeddedPhoto.maxSide,
+        maxHeight: EmbeddedPhoto.maxSide,
+        imageQuality: EmbeddedPhoto.quality,
+      );
+      if (picked == null) return;
 
-      final loaded = [
-        for (final file in picked.take(remaining))
-          PickedImage(name: file.name, bytes: await file.readAsBytes()),
-      ];
+      final bytes = await EmbeddedPhoto.fitted(await picked.readAsBytes());
       if (!mounted) return;
-      setState(() => _images.addAll(loaded));
+      if (bytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'That photo is too large to save. Please choose a smaller one.',
+            ),
+          ),
+        );
+        return;
+      }
+      setState(() {
+        _images.add(PickedImage(name: picked.name, bytes: bytes));
+        _photo = EmbeddedPhoto.encode(bytes);
+      });
     } on Exception catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -331,9 +356,11 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                     ImageUploadBox(
                       images: _images,
                       maxImages: AddProductScreen.maxImages,
-                      onAdd: _pickImages,
-                      onRemove: (index) =>
-                          setState(() => _images.removeAt(index)),
+                      onAdd: _pickImage,
+                      onRemove: (index) => setState(() {
+                        _images.removeAt(index);
+                        _photo = null;
+                      }),
                     ),
                     const SizedBox(height: AppSpacing.x4),
                     LabelledField(

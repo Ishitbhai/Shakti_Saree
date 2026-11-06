@@ -50,11 +50,14 @@ class DashboardScreen extends ConsumerWidget {
           clipBehavior: Clip.none,
           children: [
             // First child paints underneath.
-            const Positioned(
+            Positioned(
               top: 0,
               left: 0,
               right: 0,
-              child: DashboardHeader(height: headerHeight),
+              child: DashboardHeader(
+                height: headerHeight,
+                photo: ref.watch(profileStoreProvider).photo,
+              ),
             ),
             // Unpositioned, so this is what gives the Stack its height — the
             // offset is real layout, not a paint-time translation, and the

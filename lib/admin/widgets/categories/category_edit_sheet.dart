@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../styles/app_colors.dart';
 import '../../styles/app_spacing.dart';
 import '../../styles/app_typography.dart';
+import '../../utils/embedded_photo.dart';
 import '../common/async_content.dart';
 import '../common/busy_label.dart';
 import '../common/labelled_field.dart';
 import '../common/swatch_picker.dart';
+import '../products/image_upload_box.dart';
 import '../../models/category.dart';
 
 /// Saves the category and answers with what was stored.
 typedef CategorySubmit = Future<Category> Function(Category category);
 
-/// Collects the three things a grouping has: a name, a tint, and whether it
-/// is on offer.
+/// Collects the four things a grouping has: a picture, a name, a tint, and
+/// whether it is on offer.
 ///
 /// A sheet rather than a screen because that is the whole of it — pushing a
 /// full page for one text field would be heavier than the job.
@@ -27,6 +30,11 @@ class CategoryEditSheet extends StatefulWidget {
   final Category? category;
 
   final CategorySubmit onSubmit;
+
+  /// How large a picked photo is kept. A category is only ever shown as a
+  /// thumbnail, and every shopper downloads every category, so it stays
+  /// smaller than a product photo.
+  static const double photoSize = 512;
 
   /// Opens the sheet. Resolves to the saved category, or null if the admin
   /// backed out.
@@ -68,6 +76,14 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
   /// Why the last attempt failed, kept so the typed name survives it.
   String? _failure;
 
+  final _picker = ImagePicker();
+
+  /// The photo picked in this sheet, as the upload box shows it.
+  PickedImage? _picked;
+
+  /// The same photo as it will be stored, worked out once when it is picked.
+  String? _photo;
+
   @override
   void initState() {
     super.initState();
@@ -88,10 +104,51 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
     name: _nameValue,
     swatchIndex: _swatchIndex,
     isHidden: _isHidden,
-    // Carried through: the sheet has no picture control, and rebuilding the
-    // category without this would drop the artwork on every rename.
-    image: _editing?.image,
+    // A newly picked photo replaces the picture. Otherwise the one it has is
+    // carried through, or every rename would drop the artwork.
+    image: _photo ?? _editing?.image,
   );
+
+  /// Opens the gallery for the grouping's picture.
+  ///
+  /// Shrunk on the way in, and redrawn smaller if it is still too heavy,
+  /// because it is kept in the category's own document (see [EmbeddedPhoto]).
+  /// Problems show in the sheet rather than as a snack bar, which would land
+  /// behind it.
+  Future<void> _pickPhoto() async {
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: CategoryEditSheet.photoSize,
+        maxHeight: CategoryEditSheet.photoSize,
+        imageQuality: EmbeddedPhoto.quality,
+      );
+      if (picked == null) return;
+
+      final bytes = await EmbeddedPhoto.fitted(await picked.readAsBytes());
+      if (!mounted) return;
+      if (bytes == null) {
+        setState(
+          () => _failure =
+              'That photo is too large to save. Please choose a smaller one.',
+        );
+        return;
+      }
+      setState(() {
+        _picked = PickedImage(name: picked.name, bytes: bytes);
+        _photo = EmbeddedPhoto.encode(bytes);
+        _failure = null;
+      });
+    } on Exception catch (error) {
+      if (!mounted) return;
+      setState(() => _failure = 'Could not open the gallery: $error');
+    }
+  }
+
+  void _removePhoto() => setState(() {
+    _picked = null;
+    _photo = null;
+  });
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
@@ -115,6 +172,8 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final picked = _picked;
+
     return PopScope<Category?>(
       canPop: !_submitting,
       child: Padding(
@@ -149,6 +208,14 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.x5),
+                ImageUploadBox(
+                  images: [?picked],
+                  maxImages: 1,
+                  prompt: 'Upload category image',
+                  onAdd: _submitting ? null : _pickPhoto,
+                  onRemove: _submitting ? null : (_) => _removePhoto(),
+                ),
+                const SizedBox(height: AppSpacing.x4),
                 LabelledField(
                   label: 'Name',
                   child: TextField(

@@ -20,9 +20,10 @@ class Category {
   /// visual; `Swatches` turns it into one.
   final int swatchIndex;
 
-  /// The grouping's picture, as a path into the app's own assets, or null for
-  /// one that has none — which is what a category added in the app looks
-  /// like. Never a URL: nothing here loads a picture over a network.
+  /// The grouping's picture: a path into the app's own assets, or a photo
+  /// picked on the category sheet and kept in the category itself as a
+  /// `data:` URL (see `EmbeddedPhoto`). Null for one that has none. Never a
+  /// URL: nothing here loads a picture over a network.
   final String? image;
 
   /// Hidden categories stay in the catalogue but are not offered to

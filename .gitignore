@@ -45,3 +45,7 @@ app.*.map.json
 /android/app/release
 
 .vscode/templates
+
+# The customer app (lib/user/) is kept on this computer only: new files there
+# are never added. Files already on GitHub under it stay exactly as they are.
+lib/user/

@@ -36,9 +36,10 @@ class Product {
   /// The listing's picture, as a path into the app's own assets, or null for
   /// a listing that has none.
   ///
-  /// A bundled path rather than a URL: this app loads no pictures over a
-  /// network. A listing created in the app has no photo to point at yet, so
-  /// null is the ordinary case rather than an error — the tile falls back to
+  /// A bundled path, or a photo picked on the product form and kept in the
+  /// listing itself as a `data:` URL (see `EmbeddedPhoto`) — never something
+  /// loaded over a network. A listing saved without a photo has none, so null
+  /// is the ordinary case rather than an error — the tile falls back to
   /// [swatchIndex] and carries on.
   final String? image;
 

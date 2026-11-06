@@ -14,6 +14,7 @@ import '../widgets/common/async_content.dart';
 import '../widgets/common/busy_label.dart';
 import '../widgets/common/labelled_field.dart';
 import '../models/admin_profile.dart';
+import '../utils/embedded_photo.dart';
 import '../widgets/more/gender_selector.dart';
 
 /// Form for editing who is signed in.
@@ -33,8 +34,8 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 
   /// How large a picked photo is kept.
   ///
-  /// An avatar is never shown bigger than a coin, and the bytes live in
-  /// memory for as long as the app does — a 12-megapixel original would be
+  /// An avatar is never shown bigger than a coin, and the bytes are stored in
+  /// the admin's `users` document — a 12-megapixel original would be
   /// megabytes of it for no visible gain.
   static const double maxPhotoSize = 512;
 
@@ -202,20 +203,35 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   /// rather than something on disk — and so the picture survives the system
   /// clearing up the temporary file the picker handed over.
   ///
-  /// Nothing is stored until Save, like every other field on this form.
+  /// Nothing is stored until Save, like every other field on this form. A
+  /// picture still too heavy for the document after shrinking is redrawn
+  /// smaller, and refused only if even that will not do.
   Future<void> _pickPhoto() async {
     try {
       final picked = await _picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: EditProfileScreen.maxPhotoSize,
         maxHeight: EditProfileScreen.maxPhotoSize,
+        imageQuality: EmbeddedPhoto.quality,
       );
       // Null means the gallery was closed without choosing anything, which
       // is not a failure and should leave the draft exactly as it was.
       if (picked == null) return;
 
-      final bytes = await picked.readAsBytes();
+      final bytes = await EmbeddedPhoto.fitted(await picked.readAsBytes());
       if (!mounted) return;
+      if (bytes == null) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text(
+                'That photo is too large to save. Please choose a smaller one.',
+              ),
+            ),
+          );
+        return;
+      }
       setState(() => _photo = bytes);
     } on Exception catch (error) {
       if (!mounted) return;

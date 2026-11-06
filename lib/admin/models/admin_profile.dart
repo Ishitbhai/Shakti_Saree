@@ -62,8 +62,9 @@ class AdminProfile {
   /// a temporary the system is free to delete, while what the profile holds
   /// has to outlive the picker.
   ///
-  /// In memory only, like everything else in the store: a restart loses it,
-  /// exactly as a restart loses an edited product.
+  /// On Firestore it is saved with the rest of the profile, in the admin's
+  /// `users` document, and read back at sign-in; the in-memory stores keep it
+  /// only until a restart, like everything else they hold.
   final Uint8List? photo;
 
   /// Whether there is a picture to show instead of [initials].

@@ -2,20 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../styles/app_colors.dart';
 import '../../styles/app_spacing.dart';
+import '../../utils/embedded_photo.dart';
 
-/// A square picture from the app's own assets, with something to show when
-/// there is no picture.
+/// A square picture from the app's own assets, or a photo kept in the
+/// listing itself (see [EmbeddedPhoto]), with something to show when there is
+/// no picture.
 ///
-/// [Image.asset] only — this never reaches the network, and neither should
-/// anything that replaces it. Paths come from `AppAssets` rather than being
-/// typed at the call site.
+/// Neither kind reaches the network, and nothing that replaces this should.
+/// Asset paths come from `AppAssets` rather than being typed at the call site.
 ///
-/// Two things can go wrong with a bundled image, and both end up in the same
-/// place: there may be no path at all, which is what a listing created in the
-/// app looks like, or the file named may be missing from the bundle. Either
-/// way the frame fills with [tint] — the colour that stood in for the photo
-/// before there were any image files — rather than throwing a grey box or an
-/// exception into the middle of a list.
+/// Two things can go wrong with a picture, and both end up in the same place:
+/// there may be no path at all, which is what a listing saved without a photo
+/// looks like, or the file named may be missing from the bundle or the photo
+/// damaged. Either way the frame fills with [tint] — the colour that stood in
+/// for the photo before there were any image files — rather than throwing a
+/// grey box or an exception into the middle of a list.
 class LocalAssetImage extends StatelessWidget {
   const LocalAssetImage({
     super.key,
@@ -51,23 +52,41 @@ class LocalAssetImage extends StatelessWidget {
       borderRadius: borderRadius,
       child: SizedBox.square(
         dimension: size,
-        child: path == null
-            ? _Fallback(tint: _tint, size: size)
-            : Image.asset(
-                path,
-                fit: fit,
-                width: size,
-                height: size,
-                // Decorative: every frame sits beside the name it belongs to,
-                // and a screen reader reading both says it twice.
-                excludeFromSemantics: true,
-                // The picture is in the bundle, so there is no loading state
-                // worth animating through.
-                gaplessPlayback: true,
-                errorBuilder: (context, error, stackTrace) =>
-                    _Fallback(tint: _tint, size: size),
-              ),
+        child: path == null ? _Fallback(tint: _tint, size: size) : _picture(path),
       ),
+    );
+  }
+
+  Widget _picture(String path) {
+    Widget fallback(BuildContext context, Object error, StackTrace? stack) =>
+        _Fallback(tint: _tint, size: size);
+
+    if (EmbeddedPhoto.isEmbedded(path)) {
+      final bytes = EmbeddedPhoto.bytesOf(path);
+      if (bytes == null) return _Fallback(tint: _tint, size: size);
+      return Image.memory(
+        bytes,
+        fit: fit,
+        width: size,
+        height: size,
+        excludeFromSemantics: true,
+        gaplessPlayback: true,
+        errorBuilder: fallback,
+      );
+    }
+
+    return Image.asset(
+      path,
+      fit: fit,
+      width: size,
+      height: size,
+      // Decorative: every frame sits beside the name it belongs to, and a
+      // screen reader reading both says it twice.
+      excludeFromSemantics: true,
+      // The picture is already on the device, so there is no loading state
+      // worth animating through.
+      gaplessPlayback: true,
+      errorBuilder: fallback,
     );
   }
 }

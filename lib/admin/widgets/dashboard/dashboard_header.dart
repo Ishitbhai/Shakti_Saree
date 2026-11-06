@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../styles/app_colors.dart';
@@ -14,6 +16,7 @@ class DashboardHeader extends StatelessWidget {
     required this.height,
     this.adminName = 'Admin',
     this.storeName = 'Shakti Saree',
+    this.photo,
     this.onAvatarTap,
   });
 
@@ -23,6 +26,11 @@ class DashboardHeader extends StatelessWidget {
 
   final String adminName;
   final String storeName;
+
+  /// The admin's profile picture, shown in the avatar in place of the
+  /// initial, or null for none.
+  final Uint8List? photo;
+
   final VoidCallback? onAvatarTap;
 
   static const double _avatarSize = 38;
@@ -76,7 +84,7 @@ class DashboardHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.x3),
-              _Avatar(name: adminName, onTap: onAvatarTap),
+              _Avatar(name: adminName, photo: photo, onTap: onAvatarTap),
             ],
           ),
           const SizedBox(height: AppSpacing.x2),
@@ -127,9 +135,10 @@ class _Eyebrow extends StatelessWidget {
 }
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.name, this.onTap});
+  const _Avatar({required this.name, this.photo, this.onTap});
 
   final String name;
+  final Uint8List? photo;
   final VoidCallback? onTap;
 
   String get _initial {
@@ -139,6 +148,8 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final photo = this.photo;
+
     return Semantics(
       label: 'Admin profile',
       button: true,
@@ -152,17 +163,28 @@ class _Avatar extends StatelessWidget {
           child: SizedBox(
             height: DashboardHeader._avatarSize,
             width: DashboardHeader._avatarSize,
-            child: Center(
-              child: ExcludeSemantics(
-                child: Text(
-                  _initial,
-                  style: AppTypography.sectionTitle.copyWith(
-                    color: AppColors.textOnAccent,
-                    fontWeight: FontWeight.w700,
+            // The picture where the admin has set one, their initial where
+            // they have not — the same choice the More header makes.
+            child: photo == null
+                ? Center(
+                    child: ExcludeSemantics(
+                      child: Text(
+                        _initial,
+                        style: AppTypography.sectionTitle.copyWith(
+                          color: AppColors.textOnAccent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  )
+                : Image.memory(
+                    photo,
+                    fit: BoxFit.cover,
+                    width: DashboardHeader._avatarSize,
+                    height: DashboardHeader._avatarSize,
+                    excludeFromSemantics: true,
+                    gaplessPlayback: true,
                   ),
-                ),
-              ),
-            ),
           ),
         ),
       ),

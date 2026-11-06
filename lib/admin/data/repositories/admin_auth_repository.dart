@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../api_exception.dart';
 import '../firestore/firestore_schema.dart';
 import '../../models/admin_profile.dart';
+import '../../utils/embedded_photo.dart';
 
 /// Who is signed in to the admin panel.
 class AdminSession {
@@ -41,21 +42,16 @@ class AdminAuthRepository {
         password: password,
       );
     } on FirebaseAuthException catch (error) {
-      throw _signInFailure(error);
+      throw signInFailure(error);
     }
 
     final user = credential.user!;
     try {
-      final doc = await _db.collection(Fs.users).doc(user.uid).get();
-      final data = doc.data();
-      if (data == null ||
-          Fs.stringOf(data[Fs.userType]).toLowerCase() != Fs.adminType) {
+      final session = await sessionFor(user);
+      if (session == null) {
         throw const BadRequest(403, 'This account does not have admin access.');
       }
-      return AdminSession(
-        uid: user.uid,
-        profile: profileOf(data, fallbackEmail: user.email ?? email),
-      );
+      return session;
     } on FirebaseException catch (error) {
       await _auth.signOut();
       throw apiExceptionFor(error);
@@ -64,6 +60,26 @@ class AdminAuthRepository {
       await _auth.signOut();
       rethrow;
     }
+  }
+
+  /// The admin session of an account already signed in to Firebase, or null if
+  /// its `users/{uid}` document does not make it an admin.
+  ///
+  /// The one place an account's role is decided: at either login, and when the
+  /// app reopens on a session Firebase kept. Nothing the login screen shows has
+  /// a say in it. Throws a [FirebaseException] if the document cannot be read,
+  /// and leaves what to do about that to the caller.
+  Future<AdminSession?> sessionFor(User user) async {
+    final doc = await _db.collection(Fs.users).doc(user.uid).get();
+    final data = doc.data();
+    if (data == null ||
+        Fs.stringOf(data[Fs.userType]).toLowerCase() != Fs.adminType) {
+      return null;
+    }
+    return AdminSession(
+      uid: user.uid,
+      profile: profileOf(data, fallbackEmail: user.email ?? ''),
+    );
   }
 
   Future<void> signOut() => _auth.signOut();
@@ -83,10 +99,11 @@ class AdminAuthRepository {
       mobile: Fs.stringOf(data[Fs.phone]),
       dateOfBirth: Fs.dateOf(data[Fs.dateOfBirth]),
       gender: Gender.values.where((g) => g.name == gender).firstOrNull,
+      photo: EmbeddedPhoto.bytesOf(Fs.stringOf(data[Fs.image])),
     );
   }
 
-  static ApiException _signInFailure(FirebaseAuthException error) {
+  static ApiException signInFailure(FirebaseAuthException error) {
     // A project where Authentication was never switched on answers every
     // sign-in like this; Android reports it as an internal error, so the
     // message is checked as well as the code.

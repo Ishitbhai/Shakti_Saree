@@ -31,6 +31,12 @@ service cloud.firestore {
       return signedIn() && request.resource.data.user_id == request.auth.uid;
     }
 
+    // A customer's cart is named CART_<their uid>, so whose it is can be read
+    // straight off the cart_id, with no lookup.
+    function ownsCart(cartId) {
+      return signedIn() && cartId == 'CART_' + request.auth.uid;
+    }
+
     // The catalogue: anyone may browse it, only an admin may change it.
     match /products/{id} {
       allow read: if true;
@@ -77,22 +83,31 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Only under their own name, or one customer could take the id another's
+    // cart will need and lock them out of having one.
     match /carts/{id} {
       allow read, update, delete: if isAdmin() || ownsExisting();
-      allow create: if isAdmin() || ownsIncoming();
+      allow create: if isAdmin()
+        || (ownsIncoming() && id == 'CART_' + request.auth.uid);
     }
 
-    // Line items carry only the order_id / cart_id they belong to, and a
-    // rule cannot look a document up by a field, so ownership cannot be
-    // checked here. Signed-in users may read and add them; only an admin may
-    // change or remove an order's lines.
+    // An order's line carries only the order_id it belongs to, and a rule
+    // cannot look a document up by a field, so ownership cannot be checked
+    // here. Signed-in users may read and add them; only an admin may change or
+    // remove an order's lines.
     match /order_items/{id} {
       allow read, create: if signedIn();
       allow update, delete: if isAdmin();
     }
 
+    // A cart's lines are the customer's alone, and cannot be moved to another
+    // customer's cart.
     match /cart_items/{id} {
-      allow read, write: if signedIn();
+      allow read, delete: if isAdmin() || ownsCart(resource.data.cart_id);
+      allow create: if isAdmin() || ownsCart(request.resource.data.cart_id);
+      allow update: if isAdmin()
+        || (ownsCart(resource.data.cart_id)
+            && ownsCart(request.resource.data.cart_id));
     }
   }
 }

@@ -44,12 +44,23 @@ class Fs {
   /// What `user_type` holds for someone allowed into the admin panel.
   static const String adminType = 'admin';
 
+  /// What `user_type` holds for everyone else. The security rules insist on
+  /// it for an account that registers itself.
+  static const String customerType = 'customer';
+
+  /// What a `users` document's `status` holds for an account in good standing.
+  static const String activeStatus = 'active';
+
   // --------------------------------------------------------------- products
   static const String productId = 'product_id';
   static const String productName = 'product_name';
   static const String description = 'description';
   static const String price = 'price';
   static const String stockQuantity = 'stock_quantity';
+  /// The picture: a bundled asset path, or a photo kept in the document
+  /// itself as a `data:` URL (see `EmbeddedPhoto`). On products and
+  /// categories, and on an admin's own `users` document for their profile
+  /// photo.
   static const String image = 'image';
 
   /// Added by the admin panel: the placeholder tint, on products and
@@ -86,6 +97,10 @@ class Fs {
 
   // ------------------------------------------------------------ order items
   static const String quantity = 'quantity';
+
+  // ------------------------------------------------------------------ carts
+  static const String cartId = 'cart_id';
+  static const String cartItemId = 'cart_item_id';
 
   // --------------------------------------------------------------- payments
   static const String paymentMethod = 'payment_method';

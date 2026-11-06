@@ -24,12 +24,16 @@ class ImageUploadBox extends StatelessWidget {
     super.key,
     this.images = const [],
     this.maxImages = 5,
+    this.prompt = 'Upload product images',
     this.onAdd,
     this.onRemove,
   });
 
   final List<PickedImage> images;
   final int maxImages;
+
+  /// What the empty box invites, which is also what a screen reader announces.
+  final String prompt;
   final VoidCallback? onAdd;
   final ValueChanged<int>? onRemove;
 
@@ -59,7 +63,7 @@ class ImageUploadBox extends StatelessWidget {
 
   Widget _buildPrompt(BuildContext context) {
     return Semantics(
-      label: 'Upload product images',
+      label: prompt,
       button: true,
       child: Material(
         color: AppColors.transparent,
@@ -75,12 +79,13 @@ class ImageUploadBox extends StatelessWidget {
                 const _AddCircle(size: _button),
                 const SizedBox(height: AppSpacing.x2),
                 Text(
-                  'Upload product images',
+                  prompt,
                   textAlign: TextAlign.center,
                   style: AppTypography.bodySmall,
                 ),
                 Text(
-                  'PNG / JPG  ·  max $maxImages images',
+                  'PNG / JPG  ·  max $maxImages '
+                  '${maxImages == 1 ? 'image' : 'images'}',
                   textAlign: TextAlign.center,
                   style: AppTypography.caption.copyWith(
                     color: AppColors.textMuted,
