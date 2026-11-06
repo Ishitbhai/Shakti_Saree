@@ -210,4 +210,50 @@ class AppTheme {
       ),
     );
   }
+
+  /// The admin's colours laid over [base], the theme the app already runs
+  /// with. `AdminTheme` hands this to every admin screen.
+  ///
+  /// Colours only: [base]'s sizes, shapes and type stay as they are. Since the
+  /// 2026-10-06 merge the admin runs inside the customer side's [MaterialApp],
+  /// on Material's default theme, and [light] reaches none of it — so every
+  /// button that takes its colour from the theme came out the default purple.
+  ///
+  /// Anything that reads [ColorScheme.primary] follows the brand: filled
+  /// buttons fill with it, outlined and text buttons letter their label and
+  /// icon in it. A button that names its own colours — Cancel Order's red,
+  /// Logout's tint — keeps them, icon included, only while nothing here sets
+  /// an icon colour: the framework ranks a theme's icon colour above a
+  /// button's own foreground.
+  static ThemeData brandOver(ThemeData base) {
+    return base.copyWith(
+      colorScheme: base.colorScheme.copyWith(
+        primary: AppColors.primary,
+        onPrimary: AppColors.textOnPrimary,
+        // The Undo on a SnackBar: white, as [light] has it. Maroon would
+        // vanish into the dark bar, and the default is the old lavender.
+        inversePrimary: AppColors.textOnPrimary,
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: ButtonStyle(
+          side: _brandOutline,
+        ).merge(base.outlinedButtonTheme.style),
+      ),
+      // MaterialApp sets the caret and selection colour from the app theme,
+      // above every route; a nested Theme passes these down instead.
+      textSelectionTheme: base.textSelectionTheme.copyWith(
+        cursorColor: AppColors.primary,
+        selectionColor: AppColors.primary.withValues(alpha: 0.4),
+      ),
+    );
+  }
+
+  /// An outlined button's border in the brand colour. Disabled is left to the
+  /// button's own default, so it still reads as disabled.
+  static final WidgetStateProperty<BorderSide?> _brandOutline =
+      WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.disabled)
+            ? null
+            : const BorderSide(color: AppColors.primary),
+      );
 }

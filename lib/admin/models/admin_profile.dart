@@ -33,8 +33,8 @@ class AdminProfile {
     required this.email,
     required this.role,
     required this.mobile,
-    required this.dateOfBirth,
-    required this.gender,
+    this.dateOfBirth,
+    this.gender,
     this.photo,
   });
 
@@ -49,10 +49,11 @@ class AdminProfile {
   /// entered rather than normalised, because it is only ever displayed.
   final String mobile;
 
-  /// Date only — the form's picker has no time to give it.
-  final DateTime dateOfBirth;
+  /// Date only — the form's picker has no time to give it. Null until one is
+  /// chosen: an account made in the Firebase console has none.
+  final DateTime? dateOfBirth;
 
-  final Gender gender;
+  final Gender? gender;
 
   /// The profile picture, as encoded image bytes, or null for none.
   ///

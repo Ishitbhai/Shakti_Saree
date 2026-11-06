@@ -7,8 +7,11 @@ import '../styles/app_typography.dart';
 import '../widgets/common/tinted_pill.dart';
 import '../widgets/common/admin_page_header.dart';
 import '../widgets/common/async_content.dart';
+import '../utils/formatters.dart';
 import '../models/faq.dart';
+import '../models/support_ticket.dart';
 import '../data/providers/faqs_providers.dart';
+import '../data/providers/support_providers.dart';
 import '../widgets/support/faq_edit_sheet.dart';
 import '../widgets/support/faq_tile.dart';
 
@@ -41,6 +44,9 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
   /// The wording rather than the position, so an entry added or deleted above
   /// the open one does not slide the answer onto a different question.
   String? _open;
+
+  /// The customer query showing its message, by its id.
+  String? _openTicket;
 
   void _toggle(Faq faq) =>
       setState(() => _open = _open == faq.question ? null : faq.question);
@@ -132,9 +138,59 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
     return confirmed ?? false;
   }
 
+  /// A customer query shown in the FAQ card's shape: the subject where the
+  /// question goes, the message and who sent it where the answer goes.
+  Faq _asFaq(SupportTicket ticket) {
+    final sent = ticket.createdAt;
+    return Faq(
+      question: ticket.subject.isEmpty ? '(No subject)' : ticket.subject,
+      answer:
+          '${ticket.message}\n\n— ${ticket.customer}'
+          '${sent == null ? '' : ', ${Formatters.date(sent)}'}',
+    );
+  }
+
+  /// The queries customers have sent in, above the FAQs. Nothing at all
+  /// while there are none, so the screen reads as it always has.
+  List<Widget> _ticketSection(AsyncValue<List<SupportTicket>> tickets) {
+    return tickets.when(
+      loading: () => const [],
+      error: (error, _) => [
+        AsyncMessage(
+          text: AsyncContent.messageFor(error),
+          onRetry: () => ref.invalidate(supportTicketsProvider),
+        ),
+      ],
+      data: (loaded) => loaded.isEmpty
+          ? const []
+          : [
+              Text(
+                'Customer Queries (${Formatters.count(loaded.length)})',
+                style: AppTypography.sectionTitle,
+              ),
+              const SizedBox(height: AppSpacing.x3),
+              for (final ticket in loaded) ...[
+                FaqTile(
+                  // Read-only: the collection has nowhere to keep a reply.
+                  faq: _asFaq(ticket),
+                  isExpanded: ticket.id == _openTicket,
+                  onToggle: () => setState(
+                    () => _openTicket = _openTicket == ticket.id
+                        ? null
+                        : ticket.id,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.x3),
+              ],
+              const SizedBox(height: AppSpacing.x3),
+            ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final faqs = ref.watch(faqsProvider);
+    final tickets = _ticketSection(ref.watch(supportTicketsProvider));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -153,6 +209,21 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.x3),
+            if (tickets.isNotEmpty)
+              // Capped, so a long queue of queries cannot push the FAQs off
+              // the screen; it scrolls on its own beyond that.
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.4,
+                ),
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: HelpSupportScreen._screenPadding,
+                  ),
+                  children: tickets,
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: HelpSupportScreen._screenPadding,

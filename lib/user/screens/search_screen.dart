@@ -1,54 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
-import '../resources/imagestrings.dart';
+import '../../admin/utils/formatters.dart';
+import '../data/shop_providers.dart';
+import '../models/shop_models.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
+import '../widgets/shop_async_view.dart';
+import '../widgets/shop_image.dart';
 import 'MainNavigationScreen.dart';
 import 'product_detail_screen.dart';
 import 'product_list_screen.dart';
 
-class SearchScreen extends StatefulWidget {
+class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _SearchScreenState extends ConsumerState<SearchScreen> {
   late final TextEditingController _searchController;
 
-  // State variables for search query, validation error, and list data[cite: 23]
-  String currentSearchQuery = 'banarasi saree';
+  // State variables for search query and validation error[cite: 23]
+  String currentSearchQuery = '';
   String? searchError;
-  late List<String> recentSearches;
-  late final List<Map<String, String>> trendingSearches;
-  late final List<Map<String, dynamic>> suggestedProducts;
+
+  // How many of each show before anything has been typed
+  static const int trendingShown = 4;
+  static const int suggestionsShown = 3;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: currentSearchQuery);
-
-    recentSearches = [
-      'silk saree',
-      'red bandhej',
-      'cotton daily wear',
-      'bridal saree',
-    ];
-
-    trendingSearches = [
-      {'title': 'Banarasi silk saree', 'searches': '1.2k searches'},
-      {'title': 'Kanjivaram wedding saree', 'searches': '980 searches'},
-      {'title': 'Georgette party wear', 'searches': '740 searches'},
-      {'title': 'Cotton saree under 1500', 'searches': '610 searches'},
-    ];
-
-    suggestedProducts = [
-      {'title': 'Banarasi Silk Saree', 'price': '₹2,499', 'imagePath': image1},
-      {'title': 'Banarasi Zari Border', 'price': '₹3,150', 'imagePath': image2},
-      {'title': 'Banarasi Cotton Silk', 'price': '₹1,899', 'imagePath': image3},
-    ];
   }
 
   @override
@@ -94,32 +80,36 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     _searchController.text = term;
-    if (!recentSearches.contains(term)) {
-      setState(() {
-        recentSearches.insert(0, term);
-      });
-    }
+    setState(() {
+      currentSearchQuery = term;
+    });
+    ref.read(recentSearchesProvider.notifier).add(term);
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ProductListScreen()),
+      MaterialPageRoute(
+        builder: (context) => ProductListScreen(searchQuery: term),
+      ),
     ); //[cite: 23]
   }
 
-  void _removeRecentSearch(int index) {
-    setState(() {
-      recentSearches.removeAt(index);
-    });
-  }
-
-  void _clearAllRecentSearches() {
-    setState(() {
-      recentSearches.clear();
-    });
+  void _navigateToCategory(ShopCategory category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductListScreen(
+          categoryId: category.id,
+          categoryName: category.name,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final query = currentSearchQuery.trim();
+    final recentSearches = ref.watch(recentSearchesProvider);
+
     return Scaffold(
       backgroundColor: AppColors.white, //[cite: 23]
       body: SafeArea(
@@ -224,7 +214,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
               const SizedBox(height: 22), //[cite: 23]
               // ================= RECENT SEARCHES =================[cite: 23]
-              if (recentSearches.isNotEmpty) ...[
+              // Typing swaps this and the trending list for the results
+              if (query.isEmpty && recentSearches.isNotEmpty) ...[
                 Row(
                   mainAxisAlignment:
                       MainAxisAlignment.spaceBetween, //[cite: 23]
@@ -236,7 +227,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ), //[cite: 23]
                     ),
                     GestureDetector(
-                      onTap: _clearAllRecentSearches,
+                      onTap: ref.read(recentSearchesProvider.notifier).clear,
                       child: Text(
                         'Clear all', //[cite: 23]
                         style: AppTextStyles.caption.copyWith(
@@ -252,11 +243,13 @@ class _SearchScreenState extends State<SearchScreen> {
                   spacing: 8, //[cite: 23]
                   runSpacing: 10, //[cite: 23]
                   children: [
-                    for (int i = 0; i < recentSearches.length; i++)
+                    for (final term in recentSearches)
                       _buildRecentChip(
-                        label: recentSearches[i],
-                        onTap: () => _navigateToProductList(recentSearches[i]),
-                        onDelete: () => _removeRecentSearch(i),
+                        label: term,
+                        onTap: () => _navigateToProductList(term),
+                        onDelete: () => ref
+                            .read(recentSearchesProvider.notifier)
+                            .remove(term),
                       ),
                   ],
                 ),
@@ -264,29 +257,44 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
 
               // ================= TRENDING SEARCHES =================[cite: 23]
-              Text(
-                'Trending Searches', //[cite: 23]
-                style: AppTextStyles.sectionTitle.copyWith(
-                  fontSize: 14,
-                ), //[cite: 23]
-              ),
-
-              const SizedBox(height: 14), //[cite: 23]
-
-              for (final trending in trendingSearches) ...[
-                _buildTrendingItem(
-                  title: trending['title']!,
-                  searches: trending['searches']!,
-                  onTap: () => _navigateToProductList(trending['title']),
+              // The database keeps no search history to rank by, so these are
+              // the categories on offer, each with its real product count
+              if (query.isEmpty) ...[
+                Text(
+                  'Trending Searches', //[cite: 23]
+                  style: AppTextStyles.sectionTitle.copyWith(
+                    fontSize: 14,
+                  ), //[cite: 23]
                 ),
-                const SizedBox(height: 14), //[cite: 23]
-              ],
 
-              const SizedBox(height: 10),
+                const SizedBox(height: 14), //[cite: 23]
+
+                ShopAsyncView<List<ShopCategory>>(
+                  state: ref.watch(shopCategoriesProvider),
+                  placeholderHeight: 120,
+                  onRetry: () => ref.invalidate(allCategoriesProvider),
+                  builder: (context, categories) => Column(
+                    children: [
+                      for (final category in categories.take(
+                        trendingShown,
+                      )) ...[
+                        _buildTrendingItem(
+                          title: category.name,
+                          searches: Formatters.items(category.productCount),
+                          onTap: () => _navigateToCategory(category),
+                        ),
+                        const SizedBox(height: 14), //[cite: 23]
+                      ],
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+              ],
 
               // ================= SUGGESTED PRODUCTS =================[cite: 23]
               Text(
-                'Suggested Products', //[cite: 23]
+                query.isEmpty ? 'Suggested Products' : 'Results', //[cite: 23]
                 style: AppTextStyles.sectionTitle.copyWith(
                   fontSize: 14,
                 ), //[cite: 23]
@@ -294,24 +302,54 @@ class _SearchScreenState extends State<SearchScreen> {
 
               const SizedBox(height: 14), //[cite: 23]
 
-              for (int i = 0; i < suggestedProducts.length; i++) ...[
-                _buildSuggestedCard(
-                  title: suggestedProducts[i]['title'] as String, //[cite: 23]
-                  price: suggestedProducts[i]['price'] as String, //[cite: 23]
-                  imagePath: suggestedProducts[i]['imagePath'] as String,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const ProductDetailScreen(), //[cite: 23]
+              ShopAsyncView<List<ShopProduct>>(
+                state: ref.watch(shopProductsProvider),
+                placeholderHeight: 120,
+                onRetry: () => ref.invalidate(allProductsProvider),
+                builder: (context, products) {
+                  final shown = query.isEmpty
+                      ? products.take(suggestionsShown).toList()
+                      : products
+                            .where((product) => product.matches(query))
+                            .toList();
+
+                  if (shown.isEmpty) {
+                    return Text(
+                      query.isEmpty
+                          ? 'No products available yet'
+                          : 'No products found for "$query"',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.muted,
                       ),
                     );
-                  },
-                ),
-                if (i != suggestedProducts.length - 1)
-                  const SizedBox(height: 12), //[cite: 23]
-              ],
+                  }
+                  return Column(
+                    children: [
+                      for (int i = 0; i < shown.length; i++) ...[
+                        _buildSuggestedCard(
+                          title: shown[i].name, //[cite: 23]
+                          price: Formatters.rupeesFromPaise(
+                            shown[i].pricePaise,
+                          ), //[cite: 23]
+                          imagePath: shown[i].image,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProductDetailScreen(
+                                  productDocId: shown[i].docId,
+                                ), //[cite: 23]
+                              ),
+                            );
+                          },
+                        ),
+                        if (i != shown.length - 1)
+                          const SizedBox(height: 12), //[cite: 23]
+                      ],
+                    ],
+                  );
+                },
+              ),
 
               const SizedBox(height: 16), //[cite: 23]
             ],
@@ -420,7 +458,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildSuggestedCard({
     required String title,
     required String price,
-    required String imagePath,
+    required String? imagePath,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -442,10 +480,9 @@ class _SearchScreenState extends State<SearchScreen> {
               child: SizedBox(
                 width: 54, //[cite: 23]
                 height: 54, //[cite: 23]
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+                child: ShopImage(
+                  path: imagePath,
+                  fallback: Container(
                     color: AppColors.muted.withOpacity(0.2),
                     child: const Icon(
                       Icons.image_not_supported_outlined,

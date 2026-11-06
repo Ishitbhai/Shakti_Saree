@@ -1,46 +1,85 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../admin/data/providers/backend_providers.dart';
+import '../../admin/data/providers/session_providers.dart';
+import '../../admin/screens/admin_shell.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
+import 'MainNavigationScreen.dart';
 import 'login_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   // State variables for brand details and configuration[cite: 23]
   final String initials = 'SS';
   final String brandName = 'SHAKTI SAREE';
   final String brandTagline = 'Tradition Women With Elegance';
   final String footerText = 'MADE IN INDIA';
   final int splashDurationMs = 2500;
-  Timer? _timer;
+
+  // Firestore answers from its cache within about ten seconds when offline;
+  // past this, something is stuck and the app should not sit on the splash
+  static const Duration restoreTimeout = Duration(seconds: 15);
 
   @override
   void initState() {
     super.initState();
-    // Navigate automatically after splash duration[cite: 23]
-    _timer = Timer(Duration(milliseconds: splashDurationMs), () {
+    _openStartScreen();
+  }
+
+  // Navigate automatically after splash duration[cite: 23]
+  Future<void> _openStartScreen() async {
+    final (screen, _) = await (
+      _screenForSession(),
+      Future<void>.delayed(Duration(milliseconds: splashDurationMs)),
+    ).wait;
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
+
+  // Where this launch opens, for whoever Firebase kept signed in. Their users
+  // document decides, exactly as it does at login: an admin goes to the panel
+  // and anyone else to the shop. If the role cannot be checked the session is
+  // left alone for the next launch to try again, and they get the login screen
+  // rather than a guess that could open the wrong side.
+  Future<Widget> _screenForSession() async {
+    final auth = ref.read(firebaseAuthProvider);
+    final admins = ref.read(adminAuthRepositoryProvider);
+    if (auth == null || admins == null) return const LoginScreen();
+
+    try {
+      final user = await auth.authStateChanges().first.timeout(restoreTimeout);
+      if (user == null) return const LoginScreen();
+
+      final session = await admins.sessionFor(user).timeout(restoreTimeout);
+      if (session == null) return const MainNavigationScreen(initialIndex: 0);
+      if (!mounted) return const LoginScreen();
+
+      ref.read(adminSessionProvider.notifier).start(session);
+      return const AdminShell();
+    } on Exception {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                const LoginScreen(), // Replace with LoginScreen next[cite: 23]
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'We could not verify your account. Check your connection and '
+              'login again.',
+            ),
           ),
         );
       }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+      return const LoginScreen();
+    }
   }
 
   @override

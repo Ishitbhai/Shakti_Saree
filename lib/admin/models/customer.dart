@@ -1,20 +1,24 @@
 /// One person who has ordered, as the admin list shows them.
 ///
-/// Not a record the app stores: there is no customer table, only orders, so a
-/// customer is what the orders add up to. The phone number is the identity —
-/// two people can share a name, but an order carries the number it was placed
-/// against.
+/// [id] is the identity: the `user_id` of their account in Firestore, or the
+/// phone number for the in-memory sample, where a customer is only what the
+/// orders add up to. Two people can share a name, never an id.
 ///
 /// Money is held as paise; formatting happens at the widget.
 class Customer {
   const Customer({
+    String? id,
     required this.name,
     required this.phone,
     required this.orderCount,
     required this.spentPaise,
-  });
+  }) : id = id ?? phone;
 
+  final String id;
   final String name;
+
+  /// How to reach them, as shown under the name: a phone number where there
+  /// is one, otherwise the email address the account was opened with.
   final String phone;
 
   /// Every order they have placed, cancellations included — they still

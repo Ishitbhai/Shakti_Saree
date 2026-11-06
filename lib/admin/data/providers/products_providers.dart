@@ -1,21 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../firestore/firestore_schema.dart';
 import '../mock/product_store.dart';
 import '../../models/product.dart';
+import '../repositories/firestore_products_repository.dart';
 import '../repositories/products_repository.dart';
+import 'backend_providers.dart';
 
-/// The catalogue source. Overridden in tests and, later, swapped for the HTTP
-/// implementation in one place.
-final productsRepositoryProvider = Provider<ProductsRepository>(
-  (ref) => InMemoryProductsRepository(ref.watch(productStoreProvider.notifier)),
-);
+/// The catalogue source: Firestore when the app has one, the in-memory store
+/// otherwise. Overridden in tests.
+final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
+  final db = ref.watch(firestoreProvider);
+  if (db != null) return FirestoreProductsRepository(db);
+  return InMemoryProductsRepository(ref.watch(productStoreProvider.notifier));
+});
 
 /// The catalogue.
 ///
-/// Watches the stored list, so an edit saved from the form is on the list
-/// screen by the time the form closes.
+/// Watches the stored list — or, on Firestore, the products and the
+/// categories their names come from — so an edit saved from the form is on
+/// the list screen by the time the form closes.
 final productsProvider = FutureProvider<List<Product>>((ref) {
   ref.watch(productStoreProvider);
+  watchCollections(ref, const [Fs.products, Fs.categories]);
   return ref.watch(productsRepositoryProvider).fetchProducts();
 });
 

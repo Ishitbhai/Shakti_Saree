@@ -19,7 +19,7 @@ class GenderSelector extends StatelessWidget {
     required this.onSelect,
   });
 
-  final Gender selected;
+  final Gender? selected;
   final ValueChanged<Gender> onSelect;
 
   @override

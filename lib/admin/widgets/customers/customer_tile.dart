@@ -48,9 +48,9 @@ class CustomerTile extends StatelessWidget {
                   children: [
                     InitialsAvatar(
                       initials: customer.initials,
-                      // Seeded on the number, which is the identity — a
+                      // Seeded on the id, which is the identity — a
                       // renamed customer keeps their colour.
-                      seed: customer.phone,
+                      seed: customer.id,
                     ),
                     const SizedBox(width: AppSpacing.x3),
                     Expanded(

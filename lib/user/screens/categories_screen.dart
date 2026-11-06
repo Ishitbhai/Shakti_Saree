@@ -1,39 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
-import '../resources/imagestrings.dart';
+import '../../admin/utils/formatters.dart';
+import '../data/shop_providers.dart';
+import '../models/shop_models.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
+import '../widgets/shop_async_view.dart';
+import '../widgets/shop_image.dart';
 import 'product_list_screen.dart';
 
-class CategoriesScreen extends StatefulWidget {
+class CategoriesScreen extends ConsumerStatefulWidget {
   const CategoriesScreen({super.key});
 
   @override
-  State<CategoriesScreen> createState() => _CategoriesScreenState();
+  ConsumerState<CategoriesScreen> createState() => _CategoriesScreenState();
 }
 
-class _CategoriesScreenState extends State<CategoriesScreen> {
-  // State variables for header texts and category list[cite: 20]
+class _CategoriesScreenState extends ConsumerState<CategoriesScreen> {
+  // State variables for header texts[cite: 20]
   final String pageTitle = 'Categories';
   final String pageSubtitle = 'Fabric & occasion wise';
-  late final List<Map<String, dynamic>> categories;
-
-  @override
-  void initState() {
-    super.initState();
-    // 8 Categories initialized as state data[cite: 20]
-    categories = [
-      {'title': 'Silk Saree', 'items': '248 items', 'image': image1},
-      {'title': 'Banarasi', 'items': '182 items', 'image': image2},
-      {'title': 'Cotton Saree', 'items': '320 items', 'image': image3},
-      {'title': 'Georgette', 'items': '156 items', 'image': image4},
-      {'title': 'Kanjivaram', 'items': '94 items', 'image': image5},
-      {'title': 'Designer', 'items': '210 items', 'image': image6},
-      {'title': 'Bridal Wear', 'items': '68 items', 'image': image7},
-      {'title': 'Daily Wear', 'items': '412 items', 'image': image8},
-    ];
-  }
 
   void _handleBackNavigation() {
     final tabController = DefaultTabController.maybeOf(context);
@@ -44,10 +32,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     }
   }
 
-  void _navigateToProductList() {
+  void _navigateToProductList(ShopCategory category) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const ProductListScreen()),
+      MaterialPageRoute(
+        builder: (context) => ProductListScreen(
+          categoryId: category.id,
+          categoryName: category.name,
+        ),
+      ),
     );
   }
 
@@ -99,25 +92,43 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
             // ================= CATEGORIES GRID =================[cite: 20]
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                itemCount: categories.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.95,
-                ),
-                itemBuilder: (context, index) {
-                  final cat = categories[index];
-                  return _buildCategoryCard(
-                    title: cat['title'] as String,
-                    items: cat['items'] as String,
-                    imagePath: cat['image'] as String,
-                    onTap: _navigateToProductList,
+              child: ShopAsyncView<List<ShopCategory>>(
+                state: ref.watch(shopCategoriesProvider),
+                onRetry: () => ref.invalidate(allCategoriesProvider),
+                builder: (context, categories) {
+                  if (categories.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No categories available',
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    );
+                  }
+                  return GridView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    itemCount: categories.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.95,
+                        ),
+                    itemBuilder: (context, index) {
+                      final cat = categories[index];
+                      return _buildCategoryCard(
+                        title: cat.name,
+                        items: Formatters.items(cat.productCount),
+                        imagePath: cat.image,
+                        onTap: () => _navigateToProductList(cat),
+                      );
+                    },
                   );
                 },
               ),
@@ -132,7 +143,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Widget _buildCategoryCard({
     required String title,
     required String items,
-    required String imagePath,
+    required String? imagePath,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -155,10 +166,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 flex: 6,
                 child: SizedBox(
                   width: double.infinity,
-                  child: Image.asset(
-                    imagePath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                  child: ShopImage(
+                    path: imagePath,
+                    fallback: Container(
                       color: AppColors.muted.withOpacity(0.2),
                       child: const Icon(
                         Icons.image_outlined,
