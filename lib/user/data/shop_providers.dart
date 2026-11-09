@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../admin/data/firestore/firestore_schema.dart';
 import '../../admin/data/providers/backend_providers.dart';
 import '../models/shop_models.dart';
 import 'customer_auth_repository.dart';
@@ -26,12 +27,6 @@ final shopRepositoryProvider = Provider<ShopRepository>((ref) {
 });
 
 /// Who is signed in, as Firebase Authentication reports it.
-///
-/// Auto-disposed because a stream nobody is listening to is only paused, and
-/// a paused stream saves its events up. Kept alive, it would replay every
-/// sign-in and sign-out from while the shop was closed on the next visit, and
-/// the shop would take an old "signed out" for a new one. Disposed, each visit
-/// starts from who Firebase says is signed in now.
 final authUserProvider = StreamProvider.autoDispose<User?>((ref) {
   final auth = ref.watch(firebaseAuthProvider);
   return auth == null ? Stream.value(null) : auth.authStateChanges();
@@ -47,12 +42,30 @@ final customerNameProvider = StreamProvider.autoDispose<String>((ref) {
   return ref.watch(shopRepositoryProvider).watchCustomerName(uid);
 });
 
-// ---------------------------------------------------------------- catalogue
-// One listener per collection, shared by every screen, which filter what it
-// delivers rather than each running a query of their own.
+// ---------------------------------------------------------------- customer profile & counts
+/// Real-time stream of the current customer's Firestore profile document.
+final customerProfileProvider = StreamProvider.autoDispose((ref) {
+  final uid = ref.watch(customerUidProvider);
+  final db = ref.watch(firestoreProvider);
+  if (uid == null || db == null) return Stream.value(null);
 
-/// Every product, including those a shopper is not offered: a cart line still
-/// has to find its product after the category has been hidden.
+  return db.collection(Fs.users).doc(uid).snapshots().map((doc) => doc.data());
+});
+
+/// Count of orders placed by the current customer.
+final customerOrderCountProvider = StreamProvider.autoDispose<int>((ref) {
+  final uid = ref.watch(customerUidProvider);
+  final db = ref.watch(firestoreProvider);
+  if (uid == null || db == null) return Stream.value(0);
+
+  return db
+      .collection(Fs.orders)
+      .where(Fs.userId, isEqualTo: uid)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.length);
+});
+
+// ---------------------------------------------------------------- catalogue
 final allProductsProvider = StreamProvider<List<ShopProduct>>(
   (ref) => ref.watch(shopRepositoryProvider).watchProducts(),
 );
@@ -61,8 +74,6 @@ final allCategoriesProvider = StreamProvider<List<ShopCategory>>(
   (ref) => ref.watch(shopRepositoryProvider).watchCategories(),
 );
 
-/// The products on offer: all but those filed under a hidden category, which
-/// the admin panel promises shoppers will not see.
 final shopProductsProvider = Provider<AsyncValue<List<ShopProduct>>>(
   (ref) => _both(
     ref.watch(allProductsProvider),
@@ -80,7 +91,6 @@ final shopProductsProvider = Provider<AsyncValue<List<ShopProduct>>>(
   ),
 );
 
-/// The categories on offer, each with its product count.
 final shopCategoriesProvider = Provider<AsyncValue<List<ShopCategory>>>(
   (ref) => _both(
     ref.watch(allCategoriesProvider),
@@ -98,8 +108,7 @@ final shopCategoriesProvider = Provider<AsyncValue<List<ShopCategory>>>(
   ),
 );
 
-/// category_id → category_name, hidden categories included.
-final categoryNamesByIdProvider = Provider<Map<String, String>>(
+final categoryNamesByIdProvider = Provider(
   (ref) => {
     for (final category
         in ref.watch(allCategoriesProvider).value ?? const <ShopCategory>[])
@@ -107,20 +116,13 @@ final categoryNamesByIdProvider = Provider<Map<String, String>>(
   },
 );
 
-/// One product, opened by its document id.
 final productProvider = StreamProvider.autoDispose.family<ShopProduct?, String>(
   (ref, docId) => ref.watch(shopRepositoryProvider).watchProduct(docId),
 );
 
 // --------------------------------------------------------------------- cart
-// All of these are auto-disposed, so a listener on one customer's cart never
-// outlives the screens showing it, and the next person to sign in on the same
-// device starts from nothing.
-
 final _cartIdProvider = StreamProvider.autoDispose<String?>((ref) async* {
   final repository = ref.watch(shopRepositoryProvider);
-  // Waited for rather than read, so the moment before Firebase has said who
-  // is signed in shows as loading, not as an empty cart.
   final user = await ref.watch(authUserProvider.future);
   if (user == null) {
     yield null;
@@ -141,7 +143,6 @@ final cartLinesProvider = StreamProvider.autoDispose<List<CartLine>>((
   yield* repository.watchCartLines(cartId);
 });
 
-/// The signed-in customer's cart, each line with the product it points at.
 final cartProvider = Provider.autoDispose<AsyncValue<List<CartEntry>>>(
   (ref) => _both(ref.watch(cartLinesProvider), ref.watch(allProductsProvider), (
     lines,
@@ -156,11 +157,6 @@ final cartProvider = Provider.autoDispose<AsyncValue<List<CartEntry>>>(
 );
 
 // ------------------------------------------------------------------- search
-/// What has been searched for this session, newest first.
-///
-/// Held in memory only: the database has nowhere to keep it, and the app has
-/// no local storage. The login screen resets it, so one person's searches are
-/// not shown to the next.
 class RecentSearches extends Notifier<List<String>> {
   @override
   List<String> build() => const [];
@@ -183,7 +179,6 @@ final recentSearchesProvider = NotifierProvider<RecentSearches, List<String>>(
   RecentSearches.new,
 );
 
-/// Two reads as one: failed if either failed, loaded once both have.
 AsyncValue<R> _both<A, B, R>(
   AsyncValue<A> first,
   AsyncValue<B> second,
@@ -202,3 +197,23 @@ AsyncValue<R> _both<A, B, R>(
   }
   return AsyncLoading<R>();
 }
+
+/// Real-time stream of all saved addresses under users/{uid}/addresses
+final customerAddressesProvider = StreamProvider.autoDispose((ref) {
+  final uid = ref.watch(customerUidProvider);
+  final db = ref.watch(firestoreProvider);
+  if (uid == null || db == null) return Stream.value([]);
+
+  return db
+      .collection(Fs.users)
+      .doc(uid)
+      .collection('addresses')
+      .snapshots()
+      .map((snapshot) => [
+            for (final doc in snapshot.docs)
+              {
+                'id': doc.id,
+                ...doc.data(),
+              }
+          ]);
+});

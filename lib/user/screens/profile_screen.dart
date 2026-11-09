@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../admin/data/firestore/firestore_schema.dart';
 import '../data/shop_providers.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
@@ -10,24 +11,36 @@ import 'help_and_support_screen.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
-  @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  // Profile state variables
-  String initials = 'IV';
-  String username = 'iv';
-  String email = 'ishit@gmail.com';
-  String phone = '+91 12345 67890';
-  int ordersCount = 12;
-  int wishlistCount = 8;
+  String _getInitials(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'IV';
+    final parts = trimmed.split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(customerProfileProvider);
+    final orderCountAsync = ref.watch(customerOrderCountProvider);
+
+    final profile = profileAsync.value ?? <String, dynamic>{};
+    final String name = Fs.stringOf(profile[Fs.name]).isEmpty
+        ? 'Customer'
+        : Fs.stringOf(profile[Fs.name]);
+    final String email = Fs.stringOf(profile[Fs.email]).isEmpty
+        ? 'No email registered'
+        : Fs.stringOf(profile[Fs.email]);
+    final String phone = Fs.stringOf(profile[Fs.phone]).isEmpty
+        ? 'No mobile registered'
+        : Fs.stringOf(profile[Fs.phone]);
+    final String initials = _getInitials(name);
+    final int ordersCount = orderCountAsync.value ?? 0;
+    final int wishlistCount = 0;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SingleChildScrollView(
@@ -43,17 +56,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
                   child: Column(
                     children: [
-                      // Title
                       Text(
                         'My Profile',
                         style: AppTextStyles.pageTitle.copyWith(
                           color: AppColors.white,
                         ),
                       ),
-
                       const SizedBox(height: 20),
 
-                      // Avatar circle with "IV"
+                      // Avatar circle with Initials
                       Container(
                         width: 90,
                         height: 90,
@@ -77,7 +88,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                       // Username
                       Text(
-                        username,
+                        name,
                         style: AppTextStyles.pageTitle.copyWith(
                           color: AppColors.white,
                           fontSize: 20,
@@ -103,7 +114,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
             const SizedBox(height: 24),
 
-            // ================= STATS ROW (NO BOXES) =================
+            // ================= STATS ROW =================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
@@ -131,7 +142,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
 
-                  // Center vertical divider
                   Container(
                     width: 1,
                     height: 38,
@@ -188,7 +198,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const EditProfileScreen(),
+                            builder: (context) =>
+                                EditProfileScreen(initialData: profile),
                           ),
                         );
                       },
@@ -238,27 +249,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
             const SizedBox(height: 36),
 
-            // ================= FILLED LOGOUT BUTTON =================
+            // ================= LOGOUT BUTTON =================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Not awaited, as at the admin logout: the session ends
-                    // here and now, and the screen moves on in the same breath
-                    ref
-                        .read(customerAuthRepositoryProvider)
-                        ?.signOut()
-                        .ignore();
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                      (route) => false,
-                    );
+                  onPressed: () async {
+                    final authRepo = ref.read(customerAuthRepositoryProvider);
+                    if (authRepo != null) {
+                      await authRepo.signOut();
+                    }
+                    if (context.mounted) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
@@ -297,7 +308,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  // ================= HELPER WIDGET =================
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
