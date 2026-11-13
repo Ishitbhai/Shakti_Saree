@@ -1,40 +1,58 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../../admin/data/firestore/firestore_schema.dart';
+import '../../admin/data/providers/backend_providers.dart';
+import '../data/shop_providers.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
-class AddEditAddressScreen extends StatefulWidget {
-  const AddEditAddressScreen({super.key});
+class AddEditAddressScreen extends ConsumerStatefulWidget {
+  final String? addressId;
+  final Map<String, dynamic>? initialAddressData;
+
+  const AddEditAddressScreen({
+    super.key,
+    this.addressId,
+    this.initialAddressData,
+  });
 
   @override
-  State<AddEditAddressScreen> createState() => _AddEditAddressScreenState();
+  ConsumerState<AddEditAddressScreen> createState() => _AddEditAddressScreenState();
 }
 
-class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
-  // 1. Text Controllers
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Ishit Vadhavana',
-  );
-  final TextEditingController _addressController = TextEditingController(
-    text: 'Samras Hostel, Rajkot',
-  );
-  final TextEditingController _phoneController = TextEditingController(
-    text: '+91 12345 67890',
-  );
-  final TextEditingController _pincodeController = TextEditingController(
-    text: '360002',
-  );
-  final TextEditingController _saveAsController = TextEditingController(
-    text: 'Home',
-  );
+class _AddEditAddressScreenState extends ConsumerState<AddEditAddressScreen> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _addressController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _pincodeController;
+  late final TextEditingController _saveAsController;
 
-  // 2. Error Strings
   String errName = '';
   String errAddress = '';
   String errPhone = '';
   String errPincode = '';
   String errSaveAs = '';
+
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final d = widget.initialAddressData ?? {};
+
+    // Populates fields ONLY if editing existing address data, otherwise completely empty
+    _nameController = TextEditingController(text: Fs.stringOf(d['recipient_name']));
+    _addressController = TextEditingController(text: Fs.stringOf(d['street']));
+    _phoneController = TextEditingController(text: Fs.stringOf(d['phone']));
+    _pincodeController = TextEditingController(text: Fs.stringOf(d['pincode']));
+    _saveAsController = TextEditingController(
+      text: widget.initialAddressData != null ? Fs.stringOf(d['label']) : 'Home',
+    );
+  }
 
   @override
   void dispose() {
@@ -46,77 +64,150 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     super.dispose();
   }
 
-  // Submit and Validation
-  void validateAndSubmit() {
-    setState(() {
-      bool isValid = true;
+  Future<void> validateAndSubmit() async {
+    bool isValid = true;
 
-      // Name Validation
-      if (_nameController.text.trim().isEmpty) {
-        errName = 'Your name is required';
-        isValid = false;
+    final nameTrimmed = _nameController.text.trim();
+    final nameRegex = RegExp(r'^[a-zA-Z\s]+$');
+    if (nameTrimmed.isEmpty) {
+      errName = 'Your name is required';
+      isValid = false;
+    } else if (!nameRegex.hasMatch(nameTrimmed)) {
+      errName = 'Name must contain only letters and spaces';
+      isValid = false;
+    } else {
+      errName = '';
+    }
+
+    final addressTrimmed = _addressController.text.trim();
+    if (addressTrimmed.isEmpty) {
+      errAddress = 'Address is required';
+      isValid = false;
+    } else if (addressTrimmed.length < 8) {
+      errAddress = 'Please enter a complete street address';
+      isValid = false;
+    } else {
+      errAddress = '';
+    }
+
+    final phoneTrimmed = _phoneController.text.trim();
+    final phoneRegex = RegExp(r'^[6-9]\d{9}$');
+    if (phoneTrimmed.isEmpty) {
+      errPhone = 'Mobile number is required';
+      isValid = false;
+    } else if (!phoneRegex.hasMatch(phoneTrimmed)) {
+      errPhone = 'Enter a valid 10-digit mobile number';
+      isValid = false;
+    } else {
+      errPhone = '';
+    }
+
+    final pinTrimmed = _pincodeController.text.trim();
+    final pinRegex = RegExp(r'^[1-9][0-9]{5}$');
+    if (pinTrimmed.isEmpty) {
+      errPincode = 'Pincode is required';
+      isValid = false;
+    } else if (!pinRegex.hasMatch(pinTrimmed)) {
+      errPincode = 'Enter a valid 6-digit Indian pincode';
+      isValid = false;
+    } else {
+      errPincode = '';
+    }
+
+    final saveAsTrimmed = _saveAsController.text.trim();
+    final saveAsRegex = RegExp(r'^[a-zA-Z\s]+$');
+    if (saveAsTrimmed.isEmpty) {
+      errSaveAs = 'Label is required (e.g. Home, Office)';
+      isValid = false;
+    } else if (!saveAsRegex.hasMatch(saveAsTrimmed)) {
+      errSaveAs = 'Label must contain only letters';
+      isValid = false;
+    } else {
+      errSaveAs = '';
+    }
+
+    setState(() {});
+    if (!isValid) return;
+
+    final uid = ref.read(customerUidProvider);
+    final db = ref.read(firestoreProvider);
+
+    if (uid == null || db == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No active user session.')),
+      );
+      return;
+    }
+
+    setState(() => _isSaving = true);
+
+    try {
+      final formattedString = '$addressTrimmed, Pincode: $pinTrimmed';
+      final addressData = {
+        'recipient_name': nameTrimmed,
+        'phone': phoneTrimmed,
+        'street': addressTrimmed,
+        'pincode': pinTrimmed,
+        'label': saveAsTrimmed,
+        'updated_at': FieldValue.serverTimestamp(),
+      };
+
+      final addressesCollection = db
+          .collection(Fs.users)
+          .doc(uid)
+          .collection('addresses');
+
+      if (widget.addressId != null) {
+        await addressesCollection.doc(widget.addressId).set(addressData, SetOptions(merge: true));
       } else {
-        errName = '';
+        await addressesCollection.add({
+          ...addressData,
+          'created_at': FieldValue.serverTimestamp(),
+        });
       }
 
-      // Address Validation
-      if (_addressController.text.trim().isEmpty) {
-        errAddress = 'Address is required';
-        isValid = false;
-      } else if (_addressController.text.trim().length < 8) {
-        errAddress = 'Please enter a complete street address';
-        isValid = false;
-      } else {
-        errAddress = '';
-      }
+      await db.collection(Fs.users).doc(uid).set({
+        Fs.address: formattedString,
+        'street': addressTrimmed,
+        'pincode': pinTrimmed,
+        'address_label': saveAsTrimmed,
+        'delivery_address': addressData,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
-      // Phone Validation
-      String phone = _phoneController.text.replaceAll(RegExp(r'[^0-9]'), '');
-      if (phone.isEmpty) {
-        errPhone = 'Mobile number is required';
-        isValid = false;
-      } else if (phone.length < 10) {
-        errPhone = 'Enter a valid 10-digit mobile number';
-        isValid = false;
-      } else {
-        errPhone = '';
-      }
-
-      // Pincode Validation
-      String pin = _pincodeController.text.trim();
-      final pinRegex = RegExp(r'^[1-9][0-9]{5}$');
-      if (pin.isEmpty) {
-        errPincode = 'Pincode is required';
-        isValid = false;
-      } else if (!pinRegex.hasMatch(pin)) {
-        errPincode = 'Enter a valid 6-digit Indian pincode';
-        isValid = false;
-      } else {
-        errPincode = '';
-      }
-
-      // Save as Validation
-      if (_saveAsController.text.trim().isEmpty) {
-        errSaveAs = 'Label is required (e.g. Home, Office)';
-        isValid = false;
-      } else {
-        errSaveAs = '';
-      }
-
-      if (isValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.addressId != null
+                  ? 'Address updated successfully!'
+                  : 'New address added successfully!',
+            ),
+            backgroundColor: AppColors.primary,
+          ),
+        );
         Navigator.pop(context);
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save address: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.addressId != null;
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER =================
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
               child: SizedBox(
@@ -125,7 +216,7 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                   alignment: Alignment.center,
                   children: [
                     Text(
-                      'Add/Edit Address',
+                      isEditing ? 'Edit Address' : 'Add New Address',
                       style: AppTextStyles.pageTitle.copyWith(fontSize: 18),
                     ),
                     const Align(
@@ -136,105 +227,97 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                 ),
               ),
             ),
-
-            // ================= FORM BODY =================
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Your Name
                     _buildLabel('Your Name'),
                     const SizedBox(height: 6),
                     _buildInputField(
                       controller: _nameController,
                       icon: Icons.person_outline,
+                      keyboardType: TextInputType.name,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                      ],
                       hasError: errName.isNotEmpty,
                     ),
                     if (errName.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        errName,
-                        style: const TextStyle(color: Colors.red, fontSize: 11),
-                      ),
+                      Text(errName, style: const TextStyle(color: Colors.red, fontSize: 11)),
                     ],
 
                     const SizedBox(height: 16),
 
-                    // Address
-                    _buildLabel('Address'),
+                    _buildLabel('Street Address / Building'),
                     const SizedBox(height: 6),
                     _buildInputField(
                       controller: _addressController,
                       icon: Icons.home_outlined,
+                      keyboardType: TextInputType.streetAddress,
                       hasError: errAddress.isNotEmpty,
                     ),
                     if (errAddress.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        errAddress,
-                        style: const TextStyle(color: Colors.red, fontSize: 11),
-                      ),
+                      Text(errAddress, style: const TextStyle(color: Colors.red, fontSize: 11)),
                     ],
 
                     const SizedBox(height: 16),
 
-                    // Mobile Number
                     _buildLabel('Mobile Number'),
                     const SizedBox(height: 6),
                     _buildInputField(
                       controller: _phoneController,
                       icon: Icons.phone_outlined,
                       keyboardType: TextInputType.phone,
+                      maxLength: 10,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       hasError: errPhone.isNotEmpty,
                     ),
                     if (errPhone.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        errPhone,
-                        style: const TextStyle(color: Colors.red, fontSize: 11),
-                      ),
+                      Text(errPhone, style: const TextStyle(color: Colors.red, fontSize: 11)),
                     ],
 
                     const SizedBox(height: 16),
 
-                    // Pincode
                     _buildLabel('Pincode'),
                     const SizedBox(height: 6),
                     _buildInputField(
                       controller: _pincodeController,
                       icon: Icons.location_on_outlined,
                       keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
                       hasError: errPincode.isNotEmpty,
                     ),
                     if (errPincode.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        errPincode,
-                        style: const TextStyle(color: Colors.red, fontSize: 11),
-                      ),
+                      Text(errPincode, style: const TextStyle(color: Colors.red, fontSize: 11)),
                     ],
 
                     const SizedBox(height: 16),
 
-                    // Save as
-                    _buildLabel('Save as'),
+                    _buildLabel('Save as (e.g. Home, Office)'),
                     const SizedBox(height: 6),
                     _buildInputField(
                       controller: _saveAsController,
                       icon: Icons.save_outlined,
+                      keyboardType: TextInputType.text,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                      ],
                       hasError: errSaveAs.isNotEmpty,
                     ),
                     if (errSaveAs.isNotEmpty) ...[
                       const SizedBox(height: 4),
-                      Text(
-                        errSaveAs,
-                        style: const TextStyle(color: Colors.red, fontSize: 11),
-                      ),
+                      Text(errSaveAs, style: const TextStyle(color: Colors.red, fontSize: 11)),
                     ],
 
                     const SizedBox(height: 36),
@@ -242,15 +325,13 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                 ),
               ),
             ),
-
-            // ================= PINNED SAVE CHANGES BUTTON =================
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: validateAndSubmit,
+                  onPressed: _isSaving ? null : validateAndSubmit,
                   style: ElevatedButton.styleFrom(
                     elevation: 0,
                     backgroundColor: AppColors.primary,
@@ -259,14 +340,23 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: Text(
-                    'Save Changes',
-                    style: AppTextStyles.button.copyWith(
-                      color: AppColors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            color: AppColors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          isEditing ? 'Update Address' : 'Save Address',
+                          style: AppTextStyles.button.copyWith(
+                            color: AppColors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -276,7 +366,6 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     );
   }
 
-  // ================= HELPER WIDGETS =================
   Widget _buildLabel(String label) {
     return Text(
       label,
@@ -291,6 +380,8 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
     required TextEditingController controller,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    int? maxLength,
     bool hasError = false,
   }) {
     return Container(
@@ -306,6 +397,9 @@ class _AddEditAddressScreenState extends State<AddEditAddressScreen> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        maxLength: maxLength,
+        buildCounter: (context, {required currentLength, required isFocused, maxLength}) => null,
         style: AppTextStyles.body.copyWith(
           fontSize: 13,
           fontWeight: FontWeight.w500,

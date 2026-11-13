@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'MainNavigationScreen.dart';
 
 import '../../admin/data/firestore/firestore_schema.dart';
 import '../data/shop_providers.dart';
+import '../models/shop_models.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'edit_profile_screen.dart';
 import 'help_and_support_screen.dart';
 import 'login_screen.dart';
-import 'my_orders_screen.dart';
+// import 'my_orders_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -26,6 +28,8 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(customerProfileProvider);
     final orderCountAsync = ref.watch(customerOrderCountProvider);
+    // Watch cart to obtain the list of distinct product items
+    final cartAsync = ref.watch(cartProvider);
 
     final profile = profileAsync.value ?? <String, dynamic>{};
     final String name = Fs.stringOf(profile[Fs.name]).isEmpty
@@ -39,7 +43,10 @@ class ProfileScreen extends ConsumerWidget {
         : Fs.stringOf(profile[Fs.phone]);
     final String initials = _getInitials(name);
     final int ordersCount = orderCountAsync.value ?? 0;
-    final int wishlistCount = 0;
+
+    // Distinct product count in cart (e.g. 2 items with quantities 2 & 4 results in 2)
+    final cartList = cartAsync.value ?? <CartEntry>[];
+    final int distinctProductsCount = cartList.length;
 
     return Scaffold(
       backgroundColor: AppColors.white,
@@ -152,7 +159,7 @@ class ProfileScreen extends ConsumerWidget {
                     child: Column(
                       children: [
                         Text(
-                          wishlistCount.toString().padLeft(2, '0'),
+                          distinctProductsCount.toString().padLeft(2, '0'),
                           style: GoogleFonts.lora(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -215,12 +222,23 @@ class ProfileScreen extends ConsumerWidget {
                       title: 'My Orders',
                       subtitle: 'Track orders',
                       onTap: () {
-                        Navigator.push(
+                        final tabController = DefaultTabController.maybeOf(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => const MyOrdersScreen(),
-                          ),
                         );
+                        if (tabController != null) {
+                          // Switch directly to the Orders tab (Tab index 3)
+                          tabController.animateTo(3);
+                        } else {
+                          // Fallback if opened outside of MainNavigationScreen
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const MainNavigationScreen(initialIndex: 3),
+                            ),
+                            (route) => false,
+                          );
+                        }
                       },
                     ),
                     Divider(
