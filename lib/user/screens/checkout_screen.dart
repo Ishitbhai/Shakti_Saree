@@ -142,7 +142,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         'created_at': FieldValue.serverTimestamp(),
       });
 
-      // 2. Add each purchased item to the 'order_items' collection
+      // 2. Add each purchased item to 'order_items' & decrement stock in 'products'
       for (int i = 0; i < cartItems.length; i++) {
         final item = cartItems[i];
         final orderItemDocRef = db.collection('order_items').doc();
@@ -160,12 +160,26 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           'quantity': item.line.quantity,
           'created_at': FieldValue.serverTimestamp(),
         });
+
+        // Find the matching product document by 'product_id' field and decrement stock_quantity
+        final prodQuery = await db
+            .collection('products')
+            .where('product_id', isEqualTo: item.line.productId)
+            .limit(1)
+            .get();
+
+        if (prodQuery.docs.isNotEmpty) {
+          final prodDocRef = prodQuery.docs.first.reference;
+          batch.update(prodDocRef, {
+            'stock_quantity': FieldValue.increment(-item.line.quantity),
+          });
+        }
       }
 
-      // Commit the order and all order_items atomically
+      // 3. Commit order, order_items, and stock decrements atomically
       await batch.commit();
 
-      // 3. Clear customer's active cart lines
+      // 4. Clear customer's active cart lines
       final rawLines = [for (final item in cartItems) item.line];
       await repository.clearCart(rawLines);
 
