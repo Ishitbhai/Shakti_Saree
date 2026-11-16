@@ -4,12 +4,12 @@ import '../../styles/app_colors.dart';
 import '../../styles/app_spacing.dart';
 import '../../utils/embedded_photo.dart';
 
-/// A square picture from the app's own assets, or a photo kept in the
-/// listing itself (see [EmbeddedPhoto]), with something to show when there is
-/// no picture.
+/// A square picture from the app's own assets — what products and categories
+/// store, a path the admin chose from `assets/images/` — or a photo kept in
+/// the record itself (see [EmbeddedPhoto]), which an older listing may hold,
+/// with something to show when there is no picture.
 ///
 /// Neither kind reaches the network, and nothing that replaces this should.
-/// Asset paths come from `AppAssets` rather than being typed at the call site.
 ///
 /// Two things can go wrong with a picture, and both end up in the same place:
 /// there may be no path at all, which is what a listing saved without a photo
@@ -46,13 +46,14 @@ class LocalAssetImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final path = assetPath;
+    // Blank is a picture that was taken off, and reads as none.
+    final path = assetPath?.trim() ?? '';
 
     return ClipRRect(
       borderRadius: borderRadius,
       child: SizedBox.square(
         dimension: size,
-        child: path == null ? _Fallback(tint: _tint, size: size) : _picture(path),
+        child: path.isEmpty ? _Fallback(tint: _tint, size: size) : _picture(path),
       ),
     );
   }

@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
@@ -15,18 +16,19 @@ import 'package:shakti_saree/admin/screens/admin_shell.dart';
 import 'package:shakti_saree/admin/screens/categories_screen.dart';
 import 'package:shakti_saree/admin/styles/app_theme.dart';
 import 'package:shakti_saree/admin/utils/embedded_photo.dart';
-import 'package:shakti_saree/admin/widgets/categories/category_edit_sheet.dart';
 import 'package:shakti_saree/admin/widgets/categories/category_tile.dart';
 import 'package:shakti_saree/admin/widgets/common/labelled_field.dart';
 import 'package:shakti_saree/admin/widgets/dashboard/dashboard_header.dart';
 import 'package:shakti_saree/admin/widgets/more/more_header.dart';
 import 'package:shakti_saree/admin/widgets/navigation/admin_bottom_nav.dart';
+import 'package:shakti_saree/admin/widgets/products/asset_picture_sheet.dart';
 
 import 'support/fake_firebase_auth.dart';
 import 'support/firestore_seed.dart';
 
-/// Photos picked for a category or for the admin's own profile are saved in
-/// that document's `image` field, and shown wherever the record is.
+/// A category's picture is the path of one of the app's own, chosen from
+/// assets/images; the admin's profile photo is kept in their own document.
+/// Both show wherever the record is.
 
 /// A one-pixel PNG: a real picture, so painting it exercises the decoder.
 final Uint8List _png = base64Decode(
@@ -145,12 +147,77 @@ void main() {
     });
   });
 
-  group('category photos', () {
+  group('the picture sheet', () {
+    test('orders names the way a person reads them', () {
+      final names = ['image10.png', 'image2.png', 'auth_model.png', 'image1.png']
+        ..sort(AssetPictureSheet.naturalOrder);
+      expect(names, ['auth_model.png', 'image1.png', 'image2.png', 'image10.png']);
+    });
+
+    testWidgets('offers every picture in assets/images, and only those', (
+      tester,
+    ) async {
+      final onDisk = [
+        for (final file in Directory('assets/images').listSync().whereType<File>())
+          if (RegExp(r'\.(png|jpe?g|webp|gif)$', caseSensitive: false)
+              .hasMatch(file.path))
+            'assets/images/${file.uri.pathSegments.last}',
+      ]..sort(AssetPictureSheet.naturalOrder);
+
+      final offered = await AssetPictureSheet.picturesIn(rootBundle);
+
+      expect(onDisk, isNotEmpty);
+      expect(offered, onDisk);
+    });
+
+    testWidgets('outlines the current picture and answers with the one tapped', (
+      tester,
+    ) async {
+      _tallPhone(tester);
+      String? chosen;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async => chosen = await AssetPictureSheet.show(
+                context,
+                selected: 'assets/images/image1.png',
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choose a picture'), findsOneWidget);
+      expect(
+        tester.getSemantics(find.bySemanticsLabel('image1.png')),
+        containsSemantics(label: 'image1.png', isButton: true, isSelected: true),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('picture:assets/images/image5.png')));
+      await tester.pumpAndSettle();
+
+      expect(chosen, 'assets/images/image5.png');
+      expect(find.text('Choose a picture'), findsNothing);
+    });
+  });
+
+  group('category pictures', () {
     late FakeFirebaseFirestore db;
 
-    Future<void> openCategories(WidgetTester tester) async {
+    Future<void> openCategories(WidgetTester tester, {String? photo}) async {
       _tallPhone(tester);
       db = await seededFirestore();
+      if (photo != null) {
+        await db
+            .collection('categories')
+            .doc('MVr3vUNaKQoiojHxfzuu')
+            .update({'image': photo});
+      }
       await tester.pumpWidget(
         ProviderScope(
           overrides: [firestoreProvider.overrideWithValue(db)],
@@ -187,21 +254,31 @@ void main() {
         .single
         .data();
 
-    testWidgets('a new category is saved with the photo picked for it', (
+    /// Opens the picture box's sheet and taps one of the app's own pictures.
+    Future<void> choose(WidgetTester tester, String path) async {
+      await tester.tap(find.text('Choose category picture'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('picture:$path')));
+      await tester.pumpAndSettle();
+    }
+
+    /// The picture a tile draws, as the asset it names.
+    String? assetIn(WidgetTester tester, Finder tile) {
+      final found = find.descendant(of: tile, matching: find.byType(Image));
+      if (found.evaluate().isEmpty) return null;
+      final image = tester.widget<Image>(found).image;
+      return image is AssetImage ? image.assetName : '$image';
+    }
+
+    testWidgets('a new category is saved with the path of the picture chosen', (
       tester,
     ) async {
-      final gallery = _useGallery(_png);
       await openCategories(tester);
       await tester.tap(find.bySemanticsLabel('Add category'));
       await tester.pumpAndSettle();
+      expect(find.text('From assets/images in the app'), findsOneWidget);
 
-      await tester.tap(find.text('Upload category image'));
-      await tester.pumpAndSettle();
-
-      // Shrunk to thumbnail size on the way in, one photo only.
-      expect(gallery.asked!.maxWidth, CategoryEditSheet.photoSize);
-      expect(gallery.asked!.maxHeight, CategoryEditSheet.photoSize);
-      expect(gallery.asked!.imageQuality, EmbeddedPhoto.quality);
+      await choose(tester, 'assets/images/image3.png');
       expect(find.text('1 of 1 selected'), findsOneWidget);
 
       await tester.enterText(_field('Name'), 'Green Saree');
@@ -210,21 +287,18 @@ void main() {
       await tester.tap(find.text('Add Category'));
       await tester.pumpAndSettle();
 
-      final image = (await stored('Green Saree'))['image'] as String;
-      expect(EmbeddedPhoto.bytesOf(image), _png);
-      final picture = tester.widget<Image>(
-        find.descendant(of: tileFor('Green Saree'), matching: find.byType(Image)),
-      );
-      expect(picture.image, isA<MemoryImage>());
+      expect((await stored('Green Saree'))['image'], 'assets/images/image3.png');
+      expect(assetIn(tester, tileFor('Green Saree')), 'assets/images/image3.png');
     });
 
-    testWidgets('renaming keeps the picture, and choosing one replaces it', (
+    testWidgets('editing shows the picture it has, keeps it, and can swap it', (
       tester,
     ) async {
-      _useGallery(_png);
       await openCategories(tester);
 
       await openEditor(tester, 'Silk Sarees');
+      // The current picture, not an empty box.
+      expect(find.bySemanticsLabel('image1.png'), findsOneWidget);
       await tester.enterText(_field('Name'), 'Pure Silk Sarees');
       await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();
@@ -234,26 +308,50 @@ void main() {
       );
 
       await openEditor(tester, 'Pure Silk Sarees');
-      await tester.tap(find.text('Upload category image'));
+      await tester.tap(find.bySemanticsLabel('Remove image1.png'));
+      await tester.pumpAndSettle();
+      await choose(tester, 'assets/images/image2.png');
+      await tester.tap(find.text('Save Changes'));
+      await tester.pumpAndSettle();
+      expect(
+        (await stored('Pure Silk Sarees'))['image'],
+        'assets/images/image2.png',
+      );
+    });
+
+    testWidgets('taking the picture off stores none', (tester) async {
+      await openCategories(tester);
+
+      await openEditor(tester, 'Silk Sarees');
+      await tester.tap(find.bySemanticsLabel('Remove image1.png'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();
-      final image = (await stored('Pure Silk Sarees'))['image'] as String;
-      expect(EmbeddedPhoto.bytesOf(image), _png);
+
+      expect((await stored('Silk Sarees'))['image'], '');
+      expect(assetIn(tester, tileFor('Silk Sarees')), isNull);
+      expect(
+        find.descendant(
+          of: tileFor('Silk Sarees'),
+          matching: find.byIcon(Icons.image_outlined),
+        ),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('a picture that cannot be made to fit is refused in the sheet', (
+    testWidgets('a photo a grouping was saved with before is kept and shown', (
       tester,
     ) async {
-      _useGallery(Uint8List(EmbeddedPhoto.maxBytes + 1));
-      await openCategories(tester);
-      await tester.tap(find.bySemanticsLabel('Add category'));
+      final photo = EmbeddedPhoto.encode(_png);
+      await openCategories(tester, photo: photo);
+
+      await openEditor(tester, 'Silk Sarees');
+      expect(find.bySemanticsLabel('Saved photo'), findsOneWidget);
+      await tester.enterText(_field('Name'), 'Silk');
+      await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();
 
-      await _tapAndWait(tester, find.text('Upload category image'));
-
-      expect(find.text(_tooBig), findsOneWidget);
-      expect(find.textContaining('selected'), findsNothing);
+      expect((await stored('Silk'))['image'], photo);
     });
   });
 

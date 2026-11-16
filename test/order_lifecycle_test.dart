@@ -905,6 +905,37 @@ void main() {
     });
   });
 
+  group('acting from the list', () {
+    testWidgets('Accept on a card moves the order on, and says so', (
+      tester,
+    ) async {
+      _phone(tester);
+      await tester.pumpWidget(_host(const OrdersScreen()));
+      await tester.pumpAndSettle();
+
+      final card = find.byType(OrderCard).first;
+      final id = tester.widget<OrderCard>(card).order.id;
+      await tester.tap(find.descendant(of: card, matching: find.text('Accept')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Order $id accepted.'), findsOneWidget);
+      // Gone from the New tab it was on...
+      expect(find.text(id), findsNothing);
+      // ...and waiting under Accepted, a step further on.
+      await tester.tap(find.text('Accepted'));
+      await tester.pumpAndSettle();
+      final moved = find.ancestor(
+        of: find.text(id),
+        matching: find.byType(OrderCard),
+      );
+      expect(moved, findsOneWidget);
+      expect(
+        find.descendant(of: moved, matching: find.text('Pack')),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('the list after a transition', () {
     /// Opens the first New order from the list, on the real repository.
     Future<void> openFirstNewOrder(WidgetTester tester) async {

@@ -4,14 +4,13 @@ import 'dart:ui' as ui;
 /// A photo kept inside its own Firestore document, as a `data:` URL in the
 /// `image` field.
 ///
-/// The project has no file storage, so a photo picked on the product form,
-/// the category sheet or the admin's profile travels in the document itself.
-/// Firestore holds a document to 1 MiB, which is why the forms shrink a photo
-/// as it is picked and [fitted] has the last word on whether it may be saved.
+/// The project has no file storage, so the admin's profile photo travels in
+/// their own `users` document. Products and categories store the path of a
+/// picture bundled with the app instead, but one saved before that may still
+/// hold a photo like this, and both apps go on showing it. Firestore holds a
+/// document to 1 MiB, which is why the profile form shrinks a photo as it is
+/// picked and [fitted] has the last word on whether it may be saved.
 abstract final class EmbeddedPhoto {
-  /// The longest side a product photo is shrunk to: sharp on any phone screen.
-  static const double maxSide = 1080;
-
   /// The JPEG quality the picker re-encodes a photo at.
   static const int quality = 75;
 

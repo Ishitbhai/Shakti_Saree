@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../styles/app_colors.dart';
 import '../styles/app_spacing.dart';
@@ -15,6 +14,7 @@ import '../utils/embedded_photo.dart';
 import '../widgets/common/swatch_picker.dart';
 import '../data/providers/categories_providers.dart';
 import '../data/providers/products_providers.dart';
+import '../widgets/products/asset_picture_sheet.dart';
 import '../widgets/products/image_upload_box.dart';
 import '../widgets/products/stock_pill.dart';
 
@@ -26,11 +26,12 @@ import '../widgets/products/stock_pill.dart';
 /// leave it null to create.
 ///
 /// Only what the catalogue stores is saved — name, SKU, price, stock, the
-/// category, the description, the placeholder tint and the photo. Sale price
-/// and the featured flag are in the design but have nowhere in the database
-/// to go yet, so they are decoration until the schema grows. The photo is
-/// kept in the listing itself (see [EmbeddedPhoto]), because the project has
-/// no file storage set up.
+/// category, the description, the placeholder tint and the picture. Sale
+/// price and the featured flag are in the design but have nowhere in the
+/// database to go yet, so they are decoration until the schema grows. The
+/// picture is one of the app's own, chosen from `assets/images/` (see
+/// [AssetPictureSheet]), and stored as its path, which every app built from
+/// this project can show.
 class AddProductScreen extends ConsumerStatefulWidget {
   const AddProductScreen({super.key, this.product});
 
@@ -88,12 +89,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   bool _submitted = false;
   bool _saving = false;
 
-  final _picker = ImagePicker();
-  final List<PickedImage> _images = [];
-
-  /// The picked photo as it will be stored, worked out once when it is
-  /// picked rather than on every keystroke's rebuild.
-  String? _photo;
+  /// The picture as it will be stored: the listing's own when editing, until
+  /// the admin chooses another or takes it off. Blank once taken off a stored
+  /// listing, which reads back as no picture.
+  late String? _image = _editing?.image;
 
   List<TextEditingController> get _fields => [
     _name,
@@ -198,10 +197,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     swatchIndex: _swatchIndex,
     category: _category,
     description: _description.text.trim(),
-    // A newly picked photo replaces the listing's picture. Otherwise the one
-    // it has is carried through, so an edit that leaves the photo alone does
-    // not quietly drop it.
-    image: _photo ?? _editing?.image,
+    // What the picture box holds: the listing's own until another is chosen,
+    // so an edit that leaves the picture alone does not quietly drop it.
+    image: _image,
   );
 
   // -------------------------------------------------------- unsaved changes
@@ -215,7 +213,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     _category,
     '$_featured',
     '$_swatchIndex',
-    '${_images.length}',
+    '$_image',
   ].join('|');
 
   bool get _isDirty => _snapshot() != _opened;
@@ -282,48 +280,21 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     }
   }
 
-  /// Opens the gallery for the listing's photo.
-  ///
-  /// The picker shrinks it on the way in, because it is stored in the listing
-  /// itself and Firestore caps a document at 1 MiB; one still too heavy is
-  /// redrawn smaller, and only refused, here rather than failing at Publish,
-  /// if even that will not do. Bytes are read here so the thumbnail renders
-  /// the same way on mobile and on web, where a file path is a blob URL rather
-  /// than something on disk.
-  Future<void> _pickImage() async {
-    if (_images.length >= AddProductScreen.maxImages) return;
+  /// Opens the app's own pictures and takes the one chosen.
+  Future<void> _choosePicture() async {
+    final chosen = await AssetPictureSheet.show(context, selected: _image);
+    if (chosen == null || !mounted) return;
+    setState(() => _image = chosen);
+  }
 
-    try {
-      final picked = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: EmbeddedPhoto.maxSide,
-        maxHeight: EmbeddedPhoto.maxSide,
-        imageQuality: EmbeddedPhoto.quality,
-      );
-      if (picked == null) return;
-
-      final bytes = await EmbeddedPhoto.fitted(await picked.readAsBytes());
-      if (!mounted) return;
-      if (bytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'That photo is too large to save. Please choose a smaller one.',
-            ),
-          ),
-        );
-        return;
-      }
-      setState(() {
-        _images.add(PickedImage(name: picked.name, bytes: bytes));
-        _photo = EmbeddedPhoto.encode(bytes);
-      });
-    } on Exception catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open the gallery: $error')),
-      );
-    }
+  /// What the picture box shows for [_image]: one of the app's own pictures,
+  /// or the photo an older listing was saved with.
+  PickedImage? get _boxImage {
+    final image = _image?.trim() ?? '';
+    if (image.isEmpty) return null;
+    if (!EmbeddedPhoto.isEmbedded(image)) return PickedImage.asset(image);
+    final bytes = EmbeddedPhoto.bytesOf(image);
+    return bytes == null ? null : PickedImage(name: 'Saved photo', bytes: bytes);
   }
 
   @override
@@ -354,13 +325,15 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   ),
                   children: [
                     ImageUploadBox(
-                      images: _images,
+                      images: [?_boxImage],
                       maxImages: AddProductScreen.maxImages,
-                      onAdd: _pickImage,
-                      onRemove: (index) => setState(() {
-                        _images.removeAt(index);
-                        _photo = null;
-                      }),
+                      prompt: 'Choose product picture',
+                      caption: 'From assets/images in the app',
+                      onAdd: _choosePicture,
+                      // Blank on a stored listing, so the save takes the
+                      // picture off rather than leaving the old one.
+                      onRemove: (_) =>
+                          setState(() => _image = _isEditing ? '' : null),
                     ),
                     const SizedBox(height: AppSpacing.x4),
                     LabelledField(

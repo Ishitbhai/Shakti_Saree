@@ -57,10 +57,11 @@ class Fs {
   static const String description = 'description';
   static const String price = 'price';
   static const String stockQuantity = 'stock_quantity';
-  /// The picture: a bundled asset path, or a photo kept in the document
-  /// itself as a `data:` URL (see `EmbeddedPhoto`). On products and
-  /// categories, and on an admin's own `users` document for their profile
-  /// photo.
+  /// The picture. On products and categories, the path of one of the app's
+  /// own pictures, chosen in the admin from `assets/images/`; one saved before
+  /// that may hold a photo kept in the document as a `data:` URL (see
+  /// `EmbeddedPhoto`). On an admin's own `users` document, their profile
+  /// photo as a `data:` URL. Blank reads as no picture.
   static const String image = 'image';
 
   /// Added by the admin panel: the placeholder tint, on products and

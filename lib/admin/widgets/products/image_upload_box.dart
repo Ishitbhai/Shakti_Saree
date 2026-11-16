@@ -6,13 +6,22 @@ import '../../styles/app_spacing.dart';
 import '../../styles/app_typography.dart';
 import '../common/dashed_border.dart';
 
-/// An image chosen for a listing, held as bytes so the same code paints it on
+/// An image chosen for a listing: one of the app's own pictures, by its path
+/// in the bundle, or a photo held as bytes, so the same code paints it on
 /// mobile, desktop and web without touching `dart:io`.
 class PickedImage {
-  const PickedImage({required this.name, required this.bytes});
+  const PickedImage({required this.name, required Uint8List this.bytes})
+    : assetPath = null;
+
+  /// One of the pictures bundled with the app, such as
+  /// `assets/images/image3.png`.
+  PickedImage.asset(String this.assetPath)
+    : name = assetPath.substring(assetPath.lastIndexOf('/') + 1),
+      bytes = null;
 
   final String name;
-  final Uint8List bytes;
+  final Uint8List? bytes;
+  final String? assetPath;
 }
 
 /// Dashed drop zone for the product photos.
@@ -25,6 +34,7 @@ class ImageUploadBox extends StatelessWidget {
     this.images = const [],
     this.maxImages = 5,
     this.prompt = 'Upload product images',
+    this.caption,
     this.onAdd,
     this.onRemove,
   });
@@ -34,6 +44,9 @@ class ImageUploadBox extends StatelessWidget {
 
   /// What the empty box invites, which is also what a screen reader announces.
   final String prompt;
+
+  /// The line under [prompt]; the formats and how many, when null.
+  final String? caption;
   final VoidCallback? onAdd;
   final ValueChanged<int>? onRemove;
 
@@ -84,8 +97,9 @@ class ImageUploadBox extends StatelessWidget {
                   style: AppTypography.bodySmall,
                 ),
                 Text(
-                  'PNG / JPG  ·  max $maxImages '
-                  '${maxImages == 1 ? 'image' : 'images'}',
+                  caption ??
+                      'PNG / JPG  ·  max $maxImages '
+                          '${maxImages == 1 ? 'image' : 'images'}',
                   textAlign: TextAlign.center,
                   style: AppTypography.caption.copyWith(
                     color: AppColors.textMuted,
@@ -182,17 +196,32 @@ class _Thumbnail extends StatelessWidget {
           Positioned.fill(
             child: ClipRRect(
               borderRadius: AppRadii.cardRadius,
-              child: Image.memory(
-                image.bytes,
-                fit: BoxFit.cover,
-                semanticLabel: image.name,
-              ),
+              child: switch (image) {
+                PickedImage(:final bytes?) => Image.memory(
+                  bytes,
+                  fit: BoxFit.cover,
+                  semanticLabel: image.name,
+                ),
+                PickedImage(:final assetPath) => Image.asset(
+                  assetPath ?? '',
+                  fit: BoxFit.cover,
+                  semanticLabel: image.name,
+                  // A file named in the database that this build lacks.
+                  errorBuilder: (context, error, stackTrace) => const ColoredBox(
+                    color: AppColors.field,
+                    child: Icon(Icons.broken_image_outlined),
+                  ),
+                ),
+              },
             ),
           ),
           Positioned(
             top: -AppSpacing.x1,
             right: -AppSpacing.x1,
             child: Semantics(
+              // Its own node: otherwise, inside a list, the caption below is
+              // merged into this button and read out as part of its name.
+              container: true,
               label: 'Remove ${image.name}',
               button: true,
               child: Material(

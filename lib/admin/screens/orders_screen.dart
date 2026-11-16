@@ -171,19 +171,26 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   /// Takes the order one step along, as the detail screen's main button
   /// does. Shipping opens the courier sheet first, because it cannot be done
   /// without the courier details.
+  ///
+  /// Says so when it is done: on a status tab the order then leaves the list,
+  /// which on its own reads as nothing having happened.
   Future<void> _advance(Order order) async {
     final repository = ref.read(ordersRepositoryProvider);
     final id = order.id;
 
     setState(() => _advancing = id);
     try {
+      final OrderStatus reached;
       switch (order.status) {
         case OrderStatus.isNew:
           await repository.acceptOrder(id);
+          reached = OrderStatus.accepted;
         case OrderStatus.accepted:
           await repository.markPacked(id);
+          reached = OrderStatus.packed;
         case OrderStatus.shipped:
           await repository.markDelivered(id);
+          reached = OrderStatus.delivered;
         case OrderStatus.packed:
           final shipped = await ShipOrderSheet.show(
             context,
@@ -191,17 +198,30 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 .markShipped(id, courier: courier, awbNumber: awbNumber),
           );
           if (shipped == null) return;
+          reached = OrderStatus.shipped;
         case OrderStatus.delivered || OrderStatus.cancelled:
           return;
       }
-      ref.invalidate(ordersProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Order $id ${reached.label.toLowerCase()}.'),
+          ),
+        );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(AsyncContent.messageFor(error))));
     } finally {
-      if (mounted) setState(() => _advancing = null);
+      if (mounted) {
+        // Refreshed after a refusal too: that usually means the list was
+        // showing a status the database had already moved past.
+        ref.invalidate(ordersProvider);
+        setState(() => _advancing = null);
+      }
     }
   }
 }

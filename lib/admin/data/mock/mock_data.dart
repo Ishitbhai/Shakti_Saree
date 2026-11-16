@@ -5,7 +5,6 @@ import '../../models/product.dart';
 import '../../models/order.dart';
 import '../../models/order_status.dart';
 import '../../models/faq.dart';
-import '../../resources/app_assets.dart';
 
 /// Sample orders for running the admin app without a backend.
 ///
@@ -416,7 +415,6 @@ class MockData {
       stock: 24,
       swatchIndex: 0,
       category: 'Banarasi',
-      image: AppAssets.banarasiSilkSaree,
     ),
     Product(
       name: 'Kanjivaram Pure Silk',
@@ -425,7 +423,6 @@ class MockData {
       stock: 12,
       swatchIndex: 1,
       category: 'Kanjivaram',
-      image: AppAssets.kanjivaramPureSilk,
     ),
     Product(
       name: 'Cotton Daily Saree',
@@ -434,7 +431,6 @@ class MockData {
       stock: 4,
       swatchIndex: 2,
       category: 'Cotton Saree',
-      image: AppAssets.cottonDailySaree,
     ),
     Product(
       name: 'Georgette Party Wear',
@@ -443,7 +439,6 @@ class MockData {
       stock: 0,
       swatchIndex: 3,
       category: 'Georgette',
-      image: AppAssets.georgettePartyWear,
     ),
     // Named for its border rather than just "Paithani Silk Saree": SS-1063
     // further down already carries that name, and two listings answering to
@@ -455,7 +450,6 @@ class MockData {
       stock: 8,
       swatchIndex: 4,
       category: 'Paithani',
-      image: AppAssets.paithaniMuniyaBorder,
     ),
     Product(
       name: 'Mysore Crepe Silk',
@@ -464,7 +458,6 @@ class MockData {
       stock: 15,
       swatchIndex: 0,
       category: 'Silk Saree',
-      image: AppAssets.mysoreCrepeSilk,
     ),
     Product(
       name: 'Bridal Kanjivaram Red',
@@ -473,7 +466,6 @@ class MockData {
       stock: 3,
       swatchIndex: 1,
       category: 'Bridal Wear',
-      image: AppAssets.bridalKanjivaramRed,
     ),
     Product(
       name: 'Patola Handloom Saree',
@@ -482,7 +474,6 @@ class MockData {
       stock: 2,
       swatchIndex: 2,
       category: 'Patola',
-      image: AppAssets.patolaHandloomSaree,
     ),
     Product(
       name: 'Bandhani Georgette Saree',
@@ -491,7 +482,6 @@ class MockData {
       stock: 18,
       swatchIndex: 3,
       category: 'Georgette',
-      image: AppAssets.bandhaniGeorgetteSaree,
     ),
     Product(
       name: 'Designer Net Saree',
@@ -500,7 +490,6 @@ class MockData {
       stock: 26,
       swatchIndex: 4,
       category: 'Designer',
-      image: AppAssets.designerNetSaree,
     ),
     Product(
       name: 'Chanderi Cotton Silk',
@@ -509,7 +498,6 @@ class MockData {
       stock: 20,
       swatchIndex: 0,
       category: 'Chanderi',
-      image: AppAssets.chanderiCottonSilk,
     ),
     Product(
       name: 'Linen Daily Saree',
@@ -518,7 +506,6 @@ class MockData {
       stock: 32,
       swatchIndex: 1,
       category: 'Daily Wear',
-      image: AppAssets.linenDailySaree,
     ),
     Product(
       name: 'Paithani Silk Saree',
@@ -527,7 +514,6 @@ class MockData {
       stock: 5,
       swatchIndex: 2,
       category: 'Paithani',
-      image: AppAssets.paithaniSilkSaree,
     ),
     Product(
       name: 'Tussar Silk Saree',
@@ -536,7 +522,6 @@ class MockData {
       stock: 9,
       swatchIndex: 3,
       category: 'Silk Saree',
-      image: AppAssets.tussarSilkSaree,
     ),
     Product(
       name: 'Banarasi Katan Silk',
@@ -545,7 +530,6 @@ class MockData {
       stock: 7,
       swatchIndex: 4,
       category: 'Banarasi',
-      image: AppAssets.banarasiKatanSilk,
     ),
     // Out of stock, which is why order #SS20260902 was cancelled against it.
     Product(
@@ -555,7 +539,6 @@ class MockData {
       stock: 0,
       swatchIndex: 0,
       category: 'Organza',
-      image: AppAssets.organzaEmbroideredSaree,
     ),
     Product(
       name: 'Ajrakh Print Modal Silk',
@@ -564,7 +547,6 @@ class MockData {
       stock: 14,
       swatchIndex: 1,
       category: 'Designer',
-      image: AppAssets.ajrakhPrintModalSilk,
     ),
     Product(
       name: 'Tissue Silk Saree',
@@ -573,7 +555,6 @@ class MockData {
       stock: 11,
       swatchIndex: 2,
       category: 'Silk Saree',
-      image: AppAssets.tissueSilkSaree,
     ),
     Product(
       name: 'Gadwal Cotton Silk',
@@ -582,7 +563,6 @@ class MockData {
       stock: 16,
       swatchIndex: 3,
       category: 'Cotton Saree',
-      image: AppAssets.gadwalCottonSilk,
     ),
     Product(
       name: 'Narayanpet Cotton',
@@ -591,7 +571,6 @@ class MockData {
       stock: 28,
       swatchIndex: 4,
       category: 'Cotton Saree',
-      image: AppAssets.narayanpetCotton,
     ),
     Product(
       name: 'Maheshwari Handloom',
@@ -600,7 +579,6 @@ class MockData {
       stock: 22,
       swatchIndex: 0,
       category: 'Cotton Saree',
-      image: AppAssets.maheshwariHandloom,
     ),
     Product(
       name: 'Kota Doria Cotton',
@@ -609,7 +587,6 @@ class MockData {
       stock: 3,
       swatchIndex: 1,
       category: 'Cotton Saree',
-      image: AppAssets.kotaDoriaCotton,
     ),
     Product(
       name: 'Velvet Bridal Saree',
@@ -618,7 +595,6 @@ class MockData {
       stock: 0,
       swatchIndex: 2,
       category: 'Bridal Wear',
-      image: AppAssets.velvetBridalSaree,
     ),
     Product(
       name: 'Bhagalpuri Silk Saree',
@@ -627,7 +603,6 @@ class MockData {
       stock: 19,
       swatchIndex: 3,
       category: 'Silk Saree',
-      image: AppAssets.bhagalpuriSilkSaree,
     ),
     Product(
       name: 'Chiffon Sequin Saree',
@@ -636,7 +611,6 @@ class MockData {
       stock: 13,
       swatchIndex: 4,
       category: 'Designer',
-      image: AppAssets.chiffonSequinSaree,
     ),
   ];
 
@@ -651,60 +625,49 @@ class MockData {
     Category(
       name: 'Silk Saree',
       swatchIndex: 0,
-      image: AppAssets.silkSareeCategory,
     ),
     Category(
       name: 'Banarasi',
       swatchIndex: 1,
-      image: AppAssets.banarasiCategory,
     ),
     Category(
       name: 'Cotton Saree',
       swatchIndex: 2,
-      image: AppAssets.cottonSareeCategory,
     ),
     Category(
       name: 'Georgette',
       swatchIndex: 3,
-      image: AppAssets.georgetteCategory,
     ),
     Category(
       name: 'Kanjivaram',
       swatchIndex: 4,
       isHidden: true,
-      image: AppAssets.kanjivaramCategory,
     ),
     Category(
       name: 'Bridal Wear',
       swatchIndex: 0,
-      image: AppAssets.bridalWearCategory,
     ),
     Category(
       name: 'Designer',
       swatchIndex: 1,
-      image: AppAssets.designerCategory,
     ),
     Category(
       name: 'Daily Wear',
       swatchIndex: 2,
-      image: AppAssets.dailyWearCategory,
     ),
     Category(
       name: 'Chanderi',
       swatchIndex: 3,
-      image: AppAssets.chanderiCategory,
     ),
-    Category(name: 'Patola', swatchIndex: 4, image: AppAssets.patolaCategory),
+    Category(name: 'Patola', swatchIndex: 4),
     Category(
       name: 'Paithani',
       swatchIndex: 0,
-      image: AppAssets.paithaniCategory,
     ),
     Category(
       name: 'Organza',
       swatchIndex: 1,
       isHidden: true,
-      image: AppAssets.organzaCategory,
     ),
   ];
 

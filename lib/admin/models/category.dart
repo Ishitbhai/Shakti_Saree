@@ -20,10 +20,12 @@ class Category {
   /// visual; `Swatches` turns it into one.
   final int swatchIndex;
 
-  /// The grouping's picture: a path into the app's own assets, or a photo
-  /// picked on the category sheet and kept in the category itself as a
-  /// `data:` URL (see `EmbeddedPhoto`). Null for one that has none. Never a
-  /// URL: nothing here loads a picture over a network.
+  /// The grouping's picture: the path of one the admin chose from
+  /// `assets/images/`, such as `assets/images/image3.png`. A grouping saved
+  /// before that may hold a photo kept in the category itself as a `data:`
+  /// URL instead (see `EmbeddedPhoto`), which still shows. Null, or blank once
+  /// taken off, for one that has none. Never a web link: nothing here loads a
+  /// picture over a network.
   final String? image;
 
   /// Hidden categories stay in the catalogue but are not offered to

@@ -1,23 +1,43 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shakti_saree/admin/data/mock/product_store.dart';
 import 'package:shakti_saree/admin/models/category.dart';
+import 'package:shakti_saree/admin/utils/embedded_photo.dart';
 import 'package:shakti_saree/admin/widgets/categories/category_tile.dart';
 import 'package:shakti_saree/admin/models/order_detail.dart';
 import 'package:shakti_saree/admin/screens/order_detail_screen.dart';
 import 'package:shakti_saree/admin/models/product.dart';
 import 'package:shakti_saree/admin/widgets/products/product_tile.dart';
 import 'package:shakti_saree/admin/styles/swatches.dart';
-import 'package:shakti_saree/admin/resources/app_assets.dart';
 import 'package:shakti_saree/admin/styles/app_colors.dart';
 import 'package:shakti_saree/admin/styles/app_theme.dart';
 import 'package:shakti_saree/admin/widgets/common/local_asset_image.dart';
 import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
-/// Pictures come from the bundle and nowhere else, and a frame without one is
-/// a frame with a tint in it rather than a crash.
+/// Pictures are photos kept in the records themselves: nothing in the
+/// catalogue depends on a file shipped with the app, and a frame without a
+/// picture is a frame with a tint in it rather than a crash.
+
+/// A one-pixel PNG, kept the way an admin's upload is.
+final String _photo = EmbeddedPhoto.encode(
+  base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGA'
+    'hKmMIQAAAABJRU5ErkJggg==',
+  ),
+);
+
+/// The sample catalogue with a photo on its first listing, SS-1024.
+class _PhotographedStore extends ProductStore {
+  @override
+  List<Product> build() => [
+    for (final product in MockData.products())
+      product.sku == 'SS-1024' ? product.copyWith(image: _photo) : product,
+  ];
+}
 
 Widget _host(Widget child) => MaterialApp(
   theme: AppTheme.light,
@@ -37,47 +57,32 @@ void _phone(WidgetTester tester) {
 String _pubspec() => File('pubspec.yaml').readAsStringSync();
 
 void main() {
-  group('the asset list', () {
-    test('every path in AppAssets is a file that exists', () {
-      for (final path in AppAssets.images) {
-        expect(
-          File(path).existsSync(),
-          isTrue,
-          reason: '$path is referenced but not on disk',
-        );
+  group('the bundle', () {
+    // A folder deleted while pubspec.yaml still lists it stops every build,
+    // with an error that names neither the folder nor the reason.
+    test('every asset folder and file the pubspec declares is on disk', () {
+      final declared = [
+        for (final line in _pubspec().split('\n'))
+          if (RegExp(r'^\s+- (assets/\S+)').firstMatch(line) case final match?)
+            match.group(1)!,
+      ];
+      expect(declared, isNotEmpty);
+
+      for (final path in declared) {
+        final exists = path.endsWith('/')
+            ? Directory(path).existsSync()
+            : File(path).existsSync();
+        expect(exists, isTrue, reason: '$path is in pubspec.yaml but not on disk');
       }
     });
 
-    test('every image folder is declared in the pubspec', () {
-      final pubspec = _pubspec();
-      final folders = {
-        for (final path in AppAssets.images)
-          path.substring(0, path.lastIndexOf('/') + 1),
-      };
-
-      for (final folder in folders) {
-        expect(
-          pubspec.contains('- $folder'),
-          isTrue,
-          reason: '$folder holds bundled images but is not in pubspec.yaml',
-        );
-      }
-    });
-
-    test('the seeded catalogue and groupings all carry a picture', () {
-      for (final product in MockData.products()) {
-        expect(product.image, isNotNull, reason: product.name);
-        expect(AppAssets.images, contains(product.image), reason: product.name);
-      }
-      for (final category in MockData.categories()) {
-        expect(category.image, isNotNull, reason: category.name);
-      }
-    });
-
-    test('no asset path points anywhere but at this app', () {
-      for (final path in AppAssets.images) {
-        expect(path.startsWith('assets/'), isTrue, reason: path);
-        expect(path.contains('://'), isFalse, reason: path);
+    test('the sample data names only pictures that ship with the app', () {
+      final named = [
+        for (final product in MockData.products()) product.image,
+        for (final category in MockData.categories()) category.image,
+      ];
+      for (final path in named.nonNulls) {
+        expect(File(path).existsSync(), isTrue, reason: '$path is not on disk');
       }
     });
   });
@@ -142,7 +147,7 @@ void main() {
   group('the rows', () {
     testWidgets('a listing with a picture shows it', (tester) async {
       _phone(tester);
-      final product = MockData.products().first;
+      final product = MockData.products().first.copyWith(image: _photo);
 
       await tester.pumpWidget(
         _host(
@@ -155,8 +160,11 @@ void main() {
       await tester.pumpAndSettle();
 
       final image = tester.widget<Image>(find.byType(Image));
-      expect(image.image, isA<AssetImage>());
-      expect((image.image as AssetImage).assetName, product.image);
+      expect(image.image, isA<MemoryImage>());
+      expect(
+        (image.image as MemoryImage).bytes,
+        EmbeddedPhoto.bytesOf(_photo),
+      );
       expect(find.byIcon(Icons.image_outlined), findsNothing);
     });
 
@@ -184,7 +192,7 @@ void main() {
 
     testWidgets('a grouping with artwork shows it', (tester) async {
       _phone(tester);
-      final category = MockData.categories().first;
+      final category = MockData.categories().first.copyWith(image: _photo);
 
       await tester.pumpWidget(
         _host(
@@ -199,7 +207,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final image = tester.widget<Image>(find.byType(Image));
-      expect((image.image as AssetImage).assetName, category.image);
+      expect(
+        (image.image as MemoryImage).bytes,
+        EmbeddedPhoto.bytesOf(category.image!),
+      );
     });
   });
 
@@ -212,6 +223,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [productStoreProvider.overrideWith(_PhotographedStore.new)],
           child: MaterialApp(
             theme: AppTheme.light,
             home: OrderDetailScreen(detail: detail),
@@ -242,11 +254,7 @@ void main() {
 
       expect(find.text('Banarasi Silk Saree'), findsOneWidget);
       final thumb = thumbOf(tester, 'Banarasi Silk Saree');
-      expect(thumb.assetPath, isNotNull);
-      expect(
-        thumb.assetPath,
-        MockData.products().firstWhere((p) => p.sku == 'SS-1024').image,
-      );
+      expect(thumb.assetPath, _photo);
     });
 
     testWidgets('falls back to its tint when the SKU is not in the catalogue', (
@@ -285,16 +293,16 @@ void main() {
 
   group('edits keep the picture', () {
     test('a renamed listing carries its image across', () {
-      final product = MockData.products().first;
+      final product = MockData.products().first.copyWith(image: _photo);
       final renamed = product.copyWith(name: 'Banarasi Silk Saree (Zari)');
 
-      expect(renamed.image, product.image);
+      expect(renamed.image, _photo);
     });
 
     test('a renamed grouping carries its artwork across', () {
-      final category = MockData.categories().first;
+      final category = MockData.categories().first.copyWith(image: _photo);
 
-      expect(category.copyWith(name: 'Silk').image, category.image);
+      expect(category.copyWith(name: 'Silk').image, _photo);
     });
   });
 }

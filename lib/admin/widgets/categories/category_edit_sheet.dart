@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../styles/app_colors.dart';
 import '../../styles/app_spacing.dart';
@@ -9,6 +8,7 @@ import '../common/async_content.dart';
 import '../common/busy_label.dart';
 import '../common/labelled_field.dart';
 import '../common/swatch_picker.dart';
+import '../products/asset_picture_sheet.dart';
 import '../products/image_upload_box.dart';
 import '../../models/category.dart';
 
@@ -30,11 +30,6 @@ class CategoryEditSheet extends StatefulWidget {
   final Category? category;
 
   final CategorySubmit onSubmit;
-
-  /// How large a picked photo is kept. A category is only ever shown as a
-  /// thumbnail, and every shopper downloads every category, so it stays
-  /// smaller than a product photo.
-  static const double photoSize = 512;
 
   /// Opens the sheet. Resolves to the saved category, or null if the admin
   /// backed out.
@@ -76,13 +71,10 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
   /// Why the last attempt failed, kept so the typed name survives it.
   String? _failure;
 
-  final _picker = ImagePicker();
-
-  /// The photo picked in this sheet, as the upload box shows it.
-  PickedImage? _picked;
-
-  /// The same photo as it will be stored, worked out once when it is picked.
-  String? _photo;
+  /// The picture as it will be stored: the grouping's own when editing, until
+  /// the admin chooses another or takes it off. Blank once taken off a stored
+  /// grouping, which reads back as no picture.
+  late String? _image = _editing?.image;
 
   @override
   void initState() {
@@ -104,51 +96,28 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
     name: _nameValue,
     swatchIndex: _swatchIndex,
     isHidden: _isHidden,
-    // A newly picked photo replaces the picture. Otherwise the one it has is
-    // carried through, or every rename would drop the artwork.
-    image: _photo ?? _editing?.image,
+    // What the picture box holds: the grouping's own until another is chosen,
+    // or every rename would drop the artwork.
+    image: _image,
   );
 
-  /// Opens the gallery for the grouping's picture.
-  ///
-  /// Shrunk on the way in, and redrawn smaller if it is still too heavy,
-  /// because it is kept in the category's own document (see [EmbeddedPhoto]).
-  /// Problems show in the sheet rather than as a snack bar, which would land
-  /// behind it.
-  Future<void> _pickPhoto() async {
-    try {
-      final picked = await _picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: CategoryEditSheet.photoSize,
-        maxHeight: CategoryEditSheet.photoSize,
-        imageQuality: EmbeddedPhoto.quality,
-      );
-      if (picked == null) return;
-
-      final bytes = await EmbeddedPhoto.fitted(await picked.readAsBytes());
-      if (!mounted) return;
-      if (bytes == null) {
-        setState(
-          () => _failure =
-              'That photo is too large to save. Please choose a smaller one.',
-        );
-        return;
-      }
-      setState(() {
-        _picked = PickedImage(name: picked.name, bytes: bytes);
-        _photo = EmbeddedPhoto.encode(bytes);
-        _failure = null;
-      });
-    } on Exception catch (error) {
-      if (!mounted) return;
-      setState(() => _failure = 'Could not open the gallery: $error');
-    }
+  /// Opens the app's own pictures, from `assets/images/`, and takes the one
+  /// chosen.
+  Future<void> _choosePicture() async {
+    final chosen = await AssetPictureSheet.show(context, selected: _image);
+    if (chosen == null || !mounted) return;
+    setState(() => _image = chosen);
   }
 
-  void _removePhoto() => setState(() {
-    _picked = null;
-    _photo = null;
-  });
+  /// What the picture box shows for [_image]: one of the app's own pictures,
+  /// or the photo an older grouping was saved with.
+  PickedImage? get _boxImage {
+    final image = _image?.trim() ?? '';
+    if (image.isEmpty) return null;
+    if (!EmbeddedPhoto.isEmbedded(image)) return PickedImage.asset(image);
+    final bytes = EmbeddedPhoto.bytesOf(image);
+    return bytes == null ? null : PickedImage(name: 'Saved photo', bytes: bytes);
+  }
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
@@ -172,8 +141,6 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final picked = _picked;
-
     return PopScope<Category?>(
       canPop: !_submitting,
       child: Padding(
@@ -209,11 +176,16 @@ class _CategoryEditSheetState extends State<CategoryEditSheet> {
                 ),
                 const SizedBox(height: AppSpacing.x5),
                 ImageUploadBox(
-                  images: [?picked],
+                  images: [?_boxImage],
                   maxImages: 1,
-                  prompt: 'Upload category image',
-                  onAdd: _submitting ? null : _pickPhoto,
-                  onRemove: _submitting ? null : (_) => _removePhoto(),
+                  prompt: 'Choose category picture',
+                  caption: 'From assets/images in the app',
+                  onAdd: _submitting ? null : _choosePicture,
+                  // Blank on a stored grouping, so the save takes the picture
+                  // off rather than leaving the old one.
+                  onRemove: _submitting
+                      ? null
+                      : (_) => setState(() => _image = _isEditing ? '' : null),
                 ),
                 const SizedBox(height: AppSpacing.x4),
                 LabelledField(
