@@ -28,6 +28,7 @@ class OrderEvent {
     this.at,
     this.detail,
     this.reached = false,
+    this.cashOnDelivery = false,
   });
 
   /// The status this step stands for. The timeline is the flow, so every step
@@ -44,7 +45,11 @@ class OrderEvent {
   /// moved along by hand in the console, where no time was written down.
   final bool reached;
 
-  String get label => status.timelineLabel;
+  /// Whether the order is paid for at the door, which changes what accepting
+  /// it confirmed.
+  final bool cashOnDelivery;
+
+  String get label => status.timelineLabel(cashOnDelivery: cashOnDelivery);
 
   bool get isDone => reached || at != null;
 
@@ -68,6 +73,7 @@ class OrderDetail {
     required this.reachedAt,
     required this.lines,
     required this.paidVia,
+    this.isCashOnDelivery = false,
     this.deliveryPaise = 0,
     this.discountPaise = 0,
     this.courier,
@@ -93,6 +99,9 @@ class OrderDetail {
 
   /// Payment method, e.g. 'UPI'.
   final String paidVia;
+
+  /// Whether the money is collected at the door rather than taken up front.
+  final bool isCashOnDelivery;
 
   final int deliveryPaise;
   final int discountPaise;
@@ -128,6 +137,7 @@ class OrderDetail {
             at: reachedAt[step],
             detail: _detailFor(step),
             reached: !isCancelled && step.index <= status.index,
+            cashOnDelivery: isCashOnDelivery,
           ),
     ];
 

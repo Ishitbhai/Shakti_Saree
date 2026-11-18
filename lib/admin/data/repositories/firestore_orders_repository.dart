@@ -444,6 +444,7 @@ class FirestoreOrdersRepository implements OrdersRepository {
       reachedAt: reachedAt,
       lines: lines,
       paidVia: _paidVia(order, payment, status),
+      isCashOnDelivery: Fs.isCashOnDelivery(_paymentMethodOf(order, payment)),
       deliveryPaise: delivery,
       discountPaise: discount,
       courier: hasShipped ? Fs.optionalString(order[Fs.courier]) : null,

@@ -122,6 +122,69 @@ void main() {
       ]);
     });
 
+    test('lists one with no date yet at the end', () async {
+      await db.collection('faqs').doc('pending').set({
+        'faq_id': 'FAQ_002',
+        'question': 'Just added',
+        'answer': 'B',
+        'created_at': null,
+      });
+      await db.collection('faqs').doc('dated').set({
+        'faq_id': 'FAQ_001',
+        'question': 'Already there',
+        'answer': 'A',
+        'created_at': Timestamp.fromDate(DateTime.utc(2026, 11, 2)),
+      });
+
+      expect((await repository.fetchFaqs()).map((faq) => faq.question), [
+        'Already there',
+        'Just added',
+      ]);
+    });
+
+    test('will not guess between two entries asking the same', () async {
+      for (final id in ['one', 'two']) {
+        await db.collection('faqs').doc(id).set({
+          'question': 'Do you ship abroad?',
+          'answer': 'Answer in $id',
+        });
+      }
+
+      await expectLater(
+        repository.deleteFaq('Do you ship abroad?'),
+        _refusedWith(409),
+      );
+      await expectLater(
+        repository.updateFaq(
+          originalQuestion: 'Do you ship abroad?',
+          faq: _shipping.copyWith(answer: 'Changed'),
+        ),
+        _refusedWith(409),
+      );
+
+      final answers = (await _docs(db)).map((doc) => doc.data()['answer']);
+      expect(answers, unorderedEquals(['Answer in one', 'Answer in two']));
+    });
+
+    test('an answer can be corrected beside a near duplicate', () async {
+      await db.collection('faqs').doc('lower').set({
+        'question': 'Do you ship abroad?',
+        'answer': 'Old',
+      });
+      await db.collection('faqs').doc('upper').set({
+        'question': 'DO YOU SHIP ABROAD?',
+        'answer': 'Other',
+      });
+
+      await repository.updateFaq(
+        originalQuestion: 'Do you ship abroad?',
+        faq: const Faq(question: 'Do you ship abroad?', answer: 'Corrected'),
+      );
+
+      final stored = await db.collection('faqs').doc('lower').get();
+      expect(stored.data()?['answer'], 'Corrected');
+    });
+
     test('leaves out a document with nothing to ask', () async {
       await db.collection('faqs').doc('blank').set({'answer': 'Orphaned'});
 
@@ -208,6 +271,22 @@ void main() {
         'Second',
         'Third',
       ]);
+    });
+
+    test('undo takes a new number if its old one was reused', () async {
+      await repository.createFaq(_shipping);
+      await repository.createFaq(_returns);
+      final removed = await repository.deleteFaq(_returns.question);
+      await repository.createFaq(
+        const Faq(question: 'Do you gift wrap?', answer: 'On request.'),
+      );
+
+      await repository.restoreFaq(removed);
+
+      expect(
+        (await _docs(db)).map((doc) => doc.data()['faq_id']),
+        unorderedEquals(['FAQ_001', 'FAQ_002', 'FAQ_003']),
+      );
     });
 
     test('undo is refused once the question is asked again', () async {

@@ -176,6 +176,7 @@ OrderDetail _detailAt(
   String? awbNumber,
   String? cancellationReason,
   List<OrderStatus>? history,
+  bool isCashOnDelivery = false,
 }) {
   final reached = history ?? _historyFor(status);
   return OrderDetail(
@@ -185,7 +186,8 @@ OrderDetail _detailAt(
     address: 'Rajkot',
     placedAt: _placedAt,
     status: status,
-    paidVia: 'UPI',
+    paidVia: isCashOnDelivery ? 'Cash on delivery' : 'UPI',
+    isCashOnDelivery: isCashOnDelivery,
     courier: courier,
     awbNumber: awbNumber,
     cancellationReason: cancellationReason,
@@ -696,18 +698,47 @@ void main() {
       expect(find.text('Pending'), findsNWidgets(4));
     });
 
+    Finder inTimeline(String text) => find.descendant(
+      of: find.byType(OrderTimeline),
+      matching: find.text(text),
+    );
+
     testWidgets('the accepted step reads Payment Confirmed', (tester) async {
       await show(tester, _detailAt(OrderStatus.accepted));
 
-      Finder inTimeline(String text) => find.descendant(
-        of: find.byType(OrderTimeline),
-        matching: find.text(text),
-      );
       expect(inTimeline('Payment Confirmed'), findsOneWidget);
+      expect(inTimeline('Order Confirmed'), findsNothing);
       expect(inTimeline('Accepted'), findsNothing);
 
       // Only the step is renamed. The order's status keeps its own name.
       expect(_pill('Accepted'), findsOneWidget);
+    });
+
+    testWidgets('on cash on delivery it reads Order Confirmed', (tester) async {
+      await show(
+        tester,
+        _detailAt(OrderStatus.accepted, isCashOnDelivery: true),
+      );
+
+      expect(inTimeline('Order Confirmed'), findsOneWidget);
+      expect(inTimeline('Payment Confirmed'), findsNothing);
+      expect(_pill('Accepted'), findsOneWidget);
+    });
+
+    test('cash on delivery is still known after a transition', () async {
+      final repository = _liveRepository();
+      OrderDetail? cash;
+      for (final order in await repository.fetchOrders()) {
+        final detail = await repository.fetchOrderDetail(order.id);
+        if (detail.isCashOnDelivery && detail.status.canCancel) cash = detail;
+      }
+
+      final cancelled = await repository.cancelOrder(
+        cash!.id,
+        reason: 'Out of stock',
+      );
+
+      expect(cancelled.isCashOnDelivery, isTrue);
     });
 
     testWidgets('steps complete as the order moves', (tester) async {

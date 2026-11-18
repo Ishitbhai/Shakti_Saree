@@ -70,6 +70,7 @@ class OrderStore extends Notifier<List<OrderDetail>> {
       reachedAt: {...current.reachedAt, to: DateTime.now()},
       lines: current.lines,
       paidVia: current.paidVia,
+      isCashOnDelivery: current.isCashOnDelivery,
       deliveryPaise: current.deliveryPaise,
       discountPaise: current.discountPaise,
       courier: courier ?? current.courier,

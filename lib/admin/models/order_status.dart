@@ -47,11 +47,14 @@ enum OrderStatus {
   bool get isTerminal => next == null;
 
   /// How this status reads as a step that has happened, rather than as a
-  /// state the order is in — 'Order Placed' rather than 'New', and 'Payment
-  /// Confirmed' rather than 'Accepted'.
-  String get timelineLabel => switch (this) {
+  /// state the order is in — 'Order Placed' rather than 'New'.
+  ///
+  /// Accepting an order paid for up front confirms its payment. On cash on
+  /// delivery no money has changed hands yet, so it confirms only the order.
+  String timelineLabel({bool cashOnDelivery = false}) => switch (this) {
     OrderStatus.isNew => 'Order Placed',
-    OrderStatus.accepted => 'Payment Confirmed',
+    OrderStatus.accepted =>
+      cashOnDelivery ? 'Order Confirmed' : 'Payment Confirmed',
     _ => label,
   };
 

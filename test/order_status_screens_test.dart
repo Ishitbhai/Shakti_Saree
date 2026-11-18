@@ -235,6 +235,17 @@ void main() {
       expect(find.text('Paid via COD'), findsOneWidget);
     });
 
+    testWidgets('says Order Confirmed on its own screen', (tester) async {
+      await pumpOrders(tester, 'Accepted', fields: cash, payment: payment);
+
+      await openChip(tester, 'Accepted');
+      await tester.tap(find.text('View Details').hitTestable());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Order Confirmed'), findsOneWidget);
+      expect(find.text('Payment Confirmed'), findsNothing);
+    });
+
     testWidgets('catches up when someone else delivered it first', (
       tester,
     ) async {

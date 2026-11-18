@@ -761,6 +761,7 @@ class MockData {
       placedAt: placedAt,
       status: status,
       paidVia: paidVia,
+      isCashOnDelivery: paidVia == 'Cash on delivery',
       deliveryPaise: deliveryPaise,
       discountPaise: discountPaise,
       courier: courier,

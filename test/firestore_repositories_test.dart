@@ -419,6 +419,54 @@ void main() {
       Future<Map<String, dynamic>> paymentIn(FakeFirebaseFirestore db) async =>
           (await db.collection('payments').doc('payCash').get()).data()!;
 
+      String acceptedStepOf(OrderDetail detail) => detail.timeline
+          .firstWhere((event) => event.status == OrderStatus.accepted)
+          .label;
+
+      test('accepting it confirms the order, not a payment', () async {
+        final detail = await FirestoreOrdersRepository(
+          await withOrder(orderStatus: 'Accepted'),
+        ).fetchOrderDetail('ORD_CASH');
+
+        expect(detail.isCashOnDelivery, isTrue);
+        expect(acceptedStepOf(detail), 'Order Confirmed');
+      });
+
+      test('an order paid online confirms its payment', () async {
+        final detail = await FirestoreOrdersRepository(
+          await withOrder(
+            orderStatus: 'Accepted',
+            method: 'UPI',
+            onOrder: 'Paid',
+            onPayment: 'Success',
+          ),
+        ).fetchOrderDetail('ORD_CASH');
+
+        expect(detail.isCashOnDelivery, isFalse);
+        expect(acceptedStepOf(detail), 'Payment Confirmed');
+      });
+
+      test('goes by the order where there is no payments document', () async {
+        final detail = await FirestoreOrdersRepository(
+          await withOrder(orderStatus: 'Accepted', hasPayment: false),
+        ).fetchOrderDetail('ORD_CASH');
+
+        expect(acceptedStepOf(detail), 'Order Confirmed');
+      });
+
+      test('the payments document decides between the two', () async {
+        final db = await withOrder(orderStatus: 'Accepted');
+        await db.collection('payments').doc('payCash').update({
+          'payment_method': 'UPI',
+        });
+
+        final detail = await FirestoreOrdersRepository(
+          db,
+        ).fetchOrderDetail('ORD_CASH');
+
+        expect(acceptedStepOf(detail), 'Payment Confirmed');
+      });
+
       test('delivering it settles the order and the payment', () async {
         final db = await withOrder();
 

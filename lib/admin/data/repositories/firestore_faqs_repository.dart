@@ -51,7 +51,12 @@ class FirestoreFaqsRepository implements FaqsRepository {
         final entry = _required(faq);
         final all = (await _faqs.get()).docs;
         final doc = _asking(all, originalQuestion);
-        if (_isTaken(all, entry.question, except: doc)) throw _alreadyAnswered;
+        // Only a new wording can collide. Correcting an answer always may.
+        final reworded =
+            entry.question.toLowerCase() != originalQuestion.toLowerCase();
+        if (reworded && _isTaken(all, entry.question, except: doc)) {
+          throw _alreadyAnswered;
+        }
 
         await doc.reference.update({
           Fs.question: entry.question,
@@ -75,7 +80,8 @@ class FirestoreFaqsRepository implements FaqsRepository {
 
   @override
   Future<void> restoreFaq(RemovedFaq removed) => guardFirestore(() async {
-    if (_isTaken((await _faqs.get()).docs, removed.faq.question)) {
+    final all = (await _faqs.get()).docs;
+    if (_isTaken(all, removed.faq.question)) {
       throw const BadRequest(
         409,
         'That question is being asked again — it cannot be restored.',
@@ -87,7 +93,14 @@ class FirestoreFaqsRepository implements FaqsRepository {
       return;
     }
     // The same document with the same date, so it returns to the same place.
-    await _faqs.doc(stored.id).set(stored.data);
+    // Its number comes back too, unless a newer question has since taken it.
+    final number = Fs.stringOf(stored.data[Fs.faqId]);
+    final taken = all.map(_idOf).toSet();
+    await _faqs.doc(stored.id).set({
+      ...stored.data,
+      if (number.isNotEmpty && taken.contains(number))
+        Fs.faqId: Fs.nextId('FAQ', taken),
+    });
   });
 
   static const BadRequest _alreadyAnswered = BadRequest(
@@ -105,21 +118,32 @@ class FirestoreFaqsRepository implements FaqsRepository {
     answer: Fs.stringOf(doc.data()[Fs.answer]),
   );
 
-  /// Oldest first, so a new question lands at the end of the list. The id
-  /// breaks ties, and one with no date at all goes ahead of the rest.
+  /// Oldest first, so a new question lands at the end of the list. One with no
+  /// date yet goes last too: a question just added has none until the server
+  /// confirms it. The id breaks ties.
   static int _oldestFirst(_FaqDoc a, _FaqDoc b) {
     final at = Fs.dateOf(a.data()[Fs.createdAt]);
     final bt = Fs.dateOf(b.data()[Fs.createdAt]);
     if (at != null && bt != null && at != bt) return at.compareTo(bt);
-    if ((at == null) != (bt == null)) return at == null ? -1 : 1;
+    if ((at == null) != (bt == null)) return at == null ? 1 : -1;
     return _idOf(a).compareTo(_idOf(b));
   }
 
+  /// The one document asking [question].
+  ///
+  /// Two asking the same thing can only be told apart in the database, so an
+  /// edit or a deletion is refused rather than landing on the wrong one.
   static _FaqDoc _asking(List<_FaqDoc> docs, String question) {
-    for (final doc in docs) {
-      if (_questionOf(doc) == question) return doc;
+    final asking = docs.where((doc) => _questionOf(doc) == question).toList();
+    if (asking.isEmpty) throw const NotFound();
+    if (asking.length > 1) {
+      throw const BadRequest(
+        409,
+        'More than one entry asks this question. Remove the extra one from '
+        'the database first.',
+      );
     }
-    throw const NotFound();
+    return asking.single;
   }
 
   /// Case-blind, as the in-memory store is.
