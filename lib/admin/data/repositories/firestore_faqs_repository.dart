@@ -56,8 +56,7 @@ class FirestoreFaqsRepository implements FaqsRepository {
         final entries = _entriesIn((await _support.get()).docs);
         final doc = _asking(entries, originalQuestion);
         // Only a new wording can collide. Correcting an answer always may.
-        final reworded =
-            entry.question.toLowerCase() != originalQuestion.toLowerCase();
+        final reworded = entry.question != originalQuestion;
         if (reworded && _isTaken(entries, entry.question, except: doc)) {
           throw _alreadyAnswered;
         }
@@ -127,15 +126,24 @@ class FirestoreFaqsRepository implements FaqsRepository {
     answer: Fs.stringOf(doc.data()[Fs.message]),
   );
 
-  /// Oldest first, so a new question lands at the end of the list. One with no
-  /// date yet goes last too: a question just added has none until the server
-  /// confirms it. The id breaks ties.
+  /// Oldest first, so a new question lands at the end of the list.
+  ///
+  /// A document written by hand with no `created_at` counts as the oldest. One
+  /// whose date is still blank is a question just added, waiting for the
+  /// server to confirm it, so it counts as the newest. The id breaks ties.
   static int _oldestFirst(_FaqDoc a, _FaqDoc b) {
+    final byAge = _ageOf(a).compareTo(_ageOf(b));
+    if (byAge != 0) return byAge;
     final at = Fs.dateOf(a.data()[Fs.createdAt]);
     final bt = Fs.dateOf(b.data()[Fs.createdAt]);
     if (at != null && bt != null && at != bt) return at.compareTo(bt);
-    if ((at == null) != (bt == null)) return at == null ? 1 : -1;
     return _idOf(a).compareTo(_idOf(b));
+  }
+
+  /// 0 for never dated, 1 for dated, 2 for a date still on its way.
+  static int _ageOf(_FaqDoc doc) {
+    if (!doc.data().containsKey(Fs.createdAt)) return 0;
+    return Fs.dateOf(doc.data()[Fs.createdAt]) == null ? 2 : 1;
   }
 
   /// The one document asking [question].

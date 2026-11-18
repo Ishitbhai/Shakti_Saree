@@ -475,6 +475,24 @@ void main() {
       expect(names[2], 'Cotton Daily Saree');
     });
 
+    testWidgets('the offer to undo goes away by itself', (tester) async {
+      _tallPhone(tester);
+      await tester.pumpWidget(_host());
+      await tester.pumpAndSettle();
+
+      await tester.tap(_action('Cotton Daily Saree', Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+      expect(find.text('Undo'), findsOneWidget);
+
+      await tester.pump(ProductsScreen.undoWindow);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Undo'), findsNothing);
+      expect(find.text('24 total'), findsOneWidget);
+    });
+
     testWidgets('emptying the catalogue says so', (tester) async {
       _tallPhone(tester);
       await tester.pumpWidget(

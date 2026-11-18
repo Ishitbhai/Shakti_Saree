@@ -92,6 +92,8 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
           SnackBar(
             content: Text('${product.name} deleted'),
             duration: ProductsScreen.undoWindow,
+            // A bar with an action otherwise stays until it is dismissed.
+            persist: false,
             action: SnackBarAction(
               label: 'Undo',
               onPressed: () async {

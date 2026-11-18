@@ -35,6 +35,10 @@ class AsyncContent<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return state.when(
+      // What is on screen stays there while it is read again, so a refresh
+      // does not blank a list and lose the admin's place, and a failure being
+      // retried is reported rather than hidden behind a spinner.
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, _) =>
           AsyncMessage(text: messageFor(error), onRetry: onRetry),

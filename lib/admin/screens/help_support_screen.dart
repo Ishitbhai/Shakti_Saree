@@ -85,6 +85,8 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
           SnackBar(
             content: const Text('Question deleted'),
             duration: HelpSupportScreen.undoWindow,
+            // A bar with an action otherwise stays until it is dismissed.
+            persist: false,
             action: SnackBarAction(
               label: 'Undo',
               onPressed: () async {
@@ -100,9 +102,10 @@ class _HelpSupportScreenState extends ConsumerState<HelpSupportScreen> {
           ),
         );
     } catch (error) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(AsyncContent.messageFor(error))),
-      );
+      // At once, rather than queued behind an earlier offer to undo.
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(AsyncContent.messageFor(error))));
     }
   }
 

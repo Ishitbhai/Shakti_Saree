@@ -276,6 +276,21 @@ void main() {
       expect(find.text('Question deleted'), findsOneWidget);
     });
 
+    testWidgets('the offer to undo goes away by itself', (tester) async {
+      await openSupport(tester);
+      await open(tester, _delivery);
+      await tapDelete(tester, _delivery);
+      await tester.tap(_inDialog('Delete'));
+      await tester.pumpAndSettle();
+      expect(find.text('Undo'), findsOneWidget);
+
+      await tester.pump(HelpSupportScreen.undoWindow);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Undo'), findsNothing);
+      expect(await _stored(tester), hasLength(5));
+    });
+
     testWidgets('undo puts it back where it was', (tester) async {
       await openSupport(tester);
       await open(tester, _delivery);

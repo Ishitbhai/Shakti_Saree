@@ -142,6 +142,55 @@ void main() {
       ]);
     });
 
+    test('a new question lands after one written by hand', () async {
+      await db.collection('support').doc('byHand').set({
+        'subject': 'this is question',
+        'message': 'this is an answer',
+      });
+
+      await repository.createFaq(_shipping);
+      await repository.createFaq(_returns);
+
+      expect((await repository.fetchFaqs()).map((faq) => faq.question), [
+        'this is question',
+        _shipping.question,
+        _returns.question,
+      ]);
+    });
+
+    test('a change of case may not land on a near duplicate', () async {
+      await db.collection('support').doc('lower').set({
+        'subject': 'do you ship abroad?',
+        'message': 'Old',
+      });
+      await db.collection('support').doc('upper').set({
+        'subject': 'DO YOU SHIP ABROAD?',
+        'message': 'Other',
+      });
+
+      await expectLater(
+        repository.updateFaq(
+          originalQuestion: 'do you ship abroad?',
+          faq: const Faq(question: 'DO YOU SHIP ABROAD?', answer: 'Old'),
+        ),
+        _refusedWith(409),
+      );
+
+      final stored = await db.collection('support').doc('lower').get();
+      expect(stored.data()?['subject'], 'do you ship abroad?');
+    });
+
+    test('a question on its own may change its case', () async {
+      await repository.createFaq(_shipping);
+
+      await repository.updateFaq(
+        originalQuestion: _shipping.question,
+        faq: _shipping.copyWith(question: 'DO YOU SHIP ABROAD?'),
+      );
+
+      expect((await _docs(db)).single.data()['subject'], 'DO YOU SHIP ABROAD?');
+    });
+
     test('will not guess between two entries asking the same', () async {
       for (final id in ['one', 'two']) {
         await db.collection('support').doc(id).set({

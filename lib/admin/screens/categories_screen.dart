@@ -64,6 +64,8 @@ class CategoriesScreen extends ConsumerWidget {
           SnackBar(
             content: Text('${listing.name} deleted'),
             duration: undoWindow,
+            // A bar with an action otherwise stays until it is dismissed.
+            persist: false,
             action: SnackBarAction(
               label: 'Undo',
               onPressed: () async {

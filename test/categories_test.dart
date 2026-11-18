@@ -257,6 +257,29 @@ void main() {
       expect(names[8], 'Chanderi');
     });
 
+    testWidgets('the offer to undo goes away by itself', (tester) async {
+      _tallPhone(tester);
+      await tester.pumpWidget(_host());
+      await tester.pumpAndSettle();
+
+      await _containerOf(
+        tester,
+      ).read(productsRepositoryProvider).deleteProduct('SS-1050');
+      await tester.pumpAndSettle();
+
+      await tester.tap(_action('Chanderi', Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+      expect(find.text('Undo'), findsOneWidget);
+
+      await tester.pump(CategoriesScreen.undoWindow);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Undo'), findsNothing);
+      expect(find.text('11 categories'), findsOneWidget);
+    });
+
     testWidgets('one that still holds listings is refused', (tester) async {
       _tallPhone(tester);
       await tester.pumpWidget(_host());
