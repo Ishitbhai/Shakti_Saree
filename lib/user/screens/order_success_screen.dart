@@ -1,25 +1,115 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakti_saree/user/screens/MainNavigationScreen.dart';
 
+import '../../admin/data/firestore/firestore_schema.dart';
+import '../../admin/data/providers/backend_providers.dart';
+import '../data/shop_providers.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import '../widgets/app_back_button.dart';
 
-class OrderSuccessScreen extends StatefulWidget {
-  const OrderSuccessScreen({super.key});
+class OrderSuccessScreen extends ConsumerStatefulWidget {
+  final String? orderId;
+  final String? amount;
+  final String? deliveryDate;
+
+  const OrderSuccessScreen({
+    super.key,
+    this.orderId,
+    this.amount,
+    this.deliveryDate,
+  });
 
   @override
-  State<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
+  ConsumerState<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
 }
 
-class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
-  // State variables for order details
-  String orderId = '#SS20260726';
-  String amount = '₹6,297';
-  String deliveryDate = 'Tue, 29 Jul 2026';
+class _OrderSuccessScreenState extends ConsumerState<OrderSuccessScreen> {
+  late String orderId;
+  late String amount;
+  late String deliveryDate;
+
+  final List<String> _weekdays = [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
+  final List<String> _months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+
+  String _formatDate(DateTime dt) {
+    final weekday = _weekdays[dt.weekday - 1];
+    final month = _months[dt.month - 1];
+    return '$weekday, ${dt.day} $month ${dt.year}';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Default 4 days standard delivery from placement
+    final estimatedDelivery = DateTime.now().add(const Duration(days: 4));
+
+    orderId = widget.orderId ?? '#ORD_PENDING';
+    amount = widget.amount ?? '₹0';
+    deliveryDate = widget.deliveryDate ?? _formatDate(estimatedDelivery);
+  }
 
   @override
   Widget build(BuildContext context) {
+    // If orderId was not passed directly, fetch the latest order placed by current user
+    if (widget.orderId == null) {
+      final uid = ref.watch(customerUidProvider);
+      final db = ref.watch(firestoreProvider);
+
+      if (uid != null && db != null) {
+        db
+            .collection(Fs.orders)
+            .where(Fs.userId, isEqualTo: uid)
+            .orderBy(Fs.createdAt, descending: true)
+            .limit(1)
+            .snapshots()
+            .listen((snapshot) {
+              if (snapshot.docs.isNotEmpty && mounted) {
+                final data = snapshot.docs.first.data();
+                final String fetchedId = Fs.stringOf(data[Fs.orderId]);
+                final num fetchedAmount = data[Fs.totalAmount] ?? 0;
+                final dynamic createdTimestamp = data[Fs.createdAt];
+
+                DateTime baseDate = DateTime.now();
+                if (createdTimestamp is Timestamp) {
+                  baseDate = createdTimestamp.toDate();
+                }
+
+                setState(() {
+                  if (fetchedId.isNotEmpty) orderId = '#$fetchedId';
+                  amount = '₹$fetchedAmount';
+                  deliveryDate = _formatDate(
+                    baseDate.add(const Duration(days: 4)),
+                  );
+                });
+              }
+            });
+      }
+    }
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
@@ -33,7 +123,14 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
                   padding: const EdgeInsets.only(top: 18),
                   child: AppBackButton(
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const MainNavigationScreen(initialIndex: 0),
+                        ),
+                        (route) => false,
+                      );
                     },
                   ),
                 ),
@@ -213,7 +310,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
         Container(
           width: 34,
           height: 34,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: AppColors.pink,
             shape: BoxShape.circle,
           ),
