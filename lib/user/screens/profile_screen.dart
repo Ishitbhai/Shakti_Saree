@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import '../data/shop_providers.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'edit_profile_screen.dart';
@@ -8,14 +10,14 @@ import 'help_and_support_screen.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   // Profile state variables
   String initials = 'IV';
   String username = 'iv';
@@ -244,6 +246,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 height: 52,
                 child: ElevatedButton(
                   onPressed: () {
+                    // Not awaited, as at the admin logout: the session ends
+                    // here and now, and the screen moves on in the same breath
+                    ref
+                        .read(customerAuthRepositoryProvider)
+                        ?.signOut()
+                        .ignore();
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(

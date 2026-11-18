@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../admin/data/api_exception.dart';
+import '../data/shop_providers.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 import 'login_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileController = TextEditingController();
@@ -96,11 +99,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _mobileError == null &&
         _passwordError == null &&
         _confirmPasswordError == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      _createAccount(
+        name: name,
+        email: email,
+        mobile: mobile,
+        password: password,
       );
     }
+  }
+
+  // True while the account is being created, to disable the button
+  bool _registering = false;
+
+  // Creates the account and its users document, then goes on to login as this
+  // screen always has. Without Firebase (the tests) there is nothing to create.
+  Future<void> _createAccount({
+    required String name,
+    required String email,
+    required String mobile,
+    required String password,
+  }) async {
+    final auth = ref.read(customerAuthRepositoryProvider);
+    if (auth != null) {
+      setState(() => _registering = true);
+      try {
+        await auth.register(
+          name: name,
+          email: email,
+          mobile: mobile,
+          password: password,
+        );
+      } on ApiException catch (error) {
+        if (!mounted) return;
+        // An email already in use is shown on the field it is about
+        if (error case BadRequest(statusCode: 409)) {
+          setState(() => _emailError = error.message);
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(error.message)));
+        }
+        return;
+      } finally {
+        if (mounted) setState(() => _registering = false);
+      }
+    }
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account created. Please login to continue.'),
+      ),
+    );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override
@@ -276,7 +330,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: _handleRegister,
+                        onPressed: _registering ? null : _handleRegister,
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor: AppColors.primary,
@@ -285,13 +339,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
-                        child: Text(
-                          'Sign Up',
-                          style: AppTextStyles.button.copyWith(
-                            color: AppColors.white,
-                            fontSize: 16,
-                          ),
-                        ),
+                        child: _registering
+                            ? const SizedBox.square(
+                                dimension: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: AppColors.primary,
+                                ),
+                              )
+                            : Text(
+                                'Sign Up',
+                                style: AppTextStyles.button.copyWith(
+                                  color: AppColors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
                       ),
                     ),
                   ],

@@ -1,45 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../admin/data/api_exception.dart';
+import '../../admin/utils/formatters.dart';
+import '../data/shop_providers.dart';
+import '../models/shop_models.dart';
 import '../resources/imagestrings.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
+import '../widgets/shop_async_view.dart';
+import '../widgets/shop_image.dart';
 import 'categories_screen.dart';
 import 'product_detail_screen.dart';
 import 'product_list_screen.dart';
 import 'search_screen.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  // State variables for user, content, and dynamic lists[cite: 19]
-  String userName = 'Vivek';
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  // State variables for content[cite: 19]
   final String greetingPrefix = 'Namaste';
   final String heroTitle = 'Find saree that suits you';
 
-  late final List<Map<String, dynamic>> categoryList;
-  late final List<Map<String, dynamic>> trendingProducts;
+  // How many of each the page has room for; "See all" leads to the rest
+  static const int categoriesShown = 4;
+  static const int trendingShown = 2;
 
-  @override
-  void initState() {
-    super.initState();
-    // Dynamic Category Items[cite: 19]
-    categoryList = [
-      {'label': 'Silk', 'imagePath': image1},
-      {'label': 'Banarasi', 'imagePath': image2},
-      {'label': 'Cotton', 'imagePath': image3},
-      {'label': 'Designer', 'imagePath': image4},
-    ];
+  Future<void> _addToCart(ShopProduct product) async {
+    String message;
+    try {
+      await ref.read(shopRepositoryProvider).addToCart(product);
+      message = 'Added to Cart';
+    } on ApiException catch (error) {
+      message = error.message;
+    }
+    if (!mounted) return;
 
-    // Dynamic Trending Products[cite: 19]
-    trendingProducts = [
-      {'title': 'Banarasi Silk Saree', 'price': '₹2,499', 'imagePath': image7},
-      {'title': 'Kanjivaram Pure Silk', 'price': '₹3,299', 'imagePath': image8},
-    ];
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: AppColors.white)),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   void _navigateToCategoryTab(BuildContext context) {
@@ -58,6 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userName = ref.watch(customerNameProvider).value ?? '';
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SingleChildScrollView(
@@ -76,7 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '$greetingPrefix, $userName',
+                        userName.isEmpty
+                            ? greetingPrefix
+                            : '$greetingPrefix, $userName',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.white.withOpacity(0.9),
                           fontSize: 13,
@@ -163,16 +175,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  for (final cat in categoryList)
-                    _buildCategoryCircle(
-                      label: cat['label'] as String,
-                      imagePath: cat['imagePath'] as String,
-                      onTap: () => _navigateToCategoryTab(context),
-                    ),
-                ],
+              child: ShopAsyncView<List<ShopCategory>>(
+                state: ref.watch(shopCategoriesProvider),
+                placeholderHeight: 90,
+                onRetry: () => ref.invalidate(allCategoriesProvider),
+                builder: (context, categories) => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (final cat in categories.take(categoriesShown))
+                      _buildCategoryCircle(
+                        label: cat.name,
+                        imagePath: cat.image,
+                        onTap: () => _navigateToCategoryTab(context),
+                      ),
+                  ],
+                ),
               ),
             ),
 
@@ -285,28 +302,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  for (int i = 0; i < trendingProducts.length; i++) ...[
-                    Expanded(
-                      child: _buildProductCard(
-                        imagePath: trendingProducts[i]['imagePath'] as String,
-                        title: trendingProducts[i]['title'] as String,
-                        price: trendingProducts[i]['price'] as String,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ProductDetailScreen(),
-                            ),
-                          );
-                        },
+              child: ShopAsyncView<List<ShopProduct>>(
+                state: ref.watch(shopProductsProvider),
+                placeholderHeight: 200,
+                onRetry: () => ref.invalidate(allProductsProvider),
+                builder: (context, products) {
+                  final trending = products.take(trendingShown).toList();
+                  if (trending.isEmpty) {
+                    return Text(
+                      'No products available yet',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.muted,
                       ),
-                    ),
-                    if (i != trendingProducts.length - 1)
-                      const SizedBox(width: 14),
-                  ],
-                ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      for (int i = 0; i < trending.length; i++) ...[
+                        Expanded(
+                          child: _buildProductCard(
+                            imagePath: trending[i].image,
+                            title: trending[i].name,
+                            price: Formatters.rupeesFromPaise(
+                              trending[i].pricePaise,
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ProductDetailScreen(
+                                    productDocId: trending[i].docId,
+                                  ),
+                                ),
+                              );
+                            },
+                            onAddToCart: trending[i].inStock
+                                ? () => _addToCart(trending[i])
+                                : null,
+                          ),
+                        ),
+                        if (i != trending.length - 1) const SizedBox(width: 14),
+                      ],
+                      // A lone product keeps a card's width, not the page's
+                      if (trending.length == 1) ...[
+                        const SizedBox(width: 14),
+                        const Expanded(child: SizedBox.shrink()),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
 
@@ -320,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ================= HELPER WIDGETS =================[cite: 19]
   Widget _buildCategoryCircle({
     required String label,
-    required String imagePath,
+    required String? imagePath,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -338,10 +382,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             child: ClipOval(
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+              child: ShopImage(
+                path: imagePath,
+                fallback: Container(
                   color: AppColors.muted.withOpacity(0.2),
                   child: const Icon(
                     Icons.image_outlined,
@@ -353,12 +396,19 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            label,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.black,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+          // Sized because a real category's name can outgrow its circle
+          SizedBox(
+            width: 72,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.black,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -367,10 +417,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildProductCard({
-    required String imagePath,
+    required String? imagePath,
     required String title,
     required String price,
     required VoidCallback onTap,
+    VoidCallback? onAddToCart,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -393,19 +444,44 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.asset(
-                  imagePath,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: AppColors.muted.withOpacity(0.2),
-                    child: const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: AppColors.muted,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: ShopImage(
+                      path: imagePath,
+                      fallback: Container(
+                        color: AppColors.muted.withOpacity(0.2),
+                        child: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: AppColors.muted,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (onAddToCart != null)
+                    Positioned(
+                      right: 6,
+                      bottom: 6,
+                      child: GestureDetector(
+                        onTap: onAddToCart,
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: const BoxDecoration(
+                            color: AppColors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.add_shopping_cart,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             const SizedBox(height: 10),

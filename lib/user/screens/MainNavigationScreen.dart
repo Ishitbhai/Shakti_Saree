@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../admin/data/providers/backend_providers.dart';
+import '../data/shop_providers.dart';
 import '../styles/app_colors.dart';
 import 'home_screen.dart';
 import 'categories_screen.dart';
 import 'cart_screen.dart';
+import 'login_screen.dart';
 import 'my_orders_screen.dart';
 import 'profile_screen.dart';
 
-class MainNavigationScreen extends StatelessWidget {
+class MainNavigationScreen extends ConsumerWidget {
   final int initialIndex;
 
   const MainNavigationScreen({
@@ -16,7 +20,21 @@ class MainNavigationScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // However a session ends, the shop does not stay open behind it
+    ref.listen(authUserProvider, (previous, next) {
+      final signedOut = next.hasValue && next.value == null;
+      if (!signedOut || ref.read(firebaseAuthProvider) == null) return;
+
+      // Already on its way out: the Profile tab's Logout routes to login itself
+      if (!(ModalRoute.of(context)?.isActive ?? true)) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false,
+      );
+    });
+
     return DefaultTabController(
       length: 5,
       initialIndex: initialIndex,
