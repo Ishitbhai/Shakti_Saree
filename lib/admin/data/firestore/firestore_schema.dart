@@ -28,6 +28,9 @@ class Fs {
   static const String payments = 'payments';
   static const String support = 'support';
 
+  /// Added by the admin panel: the questions on its Help & Support screen.
+  static const String faqs = 'faqs';
+
   // ------------------------------------------------------------------ users
   static const String userId = 'user_id';
   static const String name = 'name';
@@ -79,6 +82,13 @@ class Fs {
   // ----------------------------------------------------------------- orders
   static const String orderId = 'order_id';
   static const String orderDate = 'order_date';
+
+  /// Where an order has got to. The customer app writes 'Pending' here at
+  /// checkout, and the admin panel moves it on from there.
+  static const String orderStatus = 'order_status';
+
+  /// What the panel used to keep [orderStatus] in, still on older orders.
+  /// Never written now, and read only through [orderStatusOf].
   static const String status = 'status';
   static const String totalAmount = 'total_amount';
   static const String paymentId = 'payment_id';
@@ -96,6 +106,11 @@ class Fs {
   static const String deliveryCharge = 'delivery_charge';
   static const String discount = 'discount';
 
+  /// Written by the customer app at checkout: a map holding who the order is
+  /// going to, under [recipientName] and [phone].
+  static const String deliveryAddress = 'delivery_address';
+  static const String recipientName = 'recipient_name';
+
   // ------------------------------------------------------------ order items
   static const String quantity = 'quantity';
 
@@ -107,12 +122,31 @@ class Fs {
   static const String paymentMethod = 'payment_method';
   static const String paymentStatus = 'payment_status';
 
+  /// What `payment_status` reads on an order once it has been paid for.
+  static const String paidOnOrder = 'Paid';
+
+  /// The same, on the order's document in `payments`. The customer app spells
+  /// the two differently, and these are its words.
+  static const String paidOnPayment = 'Success';
+
   // ---------------------------------------------------------------- support
   static const String supportId = 'support_id';
   static const String subject = 'subject';
   static const String message = 'message';
 
+  // ------------------------------------------------------------------- faqs
+  static const String faqId = 'faq_id';
+  static const String question = 'question';
+  static const String answer = 'answer';
+
   // -------------------------------------------------------- order statuses
+  /// The status of the order holding [fields].
+  ///
+  /// `order_status` decides, whatever an older `status` beside it says. That
+  /// one counts only on an order with no `order_status` at all.
+  static OrderStatus orderStatusOf(Map<String, dynamic> fields) =>
+      statusOf(optionalString(fields[orderStatus]) ?? fields[status]);
+
   /// The status as the app reads it.
   ///
   /// Lenient, because the customer app and the console both write this
@@ -136,6 +170,18 @@ class Fs {
   /// it; everything else is the label the panel shows.
   static String statusValue(OrderStatus status) =>
       status == OrderStatus.isNew ? 'Pending' : status.label;
+
+  // ---------------------------------------------------------- payment words
+  /// Whether [method] is cash handed over at the door, however it is spelled.
+  static bool isCashOnDelivery(Object? method) =>
+      switch (stringOf(method).toLowerCase().replaceAll(RegExp('[^a-z]'), '')) {
+        'cod' || 'cashondelivery' => true,
+        _ => false,
+      };
+
+  /// Whether [status] says the money is still to come.
+  static bool isPendingPayment(Object? status) =>
+      stringOf(status).toLowerCase() == 'pending';
 
   // ------------------------------------------------------------ conversions
   /// Rupees as stored, in paise as the models hold them.

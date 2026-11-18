@@ -22,6 +22,7 @@ import 'package:shakti_saree/admin/widgets/dashboard/dashboard_header.dart';
 import 'package:shakti_saree/admin/widgets/more/more_header.dart';
 import 'package:shakti_saree/admin/widgets/navigation/admin_bottom_nav.dart';
 import 'package:shakti_saree/admin/widgets/products/asset_picture_sheet.dart';
+import 'package:shakti_saree/admin/widgets/products/image_upload_box.dart';
 
 import 'support/fake_firebase_auth.dart';
 import 'support/firestore_seed.dart';
@@ -206,6 +207,34 @@ void main() {
     });
   });
 
+  group('the picture box', () {
+    testWidgets('a saved photo that is not a picture shows as broken', (
+      tester,
+    ) async {
+      final notAPicture = Uint8List.fromList(utf8.encode('Hello'));
+      await tester.runAsync(() async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light,
+            home: Scaffold(
+              body: ImageUploadBox(
+                images: [PickedImage(name: 'Saved photo', bytes: notAPicture)],
+                maxImages: 1,
+                onRemove: (_) {},
+              ),
+            ),
+          ),
+        );
+        // The decoder answers in real time.
+        await Future<void>.delayed(const Duration(seconds: 1));
+      });
+      await tester.pump();
+
+      expect(find.byIcon(Icons.broken_image_outlined), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('category pictures', () {
     late FakeFirebaseFirestore db;
 
@@ -347,6 +376,7 @@ void main() {
 
       await openEditor(tester, 'Silk Sarees');
       expect(find.bySemanticsLabel('Saved photo'), findsOneWidget);
+      expect(find.textContaining('uploaded photo'), findsOneWidget);
       await tester.enterText(_field('Name'), 'Silk');
       await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();

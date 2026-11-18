@@ -88,7 +88,7 @@ void main() {
         .collection('orders')
         .where('order_id', isEqualTo: 'ORD_001')
         .get();
-    expect(stored.docs.single.data()['status'], 'Accepted');
+    expect(stored.docs.single.data()['order_status'], 'Accepted');
     // Gone from the New queue the tab opens on.
     expect(find.text('No new orders'), findsOneWidget);
   });

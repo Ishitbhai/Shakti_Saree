@@ -20,9 +20,15 @@ class OrderLine {
 /// A step in the fulfilment timeline: one status, and when the order reached
 /// it.
 ///
-/// A null [at] means the step has not happened yet.
+/// A null [at] means no time is on record, which leaves the step still to come
+/// unless [reached] says the order has got past it anyway.
 class OrderEvent {
-  const OrderEvent({required this.status, this.at, this.detail});
+  const OrderEvent({
+    required this.status,
+    this.at,
+    this.detail,
+    this.reached = false,
+  });
 
   /// The status this step stands for. The timeline is the flow, so every step
   /// is a status rather than a label someone wrote down.
@@ -34,9 +40,13 @@ class OrderEvent {
   /// reading — the courier and AWB on Shipped, the reason on Cancelled.
   final String? detail;
 
+  /// Whether the order's status puts it at or past this step, as on an order
+  /// moved along by hand in the console, where no time was written down.
+  final bool reached;
+
   String get label => status.timelineLabel;
 
-  bool get isDone => at != null;
+  bool get isDone => reached || at != null;
 
   /// Cancellation is drawn differently: it ends the timeline rather than
   /// continuing it.
@@ -117,6 +127,7 @@ class OrderDetail {
             status: step,
             at: reachedAt[step],
             detail: _detailFor(step),
+            reached: !isCancelled && step.index <= status.index,
           ),
     ];
 
@@ -128,6 +139,7 @@ class OrderDetail {
         status: OrderStatus.cancelled,
         at: reachedAt[OrderStatus.cancelled],
         detail: cancellationReason,
+        reached: true,
       ),
     ];
   }

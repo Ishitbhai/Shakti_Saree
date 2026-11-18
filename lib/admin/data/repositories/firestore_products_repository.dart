@@ -61,8 +61,8 @@ class FirestoreProductsRepository implements ProductsRepository {
       ..update(doc.reference, {
         Fs.productId: product.sku,
         ...await _fieldsOf(product),
-        // Only ever set, never cleared: the form has no way to remove a
-        // picture, so a null here means "unchanged".
+        // Null means unchanged. A picture the admin took off arrives blank,
+        // and is written as is: blank reads back as no picture.
         if (product.image != null) Fs.image: product.image!,
       });
 

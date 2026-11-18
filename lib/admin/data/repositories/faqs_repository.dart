@@ -32,10 +32,14 @@ abstract interface class FaqsRepository {
 /// Carrying the position is what makes undo an undo: the row returns to where
 /// it was rather than to the end of the list.
 class RemovedFaq {
-  const RemovedFaq({required this.faq, required this.index});
+  const RemovedFaq({required this.faq, required this.index, this.stored});
 
   final Faq faq;
   final int index;
+
+  /// The document as it stood in Firestore, so undo brings back that same
+  /// document rather than a new one. Null for the in-memory sample.
+  final ({String id, Map<String, dynamic> data})? stored;
 }
 
 /// Serves the help questions from the shared in-memory store.

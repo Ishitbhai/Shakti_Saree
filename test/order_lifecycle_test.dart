@@ -56,6 +56,28 @@ class _HangingAccept extends _StubOrders {
   Future<OrderDetail> acceptOrder(String id) => completer.future;
 }
 
+/// Real orders on the list, an accept that hangs until released, and a count
+/// of how often an order's detail was asked for.
+class _SlowAccept extends _StubOrders {
+  _SlowAccept(this.orders);
+
+  final List<Order> orders;
+  final completer = Completer<OrderDetail>();
+  var detailReads = 0;
+
+  @override
+  Future<List<Order>> fetchOrders() async => orders;
+
+  @override
+  Future<OrderDetail> acceptOrder(String id) => completer.future;
+
+  @override
+  Future<OrderDetail> fetchOrderDetail(String id) async {
+    detailReads++;
+    return _detailAt(OrderStatus.accepted);
+  }
+}
+
 class _FailingAccept extends _StubOrders {
   @override
   Future<OrderDetail> acceptOrder(String id) async =>
@@ -662,17 +684,36 @@ void main() {
       await show(tester, _detailAt(OrderStatus.isNew));
 
       // The whole flow is laid out, so the admin can see what is coming.
-      for (final label in ['Order Placed', 'Accepted', 'Packed', 'Shipped']) {
+      for (final label in [
+        'Order Placed',
+        'Payment Confirmed',
+        'Packed',
+        'Shipped',
+      ]) {
         expect(find.text(label), findsWidgets, reason: label);
       }
       // Everything after the first step is still to happen.
       expect(find.text('Pending'), findsNWidgets(4));
     });
 
+    testWidgets('the accepted step reads Payment Confirmed', (tester) async {
+      await show(tester, _detailAt(OrderStatus.accepted));
+
+      Finder inTimeline(String text) => find.descendant(
+        of: find.byType(OrderTimeline),
+        matching: find.text(text),
+      );
+      expect(inTimeline('Payment Confirmed'), findsOneWidget);
+      expect(inTimeline('Accepted'), findsNothing);
+
+      // Only the step is renamed. The order's status keeps its own name.
+      expect(_pill('Accepted'), findsOneWidget);
+    });
+
     testWidgets('steps complete as the order moves', (tester) async {
       await show(tester, _detailAt(OrderStatus.packed));
 
-      // Placed, Accepted and Packed are done; Shipped and Delivered are not.
+      // Placed, Payment Confirmed and Packed are done; the last two are not.
       expect(find.text('Pending'), findsNWidgets(2));
     });
 
@@ -719,7 +760,7 @@ void main() {
 
       // What actually happened, then the cancellation and why.
       expect(find.text('Order Placed'), findsOneWidget);
-      expect(find.text('Accepted'), findsOneWidget);
+      expect(find.text('Payment Confirmed'), findsOneWidget);
       expect(find.text('Cancelled'), findsWidgets);
       expect(find.text('Out of stock'), findsOneWidget);
 
@@ -760,7 +801,7 @@ void main() {
 
       expect(shipped.timeline.map((event) => event.label), [
         'Order Placed',
-        'Accepted',
+        'Payment Confirmed',
         'Packed',
         'Shipped',
         'Delivered',
@@ -793,7 +834,7 @@ void main() {
 
       expect(cancelled.timeline.map((event) => event.label), [
         'Order Placed',
-        'Accepted',
+        'Payment Confirmed',
         'Cancelled',
       ]);
       expect(cancelled.timeline.every((event) => event.isDone), isTrue);
@@ -915,7 +956,9 @@ void main() {
 
       final card = find.byType(OrderCard).first;
       final id = tester.widget<OrderCard>(card).order.id;
-      await tester.tap(find.descendant(of: card, matching: find.text('Accept')));
+      await tester.tap(
+        find.descendant(of: card, matching: find.text('Accept')),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Order $id accepted.'), findsOneWidget);
@@ -933,6 +976,34 @@ void main() {
         find.descendant(of: moved, matching: find.text('Pack')),
         findsOneWidget,
       );
+    });
+
+    testWidgets('View Details waits while a step is on its way', (
+      tester,
+    ) async {
+      _phone(tester);
+      final repository = _SlowAccept(await _liveRepository().fetchOrders());
+      await tester.pumpWidget(_host(const OrdersScreen(), repository));
+      await tester.pumpAndSettle();
+
+      final card = find.byType(OrderCard).first;
+      Finder inCard(String text) =>
+          find.descendant(of: card, matching: find.text(text));
+
+      await tester.tap(inCard('Accept'));
+      await tester.pump();
+      await tester.tap(inCard('View Details'));
+      await tester.pump();
+
+      expect(repository.detailReads, 0);
+
+      repository.completer.complete(_detailAt(OrderStatus.accepted));
+      await tester.pumpAndSettle();
+      await tester.tap(inCard('View Details'));
+      await tester.pumpAndSettle();
+
+      expect(repository.detailReads, 1);
+      expect(find.byType(OrderDetailScreen), findsOneWidget);
     });
   });
 

@@ -87,8 +87,23 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       onSubmit: ({required courier, required awbNumber}) =>
           _repository.markShipped(id, courier: courier, awbNumber: awbNumber),
     );
-    if (!mounted || updated == null) return;
+    if (!mounted) return;
+    if (updated == null) return _catchUp();
     _settle(updated);
+  }
+
+  /// Reads the order again after a step that did not go through.
+  ///
+  /// A refusal usually means the order has moved on without this screen, which
+  /// would otherwise go on offering a step that can only be refused. The admin
+  /// has already been told what went wrong, so a failure here adds nothing.
+  Future<void> _catchUp() async {
+    try {
+      final latest = await _repository.fetchOrderDetail(detail.id);
+      if (mounted) _settle(latest);
+    } catch (_) {
+      // The last known state is still on screen, and is all there is to show.
+    }
   }
 
   /// Runs one transition, holding the bar disabled until it settles.
@@ -109,6 +124,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(AsyncContent.messageFor(error))));
+      await _catchUp();
     } finally {
       if (mounted) setState(() => _advancing = false);
     }
@@ -140,7 +156,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       context,
       onSubmit: (reason) => _repository.cancelOrder(id, reason: reason),
     );
-    if (!mounted || updated == null) return;
+    if (!mounted) return;
+    if (updated == null) return _catchUp();
     _settle(updated);
   }
 

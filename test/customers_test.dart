@@ -7,6 +7,7 @@ import 'package:shakti_saree/admin/screens/customers_screen.dart';
 import 'package:shakti_saree/admin/widgets/customers/customer_tile.dart';
 import 'package:shakti_saree/admin/data/providers/orders_providers.dart';
 import 'package:shakti_saree/admin/widgets/common/order_tile.dart';
+import 'package:shakti_saree/admin/styles/app_colors.dart';
 import 'package:shakti_saree/admin/styles/app_theme.dart';
 import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
@@ -115,6 +116,51 @@ void main() {
         ).initials,
         '-',
       );
+    });
+  });
+
+  group('a row', () {
+    Future<void> pumpTile(WidgetTester tester, String contact) =>
+        tester.pumpWidget(
+          MaterialApp(
+            theme: AppTheme.light,
+            home: Scaffold(
+              body: CustomerTile(
+                customer: Customer(
+                  id: 'testCustomerUid0003',
+                  name: 'Asha Patel',
+                  phone: contact,
+                  orderCount: 12,
+                  spentPaise: 4829000,
+                ),
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
+
+    testWidgets('writes a stored number the way the design does', (
+      tester,
+    ) async {
+      await pumpTile(tester, '9876543210');
+
+      expect(find.text('+91 98765 43210'), findsOneWidget);
+      expect(find.text('9876543210'), findsNothing);
+    });
+
+    testWidgets('leaves an email address alone', (tester) async {
+      await pumpTile(tester, 'asha@example.com');
+
+      expect(find.text('asha@example.com'), findsOneWidget);
+    });
+
+    testWidgets('shows the orders and spend in green', (tester) async {
+      await pumpTile(tester, '9876543210');
+
+      final line = tester.widget<Text>(
+        find.text('12 orders  •  ₹48,290 spent'),
+      );
+      expect(line.style?.color, AppColors.success);
     });
   });
 

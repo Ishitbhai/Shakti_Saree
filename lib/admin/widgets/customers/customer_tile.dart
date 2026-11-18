@@ -25,75 +25,73 @@ class CustomerTile extends StatelessWidget {
         ? '1 order'
         : '${Formatters.count(customer.orderCount)} orders';
     final spent = Formatters.rupeesFromPaise(customer.spentPaise);
+    final contact = Formatters.phone(customer.phone);
 
     return MergeSemantics(
       child: Semantics(
-        label: '${customer.name}, ${customer.phone}, $orders, $spent spent',
+        label: '${customer.name}, $contact, $orders, $spent spent',
         button: onTap != null,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: AppRadii.cardRadius,
-            boxShadow: AppShadows.softShadow,
-          ),
-          child: Material(
-            color: AppColors.transparent,
-            borderRadius: AppRadii.cardRadius,
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onTap,
-              child: Padding(
-                padding: const EdgeInsets.all(_padding),
-                child: Row(
-                  children: [
-                    InitialsAvatar(
-                      initials: customer.initials,
-                      // Seeded on the id, which is the identity — a
-                      // renamed customer keeps their colour.
-                      seed: customer.id,
-                    ),
-                    const SizedBox(width: AppSpacing.x3),
-                    Expanded(
-                      child: ExcludeSemantics(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              customer.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.titleMedium,
+        child: Material(
+          color: AppColors.transparent,
+          borderRadius: AppRadii.cardRadius,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(_padding),
+              child: Row(
+                children: [
+                  InitialsAvatar(
+                    initials: customer.initials,
+                    // Seeded on the id, which is the identity — a
+                    // renamed customer keeps their colour.
+                    seed: customer.id,
+                  ),
+                  const SizedBox(width: AppSpacing.x3),
+                  Expanded(
+                    child: ExcludeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            customer.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.titleMedium.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
-                            Text(
-                              customer.phone,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.caption,
+                          ),
+                          Text(
+                            contact,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.caption,
+                          ),
+                          const SizedBox(height: AppSpacing.x1),
+                          Text(
+                            '$orders  •  $spent spent',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.caption.copyWith(
+                              color: AppColors.success,
                             ),
-                            const SizedBox(height: AppSpacing.x1),
-                            Text(
-                              '$orders  •  $spent spent',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.caption,
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    if (onTap != null) ...[
-                      const SizedBox(width: AppSpacing.x2),
-                      const ExcludeSemantics(
-                        child: Icon(
-                          Icons.chevron_right,
-                          size: _chevron,
-                          color: AppColors.textMuted,
-                        ),
+                  ),
+                  if (onTap != null) ...[
+                    const SizedBox(width: AppSpacing.x2),
+                    const ExcludeSemantics(
+                      child: Icon(
+                        Icons.chevron_right,
+                        size: _chevron,
+                        color: AppColors.textMuted,
                       ),
-                    ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ),

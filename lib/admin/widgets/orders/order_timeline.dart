@@ -119,7 +119,9 @@ class _Step extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.x2),
                       Text(
-                        at == null ? 'Pending' : Formatters.dayTime(at),
+                        at != null
+                            ? Formatters.dayTime(at)
+                            : (done ? '' : 'Pending'),
                         style: AppTypography.caption.copyWith(
                           color: done
                               ? AppColors.textGrey

@@ -18,11 +18,11 @@ import 'package:shakti_saree/admin/styles/app_theme.dart';
 import 'package:shakti_saree/admin/widgets/common/local_asset_image.dart';
 import 'package:shakti_saree/admin/data/mock/mock_data.dart';
 
-/// Pictures are photos kept in the records themselves: nothing in the
-/// catalogue depends on a file shipped with the app, and a frame without a
-/// picture is a frame with a tint in it rather than a crash.
+/// Pictures are files shipped with the app under assets/images, or a photo an
+/// older record was saved with; a frame without a picture is a frame with a
+/// tint in it rather than a crash.
 
-/// A one-pixel PNG, kept the way an admin's upload is.
+/// A one-pixel PNG, kept the way an older upload was.
 final String _photo = EmbeddedPhoto.encode(
   base64Decode(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGA'

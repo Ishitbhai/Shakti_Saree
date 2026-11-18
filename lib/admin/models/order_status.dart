@@ -47,9 +47,13 @@ enum OrderStatus {
   bool get isTerminal => next == null;
 
   /// How this status reads as a step that has happened, rather than as a
-  /// state the order is in — 'Order Placed' rather than 'New'.
-  String get timelineLabel =>
-      this == OrderStatus.isNew ? 'Order Placed' : label;
+  /// state the order is in — 'Order Placed' rather than 'New', and 'Payment
+  /// Confirmed' rather than 'Accepted'.
+  String get timelineLabel => switch (this) {
+    OrderStatus.isNew => 'Order Placed',
+    OrderStatus.accepted => 'Payment Confirmed',
+    _ => label,
+  };
 
   /// The happy path in order, from New through to Delivered.
   ///

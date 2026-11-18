@@ -335,6 +335,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                       onRemove: (_) =>
                           setState(() => _image = _isEditing ? '' : null),
                     ),
+                    if (EmbeddedPhoto.isEmbedded(_image)) ...[
+                      const SizedBox(height: AppSpacing.x2),
+                      const SavedPhotoNote(),
+                    ],
                     const SizedBox(height: AppSpacing.x4),
                     LabelledField(
                       label: 'Placeholder Colour',

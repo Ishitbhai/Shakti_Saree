@@ -33,7 +33,10 @@ class CustomerOrdersScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            AdminPageHeader(title: customer.name, subtitle: customer.phone),
+            AdminPageHeader(
+              title: customer.name,
+              subtitle: Formatters.phone(customer.phone),
+            ),
             Expanded(
               child: AsyncContent<List<Order>>(
                 state: orders,

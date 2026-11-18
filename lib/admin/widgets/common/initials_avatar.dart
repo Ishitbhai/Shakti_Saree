@@ -57,7 +57,7 @@ class InitialsAvatar extends StatelessWidget {
         ),
         child: Text(
           initials,
-          style: AppTypography.labelMedium.copyWith(color: tint.foreground),
+          style: AppTypography.avatarInitials.copyWith(color: tint.foreground),
         ),
       ),
     );

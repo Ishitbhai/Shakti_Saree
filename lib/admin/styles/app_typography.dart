@@ -60,6 +60,15 @@ class AppTypography {
     color: AppColors.textDark,
   );
 
+  /// The letters in a customer's avatar circle.
+  static TextStyle get avatarInitials => TextStyle(
+    fontFamily: _playfair,
+    fontSize: 15,
+    fontWeight: FontWeight.w700,
+    height: 1,
+    color: AppColors.textDark,
+  );
+
   /// The two-letter mark inside the gold monogram circle. Larger than any
   /// display style, so it gets its own entry.
   static TextStyle get monogram => TextStyle(

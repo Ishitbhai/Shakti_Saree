@@ -44,16 +44,8 @@ class FirestoreCustomersRepository implements CustomersRepository {
       final id = Fs.stringOf(data[Fs.userId]).isEmpty
           ? doc.id
           : Fs.stringOf(data[Fs.userId]);
-      final name = Fs.stringOf(data[Fs.name]);
       customers.add(
-        _customerOf(
-          id: id,
-          name: name.isEmpty ? id : name,
-          contact:
-              FirestoreOrdersRepository.phoneOf(data) ??
-              Fs.stringOf(data[Fs.email]),
-          orders: placed[id] ?? const [],
-        ),
+        _customerOf(id: id, account: data, orders: placed[id] ?? const []),
       );
       listed.add(id);
     }
@@ -62,7 +54,7 @@ class FirestoreCustomersRepository implements CustomersRepository {
     // somebody, and their spend should not vanish from the list.
     for (final MapEntry(key: id, value: theirs) in placed.entries) {
       if (id.isEmpty || listed.contains(id)) continue;
-      customers.add(_customerOf(id: id, name: id, contact: '', orders: theirs));
+      customers.add(_customerOf(id: id, account: const {}, orders: theirs));
     }
 
     customers.sort((a, b) => b.spentPaise.compareTo(a.spentPaise));
@@ -73,21 +65,42 @@ class FirestoreCustomersRepository implements CustomersRepository {
   Future<List<Order>> fetchOrdersFor(String id) =>
       guardFirestore(() => _orders.fetchSummaries(userId: id));
 
+  /// An account made in the customer app often has no name or number of its
+  /// own. Those are on the delivery address it saved, or failing that on the
+  /// latest order it placed.
   static Customer _customerOf({
     required String id,
-    required String name,
-    required String contact,
+    required Map<String, dynamic> account,
     required List<Map<String, dynamic>> orders,
-  }) => Customer(
-    id: id,
-    name: name,
-    phone: contact,
-    orderCount: orders.length,
-    // A cancelled order is not money taken.
-    spentPaise: orders
-        .where(
-          (order) => Fs.statusOf(order[Fs.status]) != OrderStatus.cancelled,
-        )
-        .fold(0, (total, order) => total + Fs.paiseOf(order[Fs.totalAmount])),
-  );
+  }) {
+    final addresses = [account, ...orders.toList()..sort(_newestFirst)];
+    String? given(String? Function(Map<String, dynamic>) read) =>
+        addresses.map(read).nonNulls.firstOrNull;
+
+    return Customer(
+      id: id,
+      name:
+          Fs.optionalString(account[Fs.name]) ??
+          given(FirestoreOrdersRepository.recipientNameOf) ??
+          id,
+      phone:
+          FirestoreOrdersRepository.phoneOf(account) ??
+          given(FirestoreOrdersRepository.recipientPhoneOf) ??
+          Fs.stringOf(account[Fs.email]),
+      orderCount: orders.length,
+      // A cancelled order is not money taken.
+      spentPaise: orders
+          .where((order) => Fs.orderStatusOf(order) != OrderStatus.cancelled)
+          .fold(0, (total, order) => total + Fs.paiseOf(order[Fs.totalAmount])),
+    );
+  }
+
+  static int _newestFirst(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final at = FirestoreOrdersRepository.placedAtOf(a);
+    final bt = FirestoreOrdersRepository.placedAtOf(b);
+    if (at == null || bt == null) {
+      return at == bt ? 0 : (at == null ? 1 : -1);
+    }
+    return bt.compareTo(at);
+  }
 }

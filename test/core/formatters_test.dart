@@ -2,6 +2,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shakti_saree/admin/utils/formatters.dart';
 
 void main() {
+  group('phone', () {
+    test('writes a mobile number the way the designs do', () {
+      for (final stored in [
+        '9876543210',
+        '09876543210',
+        '919876543210',
+        '+919876543210',
+        '+91 98765 43210',
+        '98765-43210',
+      ]) {
+        expect(Formatters.phone(stored), '+91 98765 43210', reason: stored);
+      }
+    });
+
+    test('does not mistake a number starting 91 for the country code', () {
+      expect(Formatters.phone('9198765432'), '+91 91987 65432');
+    });
+
+    test('leaves anything else as it came', () {
+      for (final other in [
+        'test@example.com',
+        '',
+        '12345',
+        '+1 415 555 0100',
+      ]) {
+        expect(Formatters.phone(other), other);
+      }
+    });
+  });
+
   group('rupeesFromPaise', () {
     test('formats paise as whole rupees', () {
       expect(Formatters.rupeesFromPaise(629700), '₹6,297');

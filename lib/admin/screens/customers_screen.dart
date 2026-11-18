@@ -81,7 +81,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final customers = ref.watch(customersProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      // A single white sheet of rows, rather than cards on cream.
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -106,6 +107,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 controller: _search,
                 style: AppTypography.bodyMedium,
                 decoration: InputDecoration(
+                  fillColor: AppColors.surface,
                   hintText: 'Search name or mobile',
                   prefixIcon: const Icon(
                     Icons.search,
@@ -143,7 +145,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       return AsyncMessage(text: 'Nobody matches "$_query"');
     }
 
-    return ListView.separated(
+    return ListView.builder(
       padding: const EdgeInsets.fromLTRB(
         CustomersScreen._screenPadding,
         0,
@@ -151,7 +153,6 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         AppSpacing.x6,
       ),
       itemCount: visible.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.x3),
       itemBuilder: (context, index) {
         final customer = visible[index];
         return CustomerTile(

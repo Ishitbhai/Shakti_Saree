@@ -48,7 +48,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   String? _opening;
 
   Future<void> _openDetail(Order order) async {
-    if (_opening != null) return;
+    // Not while a step is on its way either: what opened would be read from
+    // before that step, and would stay out of date.
+    if (_opening != null || _advancing != null) return;
     // The in-memory source answers immediately; Firestore takes a moment, and
     // the bar under the header says so.
     setState(() => _opening = order.id);

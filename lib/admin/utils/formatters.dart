@@ -60,6 +60,18 @@ class Formatters {
     return date(value);
   }
 
+  /// An Indian mobile number the way the designs write it, `+91 98765 43210`.
+  ///
+  /// Anything else, an email address included, is left exactly as it came.
+  static String phone(String value) {
+    final compact = value.replaceAll(RegExp(r'[\s-]'), '');
+    final mobile = RegExp(
+      r'^(?:\+?91|0)?(\d{10})$',
+    ).firstMatch(compact)?.group(1);
+    if (mobile == null) return value;
+    return '+91 ${mobile.substring(0, 5)} ${mobile.substring(5)}';
+  }
+
   /// `1 item` / `3 items` — the singular matters in the designs.
   static String items(int quantity) {
     final plural = quantity == 1 ? '' : 's';

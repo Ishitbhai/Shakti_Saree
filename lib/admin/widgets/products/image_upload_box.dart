@@ -24,6 +24,31 @@ class PickedImage {
   final String? assetPath;
 }
 
+/// Shown under the picture box while it holds a photo an older record was
+/// uploaded with: a user app that draws pictures from the app's own files
+/// cannot show it, so the admin should pick one from `assets/images/`.
+class SavedPhotoNote extends StatelessWidget {
+  const SavedPhotoNote({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.warningBg,
+        borderRadius: AppRadii.cardRadius,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.x3),
+        child: Text(
+          'This is an uploaded photo, which the user app may not show. Tap × '
+          'and choose a picture from assets/images instead.',
+          style: AppTypography.bodySmall.copyWith(color: AppColors.textDark),
+        ),
+      ),
+    );
+  }
+}
+
 /// Dashed drop zone for the product photos.
 ///
 /// Shows the prompt while [images] is empty and the thumbnails once there are
@@ -186,6 +211,13 @@ class _Thumbnail extends StatelessWidget {
   final PickedImage image;
   final VoidCallback? onRemove;
 
+  /// What a thumbnail shows when its picture cannot be drawn.
+  static Widget _broken(BuildContext context, Object error, StackTrace? stack) =>
+      const ColoredBox(
+        color: AppColors.field,
+        child: Icon(Icons.broken_image_outlined),
+      );
+
   @override
   Widget build(BuildContext context) {
     return SizedBox.square(
@@ -201,16 +233,15 @@ class _Thumbnail extends StatelessWidget {
                   bytes,
                   fit: BoxFit.cover,
                   semanticLabel: image.name,
+                  // A saved photo whose bytes are not a picture.
+                  errorBuilder: _broken,
                 ),
                 PickedImage(:final assetPath) => Image.asset(
                   assetPath ?? '',
                   fit: BoxFit.cover,
                   semanticLabel: image.name,
                   // A file named in the database that this build lacks.
-                  errorBuilder: (context, error, stackTrace) => const ColoredBox(
-                    color: AppColors.field,
-                    child: Icon(Icons.broken_image_outlined),
-                  ),
+                  errorBuilder: _broken,
                 ),
               },
             ),
