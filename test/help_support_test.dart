@@ -146,8 +146,8 @@ void main() {
       await tester.tap(find.bySemanticsLabel('Add question'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(_field('Question'), question);
-      await tester.enterText(_field('Answer'), answer);
+      await tester.enterText(_field('Subject'), question);
+      await tester.enterText(_field('Message'), answer);
       await tester.pumpAndSettle();
     }
 
@@ -213,7 +213,7 @@ void main() {
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(_field('Answer'), 'Delivery is free this month.');
+      await tester.enterText(_field('Message'), 'Delivery is free this month.');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();
@@ -229,7 +229,7 @@ void main() {
       await tester.tap(find.text('Edit'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(_field('Question'), 'What does delivery cost?');
+      await tester.enterText(_field('Subject'), 'What does delivery cost?');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();

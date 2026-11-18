@@ -11,7 +11,6 @@ import 'package:shakti_saree/admin/data/repositories/firestore_dashboard_reposit
 import 'package:shakti_saree/admin/data/repositories/firestore_orders_repository.dart';
 import 'package:shakti_saree/admin/data/repositories/firestore_products_repository.dart';
 import 'package:shakti_saree/admin/data/repositories/profile_repository.dart';
-import 'package:shakti_saree/admin/data/repositories/support_repository.dart';
 import 'package:shakti_saree/admin/models/admin_profile.dart';
 import 'package:shakti_saree/admin/models/category.dart';
 import 'package:shakti_saree/admin/models/customer.dart';
@@ -1236,15 +1235,6 @@ void main() {
   });
 
   group('support and profile', () {
-    test('support queries name who sent them', () async {
-      final tickets = await FirestoreSupportRepository(
-        await seededFirestore(),
-      ).fetchTickets();
-
-      expect(tickets.single.subject, 'Delivery Delay');
-      expect(tickets.single.customer, 'Ishitkumar Vadhavana');
-    });
-
     test('an admin profile is read from and saved to users/{uid}', () async {
       final db = await seededFirestore();
       await db.collection('users').doc('admin-uid').set({

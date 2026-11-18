@@ -48,12 +48,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // The help questions, on the same footing as the catalogue.
-    match /faqs/{id} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
     // Accounts. A user reads and edits their own, and can never make
     // themselves an admin; admins are made in the console or by an admin.
     match /users/{uid} {

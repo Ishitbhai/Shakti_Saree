@@ -28,9 +28,6 @@ class Fs {
   static const String payments = 'payments';
   static const String support = 'support';
 
-  /// Added by the admin panel: the questions on its Help & Support screen.
-  static const String faqs = 'faqs';
-
   // ------------------------------------------------------------------ users
   static const String userId = 'user_id';
   static const String name = 'name';
@@ -131,13 +128,13 @@ class Fs {
 
   // ---------------------------------------------------------------- support
   static const String supportId = 'support_id';
-  static const String subject = 'subject';
-  static const String message = 'message';
 
-  // ------------------------------------------------------------------- faqs
-  static const String faqId = 'faq_id';
-  static const String question = 'question';
-  static const String answer = 'answer';
+  /// On a customer's query, what it is about. On a question the admin answers
+  /// on the Help & Support screen, the question.
+  static const String subject = 'subject';
+
+  /// On a customer's query, what they wrote. On the admin's, the answer.
+  static const String message = 'message';
 
   // -------------------------------------------------------- order statuses
   /// The status of the order holding [fields].
@@ -170,6 +167,12 @@ class Fs {
   /// it; everything else is the label the panel shows.
   static String statusValue(OrderStatus status) =>
       status == OrderStatus.isNew ? 'Pending' : status.label;
+
+  // ---------------------------------------------------------------- support
+  /// Whether a `support` document is a query from a customer, who is named on
+  /// it. Without a `user_id` it is a question the admin answered.
+  static bool isCustomerQuery(Map<String, dynamic> fields) =>
+      stringOf(fields[userId]).isNotEmpty;
 
   // ---------------------------------------------------------- payment words
   /// Whether [method] is cash handed over at the door, however it is spelled.

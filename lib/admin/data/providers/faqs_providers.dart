@@ -21,6 +21,6 @@ final faqsRepositoryProvider = Provider<FaqsRepository>((ref) {
 /// or deleted redraws the list without anyone telling it to.
 final faqsProvider = FutureProvider<List<Faq>>((ref) {
   ref.watch(faqStoreProvider);
-  watchCollections(ref, const [Fs.faqs]);
+  watchCollections(ref, const [Fs.support]);
   return ref.watch(faqsRepositoryProvider).fetchFaqs();
 });

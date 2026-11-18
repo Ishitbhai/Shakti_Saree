@@ -23,7 +23,7 @@ const _returns = Faq(
 
 Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> _docs(
   FakeFirebaseFirestore db,
-) async => (await db.collection('faqs').get()).docs;
+) async => (await db.collection('support').get()).docs;
 
 Matcher _refusedWith(int code) => throwsA(
   isA<BadRequest>().having((error) => error.statusCode, 'statusCode', code),
@@ -43,13 +43,13 @@ void main() {
       expect(await repository.fetchFaqs(), isEmpty);
     });
 
-    test('stores a new question in faqs', () async {
+    test('stores a new question in support, as subject and message', () async {
       await repository.createFaq(_shipping);
 
       final stored = (await _docs(db)).single.data();
-      expect(stored['faq_id'], 'FAQ_001');
-      expect(stored['question'], _shipping.question);
-      expect(stored['answer'], _shipping.answer);
+      expect(stored['support_id'], 'SUP_001');
+      expect(stored['subject'], _shipping.question);
+      expect(stored['message'], _shipping.answer);
       expect(stored['created_at'], isA<Timestamp>());
 
       final listed = (await repository.fetchFaqs()).single;
@@ -61,9 +61,9 @@ void main() {
       await repository.createFaq(_shipping);
       await repository.createFaq(_returns);
 
-      expect((await _docs(db)).map((doc) => doc.data()['faq_id']), {
-        'FAQ_001',
-        'FAQ_002',
+      expect((await _docs(db)).map((doc) => doc.data()['support_id']), {
+        'SUP_001',
+        'SUP_002',
       });
     });
 
@@ -73,8 +73,8 @@ void main() {
       );
 
       final stored = (await _docs(db)).single.data();
-      expect(stored['question'], 'Do you ship abroad?');
-      expect(stored['answer'], 'Not yet.');
+      expect(stored['subject'], 'Do you ship abroad?');
+      expect(stored['message'], 'Not yet.');
     });
 
     test('refuses a question already asked, in any case', () async {
@@ -103,16 +103,16 @@ void main() {
 
     test('lists the oldest first', () async {
       Timestamp at(int day) => Timestamp.fromDate(DateTime.utc(2026, 11, day));
-      await db.collection('faqs').doc('b').set({
-        'faq_id': 'FAQ_002',
-        'question': 'Newer',
-        'answer': 'B',
+      await db.collection('support').doc('b').set({
+        'support_id': 'SUP_002',
+        'subject': 'Newer',
+        'message': 'B',
         'created_at': at(9),
       });
-      await db.collection('faqs').doc('a').set({
-        'faq_id': 'FAQ_001',
-        'question': 'Older',
-        'answer': 'A',
+      await db.collection('support').doc('a').set({
+        'support_id': 'SUP_001',
+        'subject': 'Older',
+        'message': 'A',
         'created_at': at(2),
       });
 
@@ -123,16 +123,16 @@ void main() {
     });
 
     test('lists one with no date yet at the end', () async {
-      await db.collection('faqs').doc('pending').set({
-        'faq_id': 'FAQ_002',
-        'question': 'Just added',
-        'answer': 'B',
+      await db.collection('support').doc('pending').set({
+        'support_id': 'SUP_002',
+        'subject': 'Just added',
+        'message': 'B',
         'created_at': null,
       });
-      await db.collection('faqs').doc('dated').set({
-        'faq_id': 'FAQ_001',
-        'question': 'Already there',
-        'answer': 'A',
+      await db.collection('support').doc('dated').set({
+        'support_id': 'SUP_001',
+        'subject': 'Already there',
+        'message': 'A',
         'created_at': Timestamp.fromDate(DateTime.utc(2026, 11, 2)),
       });
 
@@ -144,9 +144,9 @@ void main() {
 
     test('will not guess between two entries asking the same', () async {
       for (final id in ['one', 'two']) {
-        await db.collection('faqs').doc(id).set({
-          'question': 'Do you ship abroad?',
-          'answer': 'Answer in $id',
+        await db.collection('support').doc(id).set({
+          'subject': 'Do you ship abroad?',
+          'message': 'Answer in $id',
         });
       }
 
@@ -162,18 +162,18 @@ void main() {
         _refusedWith(409),
       );
 
-      final answers = (await _docs(db)).map((doc) => doc.data()['answer']);
+      final answers = (await _docs(db)).map((doc) => doc.data()['message']);
       expect(answers, unorderedEquals(['Answer in one', 'Answer in two']));
     });
 
     test('an answer can be corrected beside a near duplicate', () async {
-      await db.collection('faqs').doc('lower').set({
-        'question': 'Do you ship abroad?',
-        'answer': 'Old',
+      await db.collection('support').doc('lower').set({
+        'subject': 'Do you ship abroad?',
+        'message': 'Old',
       });
-      await db.collection('faqs').doc('upper').set({
-        'question': 'DO YOU SHIP ABROAD?',
-        'answer': 'Other',
+      await db.collection('support').doc('upper').set({
+        'subject': 'DO YOU SHIP ABROAD?',
+        'message': 'Other',
       });
 
       await repository.updateFaq(
@@ -181,12 +181,12 @@ void main() {
         faq: const Faq(question: 'Do you ship abroad?', answer: 'Corrected'),
       );
 
-      final stored = await db.collection('faqs').doc('lower').get();
-      expect(stored.data()?['answer'], 'Corrected');
+      final stored = await db.collection('support').doc('lower').get();
+      expect(stored.data()?['message'], 'Corrected');
     });
 
     test('leaves out a document with nothing to ask', () async {
-      await db.collection('faqs').doc('blank').set({'answer': 'Orphaned'});
+      await db.collection('support').doc('blank').set({'message': 'Orphaned'});
 
       expect(await repository.fetchFaqs(), isEmpty);
     });
@@ -202,10 +202,10 @@ void main() {
 
       final after = (await _docs(db)).single;
       expect(after.id, before.id);
-      expect(after.data()['faq_id'], 'FAQ_001');
+      expect(after.data()['support_id'], 'SUP_001');
       expect(after.data()['created_at'], before.data()['created_at']);
-      expect(after.data()['question'], 'Do you deliver abroad?');
-      expect(after.data()['answer'], 'No.');
+      expect(after.data()['subject'], 'Do you deliver abroad?');
+      expect(after.data()['message'], 'No.');
     });
 
     test('an edit may keep its own question', () async {
@@ -216,7 +216,7 @@ void main() {
         faq: _shipping.copyWith(answer: 'A better answer.'),
       );
 
-      expect((await _docs(db)).single.data()['answer'], 'A better answer.');
+      expect((await _docs(db)).single.data()['message'], 'A better answer.');
     });
 
     test('an edit may not take another question', () async {
@@ -251,20 +251,20 @@ void main() {
     test('undo brings back the same document, in its place', () async {
       Timestamp at(int day) => Timestamp.fromDate(DateTime.utc(2026, 11, day));
       for (final (index, name) in ['First', 'Second', 'Third'].indexed) {
-        await db.collection('faqs').doc('doc$index').set({
-          'faq_id': 'FAQ_00${index + 1}',
-          'question': name,
-          'answer': 'An answer',
+        await db.collection('support').doc('doc$index').set({
+          'support_id': 'SUP_00${index + 1}',
+          'subject': name,
+          'message': 'An answer',
           'created_at': at(index + 1),
         });
       }
-      final before = (await db.collection('faqs').doc('doc1').get()).data();
+      final before = (await db.collection('support').doc('doc1').get()).data();
 
       final removed = await repository.deleteFaq('Second');
       expect(removed.index, 1);
       await repository.restoreFaq(removed);
 
-      final after = await db.collection('faqs').doc('doc1').get();
+      final after = await db.collection('support').doc('doc1').get();
       expect(after.data(), before);
       expect((await repository.fetchFaqs()).map((faq) => faq.question), [
         'First',
@@ -284,8 +284,8 @@ void main() {
       await repository.restoreFaq(removed);
 
       expect(
-        (await _docs(db)).map((doc) => doc.data()['faq_id']),
-        unorderedEquals(['FAQ_001', 'FAQ_002', 'FAQ_003']),
+        (await _docs(db)).map((doc) => doc.data()['support_id']),
+        unorderedEquals(['SUP_001', 'SUP_002', 'SUP_003']),
       );
     });
 
@@ -296,6 +296,93 @@ void main() {
 
       await expectLater(repository.restoreFaq(removed), _refusedWith(409));
       expect(await _docs(db), hasLength(1));
+    });
+
+    group('a document written by hand with only the two fields', () {
+      setUp(
+        () => db.collection('support').doc('byHand').set({
+          'subject': 'this is question',
+          'message': 'this is an answer',
+        }),
+      );
+
+      test('is listed', () async {
+        final listed = (await repository.fetchFaqs()).single;
+
+        expect(listed.question, 'this is question');
+        expect(listed.answer, 'this is an answer');
+      });
+
+      test('can be corrected, and gains no other field', () async {
+        await repository.updateFaq(
+          originalQuestion: 'this is question',
+          faq: const Faq(question: 'this is question', answer: 'a better one'),
+        );
+
+        final stored = await db.collection('support').doc('byHand').get();
+        expect(stored.data(), {
+          'subject': 'this is question',
+          'message': 'a better one',
+        });
+      });
+
+      test('comes back whole after a delete and undo', () async {
+        final removed = await repository.deleteFaq('this is question');
+        await repository.restoreFaq(removed);
+
+        final stored = await db.collection('support').doc('byHand').get();
+        expect(stored.data(), {
+          'subject': 'this is question',
+          'message': 'this is an answer',
+        });
+      });
+    });
+
+    group('beside a query from a customer', () {
+      const query = {
+        'support_id': 'SUP_007',
+        'user_id': 'testCustomerUid0004',
+        'subject': 'Do you ship abroad?',
+        'message': 'I live in Dubai.',
+      };
+
+      setUp(() => db.collection('support').doc('query').set(query));
+
+      test('does not list it', () async {
+        expect(await repository.fetchFaqs(), isEmpty);
+      });
+
+      test('numbers on from it', () async {
+        await repository.createFaq(_returns);
+
+        expect(
+          (await _docs(db)).map((doc) => doc.data()['support_id']),
+          unorderedEquals(['SUP_007', 'SUP_008']),
+        );
+      });
+
+      test('may answer the same subject', () async {
+        await repository.createFaq(_shipping);
+
+        expect((await repository.fetchFaqs()).single.answer, _shipping.answer);
+      });
+
+      test('cannot change or remove it', () async {
+        await expectLater(
+          repository.updateFaq(
+            originalQuestion: query['subject']!,
+            faq: _shipping,
+          ),
+          throwsA(isA<NotFound>()),
+        );
+        await expectLater(
+          repository.deleteFaq(query['subject']!),
+          throwsA(isA<NotFound>()),
+        );
+
+        final stored = await db.collection('support').doc('query').get();
+        expect(stored.data(), query);
+      });
     });
   });
 
@@ -330,8 +417,8 @@ void main() {
     Future<void> addFromTheScreen(WidgetTester tester, Faq faq) async {
       await tester.tap(find.bySemanticsLabel('Add question'));
       await tester.pumpAndSettle();
-      await tester.enterText(field('Question'), faq.question);
-      await tester.enterText(field('Answer'), faq.answer);
+      await tester.enterText(field('Subject'), faq.question);
+      await tester.enterText(field('Message'), faq.answer);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Add Question'));
       await tester.pumpAndSettle();
@@ -348,14 +435,47 @@ void main() {
       expect(find.text('No questions answered yet.'), findsOneWidget);
     });
 
+    testWidgets('the form asks for a subject and a message', (tester) async {
+      await open(tester);
+
+      await tester.tap(find.bySemanticsLabel('Add question'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Subject'), findsOneWidget);
+      expect(find.text('Message'), findsOneWidget);
+      expect(find.text('Question'), findsNothing);
+      expect(find.text('Answer'), findsNothing);
+    });
+
+    testWidgets('lists the admin question and no customer query', (
+      tester,
+    ) async {
+      await db.collection('support').doc('query').set({
+        'user_id': 'testCustomerUid0004',
+        'subject': 'Where is my parcel?',
+        'message': 'It has been a week.',
+      });
+      await db.collection('support').doc('byHand').set({
+        'subject': 'this is question',
+        'message': 'this is an answer',
+      });
+
+      await open(tester);
+
+      expect(find.textContaining('Customer Queries'), findsNothing);
+      expect(find.text('Where is my parcel?'), findsNothing);
+      expect(find.text('this is question'), findsOneWidget);
+      expect(find.byType(FaqTile), findsOneWidget);
+    });
+
     testWidgets('a question added here goes to the database', (tester) async {
       await open(tester);
 
       await addFromTheScreen(tester, _shipping);
 
       final stored = (await _docs(db)).single.data();
-      expect(stored['question'], _shipping.question);
-      expect(stored['answer'], _shipping.answer);
+      expect(stored['subject'], _shipping.question);
+      expect(stored['message'], _shipping.answer);
       expect(find.text(_shipping.question), findsOneWidget);
     });
 
@@ -379,12 +499,12 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.bySemanticsLabel('Edit ${_shipping.question}'));
       await tester.pumpAndSettle();
-      await tester.enterText(field('Answer'), 'A better answer.');
+      await tester.enterText(field('Message'), 'A better answer.');
       await tester.pumpAndSettle();
       await tester.tap(find.text('Save Changes'));
       await tester.pumpAndSettle();
 
-      expect((await _docs(db)).single.data()['answer'], 'A better answer.');
+      expect((await _docs(db)).single.data()['message'], 'A better answer.');
       expect(find.text('A better answer.'), findsOneWidget);
     });
 

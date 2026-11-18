@@ -153,7 +153,7 @@ class _FaqEditSheetState extends State<FaqEditSheet> {
                 ),
                 const SizedBox(height: AppSpacing.x5),
                 LabelledField(
-                  label: 'Question',
+                  label: 'Subject',
                   child: TextField(
                     controller: _question,
                     enabled: !_submitting,
@@ -167,7 +167,7 @@ class _FaqEditSheetState extends State<FaqEditSheet> {
                 ),
                 const SizedBox(height: AppSpacing.x4),
                 LabelledField(
-                  label: 'Answer',
+                  label: 'Message',
                   child: TextField(
                     controller: _answer,
                     enabled: !_submitting,

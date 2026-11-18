@@ -7,24 +7,27 @@ import 'faqs_repository.dart';
 
 typedef _FaqDoc = QueryDocumentSnapshot<Map<String, dynamic>>;
 
-/// Keeps the help questions in the `faqs` collection.
+/// Keeps the admin's help questions in the `support` collection, each question
+/// in `subject` and its answer in `message`.
+///
+/// A query from a customer would carry a `user_id`. Nothing here shows or
+/// changes one of those.
 ///
 /// The screen knows an entry by its question, so that is what an edit or a
-/// deletion finds the document by. Each one also carries a `faq_id`, as every
-/// other collection carries its own business id.
+/// deletion finds the document by.
 class FirestoreFaqsRepository implements FaqsRepository {
   const FirestoreFaqsRepository(this._db);
 
   final FirebaseFirestore _db;
 
-  CollectionReference<Map<String, dynamic>> get _faqs =>
-      _db.collection(Fs.faqs);
+  CollectionReference<Map<String, dynamic>> get _support =>
+      _db.collection(Fs.support);
 
   @override
   Future<List<Faq>> fetchFaqs() => guardFirestore(() async {
-    final docs = [...(await _faqs.get()).docs]..sort(_oldestFirst);
+    final entries = _entriesIn((await _support.get()).docs)..sort(_oldestFirst);
     return [
-      for (final doc in docs)
+      for (final doc in entries)
         // One made by hand in the console with nothing to ask is not listed.
         if (_questionOf(doc).isNotEmpty) _faqOf(doc),
     ];
@@ -33,13 +36,14 @@ class FirestoreFaqsRepository implements FaqsRepository {
   @override
   Future<Faq> createFaq(Faq faq) => guardFirestore(() async {
     final entry = _required(faq);
-    final all = (await _faqs.get()).docs;
-    if (_isTaken(all, entry.question)) throw _alreadyAnswered;
+    final all = (await _support.get()).docs;
+    if (_isTaken(_entriesIn(all), entry.question)) throw _alreadyAnswered;
 
-    await _faqs.add({
-      Fs.faqId: Fs.nextId('FAQ', all.map(_idOf)),
-      Fs.question: entry.question,
-      Fs.answer: entry.answer,
+    await _support.add({
+      // Numbered across the whole collection, customers' queries included.
+      Fs.supportId: Fs.nextId('SUP', all.map(_idOf)),
+      Fs.subject: entry.question,
+      Fs.message: entry.answer,
       Fs.createdAt: FieldValue.serverTimestamp(),
     });
     return entry;
@@ -49,39 +53,39 @@ class FirestoreFaqsRepository implements FaqsRepository {
   Future<Faq> updateFaq({required String originalQuestion, required Faq faq}) =>
       guardFirestore(() async {
         final entry = _required(faq);
-        final all = (await _faqs.get()).docs;
-        final doc = _asking(all, originalQuestion);
+        final entries = _entriesIn((await _support.get()).docs);
+        final doc = _asking(entries, originalQuestion);
         // Only a new wording can collide. Correcting an answer always may.
         final reworded =
             entry.question.toLowerCase() != originalQuestion.toLowerCase();
-        if (reworded && _isTaken(all, entry.question, except: doc)) {
+        if (reworded && _isTaken(entries, entry.question, except: doc)) {
           throw _alreadyAnswered;
         }
 
         await doc.reference.update({
-          Fs.question: entry.question,
-          Fs.answer: entry.answer,
+          Fs.subject: entry.question,
+          Fs.message: entry.answer,
         });
         return entry;
       });
 
   @override
   Future<RemovedFaq> deleteFaq(String question) => guardFirestore(() async {
-    final all = [...(await _faqs.get()).docs]..sort(_oldestFirst);
-    final doc = _asking(all, question);
+    final entries = _entriesIn((await _support.get()).docs)..sort(_oldestFirst);
+    final doc = _asking(entries, question);
 
     await doc.reference.delete();
     return RemovedFaq(
       faq: _faqOf(doc),
-      index: all.indexOf(doc),
+      index: entries.indexOf(doc),
       stored: (id: doc.id, data: doc.data()),
     );
   });
 
   @override
   Future<void> restoreFaq(RemovedFaq removed) => guardFirestore(() async {
-    final all = (await _faqs.get()).docs;
-    if (_isTaken(all, removed.faq.question)) {
+    final all = (await _support.get()).docs;
+    if (_isTaken(_entriesIn(all), removed.faq.question)) {
       throw const BadRequest(
         409,
         'That question is being asked again — it cannot be restored.',
@@ -93,13 +97,13 @@ class FirestoreFaqsRepository implements FaqsRepository {
       return;
     }
     // The same document with the same date, so it returns to the same place.
-    // Its number comes back too, unless a newer question has since taken it.
-    final number = Fs.stringOf(stored.data[Fs.faqId]);
+    // Its number comes back too, unless a newer entry has since taken it.
+    final number = Fs.stringOf(stored.data[Fs.supportId]);
     final taken = all.map(_idOf).toSet();
-    await _faqs.doc(stored.id).set({
+    await _support.doc(stored.id).set({
       ...stored.data,
       if (number.isNotEmpty && taken.contains(number))
-        Fs.faqId: Fs.nextId('FAQ', taken),
+        Fs.supportId: Fs.nextId('SUP', taken),
     });
   });
 
@@ -108,14 +112,19 @@ class FirestoreFaqsRepository implements FaqsRepository {
     'That question is already answered here.',
   );
 
-  static String _questionOf(_FaqDoc doc) =>
-      Fs.stringOf(doc.data()[Fs.question]);
+  /// The admin's own entries among everything in the collection.
+  static List<_FaqDoc> _entriesIn(List<_FaqDoc> docs) => [
+    for (final doc in docs)
+      if (!Fs.isCustomerQuery(doc.data())) doc,
+  ];
 
-  static String _idOf(_FaqDoc doc) => Fs.stringOf(doc.data()[Fs.faqId]);
+  static String _questionOf(_FaqDoc doc) => Fs.stringOf(doc.data()[Fs.subject]);
+
+  static String _idOf(_FaqDoc doc) => Fs.stringOf(doc.data()[Fs.supportId]);
 
   static Faq _faqOf(_FaqDoc doc) => Faq(
     question: _questionOf(doc),
-    answer: Fs.stringOf(doc.data()[Fs.answer]),
+    answer: Fs.stringOf(doc.data()[Fs.message]),
   );
 
   /// Oldest first, so a new question lands at the end of the list. One with no
