@@ -1,87 +1,28 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shakti_saree/user/widgets/app_back_button.dart';
 
+import '../../admin/data/firestore/firestore_schema.dart';
+import '../../admin/data/providers/backend_providers.dart';
 import '../styles/app_colors.dart';
 import '../styles/app_text_styles.dart';
 
-class HelpAndSupportScreen extends StatefulWidget {
+class HelpAndSupportScreen extends ConsumerStatefulWidget {
   const HelpAndSupportScreen({super.key});
 
   @override
-  State<HelpAndSupportScreen> createState() => _HelpAndSupportScreenState();
+  ConsumerState<HelpAndSupportScreen> createState() =>
+      _HelpAndSupportScreenState();
 }
 
-class _HelpAndSupportScreenState extends State<HelpAndSupportScreen> {
-  // 1. Text Controllers
-  final TextEditingController _queryController = TextEditingController();
-
-  // 2. Form & UI State Variables
+class _HelpAndSupportScreenState extends ConsumerState<HelpAndSupportScreen> {
   int? _expandedIndex = 0;
-
-  // 3. Error / Status Strings
-  String errQuery = '';
-  String successMessage = '';
-
-  final List<Map<String, String>> _faqList = [
-    {
-      'question': 'How to see status of my orders',
-      'answer':
-          'Go to Profile > My Orders. There you will find direct live status and tracking link.\nYou can track your order after 24 hours of order.',
-    },
-    {
-      'question': 'Can I apply for any coupen code?',
-      'answer':
-          'Yes, you can apply available coupon codes at the cart and checkout pages to avail special festive discounts.',
-    },
-    {
-      'question': 'What are return and refund policy?',
-      'answer':
-          'We offer an easy 7-day return and refund policy from the date of delivery for unused sarees in original packaging.',
-    },
-    {
-      'question': 'How much is delivery charge?',
-      'answer':
-          'Standard delivery is FREE on all orders across India. Express delivery options may carry nominal charges.',
-    },
-    {
-      'question': 'How long a saree size can be?',
-      'answer':
-          'Standard sarees are 5.5 meters in length along with an additional 0.8-meter unstitched blouse piece.',
-    },
-    {
-      'question': 'Is Cash On Delivery is available?',
-      'answer':
-          'Yes, Cash On Delivery (COD) is available on all eligible postal pin codes across India.',
-    },
-  ];
-
-  @override
-  void dispose() {
-    _queryController.dispose();
-    super.dispose();
-  }
-
-  // Submit and Validation
-  void validateAndSubmitQuery() {
-    setState(() {
-      final queryText = _queryController.text.trim();
-
-      if (queryText.isEmpty) {
-        errQuery = 'Please enter your message';
-        successMessage = '';
-      } else if (queryText.length < 5) {
-        errQuery = 'Query must be at least 5 characters';
-        successMessage = '';
-      } else {
-        errQuery = '';
-        successMessage = 'Your query has been submitted successfully!';
-        _queryController.clear();
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final db = ref.watch(firestoreProvider);
+
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
@@ -138,89 +79,155 @@ class _HelpAndSupportScreenState extends State<HelpAndSupportScreen> {
 
             const SizedBox(height: 14),
 
-            // ================= FAQ LIST =================
+            // ================= FAQ REAL-TIME LIST =================
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 4,
-                ),
-                itemCount: _faqList.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final faq = _faqList[index];
-                  final bool isExpanded = _expandedIndex == index;
+              child: db == null
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : StreamBuilder<QuerySnapshot>(
+                      stream: db.collection('support').snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _expandedIndex = isExpanded ? null : index;
-                      });
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: AppColors.black.withOpacity(0.75),
-                          width: 1,
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Question Header Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  faq['question']!,
-                                  style: AppTextStyles.bodySmall.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12.5,
-                                    color: AppColors.black,
-                                  ),
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              child: Text(
+                                'Failed to load support FAQs: ${snapshot.error}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontSize: 13,
                                 ),
                               ),
-                              Icon(
-                                isExpanded
-                                    ? Icons.keyboard_arrow_down
-                                    : Icons.chevron_right,
-                                color: AppColors.black,
-                                size: 20,
-                              ),
-                            ],
-                          ),
+                            ),
+                          );
+                        }
 
-                          // Expanded Answer Body
-                          if (isExpanded) ...[
-                            const SizedBox(height: 10),
-                            Divider(
-                              color: AppColors.muted.withOpacity(0.4),
-                              height: 1,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              faq['answer']!,
-                              style: AppTextStyles.caption.copyWith(
+                        final docs = snapshot.data?.docs ?? [];
+
+                        if (docs.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No FAQs available currently.',
+                              style: AppTextStyles.bodySmall.copyWith(
                                 color: AppColors.muted,
-                                fontSize: 11,
-                                height: 1.45,
                               ),
                             ),
-                          ],
-                        ],
-                      ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 4,
+                          ),
+                          itemCount: docs.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final data =
+                                docs[index].data() as Map<String, dynamic>?;
+
+                            final String question = Fs.stringOf(
+                              data?['question'] ?? data?['subject'],
+                            );
+                            final String answer = Fs.stringOf(
+                              data?['answer'] ?? data?['message'],
+                            );
+
+                            final bool isExpanded = _expandedIndex == index;
+                            return GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _expandedIndex = isExpanded ? null : index;
+                                });
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: AppColors.black.withOpacity(0.75),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Question Header Row
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            question.isNotEmpty
+                                                ? question
+                                                : 'General Query',
+                                            style: AppTextStyles.bodySmall
+                                                .copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12.5,
+                                                  color: AppColors.black,
+                                                ),
+                                          ),
+                                        ),
+                                        Icon(
+                                          isExpanded
+                                              ? Icons.keyboard_arrow_down
+                                              : Icons.chevron_right,
+                                          color: AppColors.black,
+                                          size: 20,
+                                        ),
+                                      ],
+                                    ),
+
+                                    // Expanded Answer Body
+                                    if (isExpanded) ...[
+                                      const SizedBox(height: 10),
+                                      Divider(
+                                        color: AppColors.muted.withOpacity(0.4),
+                                        height: 1,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        answer.isNotEmpty
+                                            ? answer
+                                            : 'No response available.',
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.muted,
+                                          fontSize: 11,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),
