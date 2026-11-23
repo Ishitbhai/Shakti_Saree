@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../admin/data/firestore/firestore_schema.dart';
 import '../../admin/data/providers/backend_providers.dart';
@@ -20,12 +21,420 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
+  // Set to true for auto-success Razorpay checkout (no Success/Failure prompt).
+  // Set to false to launch the official Razorpay SDK with your _razorpayKey.
+  static const bool _useAutoSuccessDemo = false;
+  static const String _razorpayKey = 'rzp_test_YOUR_KEY_HERE';
+
+  late Razorpay _razorpay;
+
   String selectedPayment = 'UPI';
   String? selectedAddressId;
   bool _isProcessing = false;
 
   String errAddress = '';
   String errPayment = '';
+
+  // Cached checkout details while Razorpay payment sheet is active
+  Map<String, dynamic>? _pendingAddress;
+  List<CartEntry> _pendingCartItems = [];
+  int _pendingTotalPaise = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    if (_pendingAddress == null || _pendingCartItems.isEmpty) {
+      if (mounted) setState(() => _isProcessing = false);
+      return;
+    }
+
+    _commitOrderToFirestore(
+      chosenAddress: _pendingAddress!,
+      cartItems: _pendingCartItems,
+      totalPaise: _pendingTotalPaise,
+      razorpayPaymentId: response.paymentId,
+    );
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    if (mounted) {
+      setState(() => _isProcessing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Payment Cancelled: ${response.message ?? "Transaction not completed"}',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('External Wallet: ${response.walletName ?? ""}'),
+        ),
+      );
+    }
+  }
+
+  void _openRazorpayCheckout({
+    required int totalPaise,
+    required Map<String, dynamic> chosenAddress,
+  }) {
+    final profile =
+        ref.read(customerProfileProvider).value ?? <String, dynamic>{};
+    final String phone = Fs.stringOf(chosenAddress['phone']).isNotEmpty
+        ? Fs.stringOf(chosenAddress['phone'])
+        : Fs.stringOf(profile[Fs.phone]);
+    final String email = Fs.stringOf(profile[Fs.email]).isNotEmpty
+        ? Fs.stringOf(profile[Fs.email])
+        : 'customer@shaktisaree.com';
+
+    // Real Razorpay SDK when _useAutoSuccessDemo is false and a valid key is set
+    if (!_useAutoSuccessDemo &&
+        _razorpayKey.isNotEmpty &&
+        _razorpayKey != 'rzp_test_YOUR_KEY_HERE') {
+      final Map<String, dynamic> options = {
+        'key': _razorpayKey,
+        'amount': totalPaise,
+        'currency': 'INR',
+        'name': 'Shakti Saree',
+        'description': 'Saree Order Payment',
+        'prefill': {'contact': phone, 'email': email},
+        'theme': {'color': '#7A1C24'},
+      };
+
+      try {
+        _razorpay.open(options);
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Unable to launch Razorpay: $e')),
+          );
+        }
+      }
+      return;
+    }
+
+    // Razorpay Checkout Sheet with UPI, Cards, Netbanking & Pay Later (Auto-Success)
+    _openAutoSuccessRazorpaySheet(
+      totalPaise: totalPaise,
+      phone: phone,
+      email: email,
+    );
+  }
+
+  Future<void> _openAutoSuccessRazorpaySheet({
+    required int totalPaise,
+    required String phone,
+    required String email,
+  }) async {
+    final int totalRupees = (totalPaise / 100).round();
+    String selectedDemoMethod = 'UPI (GPay / PhonePe / Paytm)';
+    bool payingNow = false;
+
+    final bool? paid = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Razorpay Brand Header
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF1A233A),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'SS',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Shakti Saree',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  SizedBox(width: 6),
+                                  Icon(
+                                    Icons.verified,
+                                    color: Color(0xFF38BDF8),
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Razorpay Trusted Business • ${phone.isNotEmpty ? "+91 $phone" : email}',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: payingNow
+                              ? null
+                              : () => Navigator.pop(sheetContext, false),
+                          icon: const Icon(Icons.close, color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Payment Methods
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'PAYMENT OPTIONS',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        for (final method in [
+                          {
+                            'title': 'UPI (GPay / PhonePe / Paytm)',
+                            'sub': 'Instant payment via UPI ID or QR',
+                            'icon': Icons.qr_code_2,
+                          },
+                          {
+                            'title': 'Pay Later (Simpl / LazyPay / ICICI)',
+                            'sub': 'Buy now, pay in 15 days at 0% interest',
+                            'icon': Icons.watch_later_outlined,
+                          },
+                          {
+                            'title': 'Credit / Debit Card',
+                            'sub': 'Visa, Mastercard, RuPay',
+                            'icon': Icons.credit_card,
+                          },
+                          {
+                            'title': 'Netbanking',
+                            'sub': 'All major Indian banks',
+                            'icon': Icons.account_balance,
+                          },
+                        ])
+                          GestureDetector(
+                            onTap: payingNow
+                                ? null
+                                : () {
+                                    setSheetState(() {
+                                      selectedDemoMethod =
+                                          method['title'] as String;
+                                    });
+                                  },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: selectedDemoMethod == method['title']
+                                      ? const Color(0xFF2B6CB0)
+                                      : Colors.grey.shade300,
+                                  width: selectedDemoMethod == method['title']
+                                      ? 1.5
+                                      : 1,
+                                ),
+                                color: selectedDemoMethod == method['title']
+                                    ? const Color(0xFFEBF8FF)
+                                    : Colors.white,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    method['icon'] as IconData,
+                                    color: const Color(0xFF1A233A),
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          method['title'] as String,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        Text(
+                                          method['sub'] as String,
+                                          style: const TextStyle(
+                                            color: Colors.black54,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(
+                                    selectedDemoMethod == method['title']
+                                        ? Icons.radio_button_checked
+                                        : Icons.radio_button_off,
+                                    color: selectedDemoMethod == method['title']
+                                        ? const Color(0xFF2B6CB0)
+                                        : Colors.grey,
+                                    size: 20,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: payingNow
+                                ? null
+                                : () async {
+                                    setSheetState(() => payingNow = true);
+                                    await Future.delayed(
+                                      const Duration(milliseconds: 1100),
+                                    );
+                                    if (sheetContext.mounted) {
+                                      Navigator.pop(sheetContext, true);
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF2B6CB0),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: payingNow
+                                ? const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Processing Payment...',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Text(
+                                    'Pay ₹$totalRupees',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Center(
+                          child: Text(
+                            'Secured by Razorpay',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.black45,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (paid == true &&
+        _pendingAddress != null &&
+        _pendingCartItems.isNotEmpty) {
+      final String autoTxnId = 'pay_${DateTime.now().millisecondsSinceEpoch}';
+      await _commitOrderToFirestore(
+        chosenAddress: _pendingAddress!,
+        cartItems: _pendingCartItems,
+        totalPaise: _pendingTotalPaise,
+        razorpayPaymentId: autoTxnId,
+      );
+    } else {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   Future<void> _deleteAddress(String addressId) async {
     final bool? confirmed = await showDialog<bool>(
@@ -105,27 +514,58 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
+    final chosenAddress = Map<String, dynamic>.from(
+      addresses.firstWhere(
+            (a) => a['id'] == selectedAddressId,
+            orElse: () => addresses.first,
+          )
+          as Map,
+    );
+
+    setState(() => _isProcessing = true);
+
+    if (selectedPayment == 'UPI') {
+      _pendingAddress = chosenAddress;
+      _pendingCartItems = List<CartEntry>.from(cartItems);
+      _pendingTotalPaise = totalPaise;
+
+      _openRazorpayCheckout(
+        totalPaise: totalPaise,
+        chosenAddress: chosenAddress,
+      );
+    } else {
+      await _commitOrderToFirestore(
+        chosenAddress: chosenAddress,
+        cartItems: cartItems,
+        totalPaise: totalPaise,
+      );
+    }
+  }
+
+  Future<void> _commitOrderToFirestore({
+    required Map<String, dynamic> chosenAddress,
+    required List<CartEntry> cartItems,
+    required int totalPaise,
+    String? razorpayPaymentId,
+  }) async {
     final uid = ref.read(customerUidProvider);
     final db = ref.read(firestoreProvider);
     final repository = ref.read(shopRepositoryProvider);
 
     if (uid == null || db == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: No active user session.')),
-      );
+      if (mounted) {
+        setState(() => _isProcessing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error: No active user session.')),
+        );
+      }
       return;
     }
-
-    final chosenAddress = addresses.firstWhere(
-      (a) => a['id'] == selectedAddressId,
-      orElse: () => addresses.first,
-    );
-
-    setState(() => _isProcessing = true);
 
     try {
       final int now = DateTime.now().millisecondsSinceEpoch;
       final String orderId = 'ORD_$now';
+      final int totalRupees = (totalPaise / 100).round();
       final batch = db.batch();
 
       // 1. Add document to 'orders' collection
@@ -133,16 +573,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       batch.set(orderDocRef, {
         Fs.orderId: orderId,
         Fs.userId: uid,
-        Fs.totalAmount: (totalPaise / 100).round(),
+        Fs.totalAmount: totalRupees,
         'total_amount_paise': totalPaise,
         'order_status': 'Pending',
         'payment_method': selectedPayment,
         'payment_status': selectedPayment == 'UPI' ? 'Paid' : 'Pending',
+        if (razorpayPaymentId != null) 'razorpay_payment_id': razorpayPaymentId,
         'delivery_address': chosenAddress,
         'created_at': FieldValue.serverTimestamp(),
       });
 
-      // 2. Add each purchased item to 'order_items' & decrement stock in 'products'
+      // 2. Record payment entry in 'payments' collection
+      final String paymentId = 'PAY_$now';
+      final paymentDocRef = db.collection('payments').doc(paymentId);
+      batch.set(paymentDocRef, {
+        'payment_id': paymentId,
+        'order_id': orderId,
+        'user_id': uid,
+        'amount': totalRupees,
+        'payment_method': selectedPayment,
+        'payment_status': selectedPayment == 'UPI' ? 'Success' : 'Pending',
+        if (razorpayPaymentId != null) 'transaction_id': razorpayPaymentId,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+
+      // 3. Add each purchased item to 'order_items' & decrement stock in 'products'
       for (int i = 0; i < cartItems.length; i++) {
         final item = cartItems[i];
         final orderItemDocRef = db.collection('order_items').doc();
@@ -176,12 +631,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         }
       }
 
-      // 3. Commit order, order_items, and stock decrements atomically
+      // 4. Commit order, payment, order_items, and stock decrements atomically
       await batch.commit();
 
-      // 4. Clear customer's active cart lines
+      // 5. Clear customer's active cart lines
       final rawLines = [for (final item in cartItems) item.line];
       await repository.clearCart(rawLines);
+
+      _pendingAddress = null;
+      _pendingCartItems = [];
+      _pendingTotalPaise = 0;
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -189,7 +648,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           MaterialPageRoute(
             builder: (context) => OrderSuccessScreen(
               orderId: '#$orderId',
-              amount: '₹${(totalPaise / 100).round()}',
+              amount: '₹$totalRupees',
             ),
           ),
         );
